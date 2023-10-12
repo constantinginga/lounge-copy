@@ -373,4 +373,4 @@ ScSoMe.BlazorServer/Properties/launchSettings.json
 ScSoMe.API/Properties/launchSettings.json
 ScSoMe.DC/Properties/launchSettings.json
 ScSoMe.DC.API/Properties/launchSettings.json
-/ScSoMe.EF/ScSoMeContext.cs
+# /ScSoMe.EF/ScSoMeContext.cs
