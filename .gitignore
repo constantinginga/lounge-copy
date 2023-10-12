@@ -367,10 +367,10 @@ FodyWeavers.xsd
 
 # Ignore Media files in the Media API 
 ScSoMe.MediaFilesAPI/Media/UploadedFiles/*
-ScSoMe.API/Properties/launchSettings.json
-ScSoMe.API/Properties/launchSettings.json
-ScSoMe.BlazorServer/Properties/launchSettings.json
-ScSoMe.API/Properties/launchSettings.json
-ScSoMe.DC/Properties/launchSettings.json
-ScSoMe.DC.API/Properties/launchSettings.json
+# ScSoMe.API/Properties/launchSettings.json
+# ScSoMe.API/Properties/launchSettings.json
+# ScSoMe.BlazorServer/Properties/launchSettings.json
+# ScSoMe.API/Properties/launchSettings.json
+# ScSoMe.DC/Properties/launchSettings.json
+# ScSoMe.DC.API/Properties/launchSettings.json
 # /ScSoMe.EF/ScSoMeContext.cs
