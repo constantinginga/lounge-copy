@@ -17,11 +17,15 @@ namespace ScSoMe.EF
         }
 
         public virtual DbSet<ActiveMember> ActiveMembers { get; set; } = null!;
+        public virtual DbSet<ActivitySection> ActivitySections { get; set; } = null!;
         public virtual DbSet<BlockedMember> BlockedMembers { get; set; } = null!;
         public virtual DbSet<Chat> Chats { get; set; } = null!;
         public virtual DbSet<Comment> Comments { get; set; } = null!;
+        public virtual DbSet<ContactsSection> ContactsSections { get; set; } = null!;
         public virtual DbSet<CountryCode> CountryCodes { get; set; } = null!;
+        public virtual DbSet<DescriptionSection> DescriptionSections { get; set; } = null!;
         public virtual DbSet<Emoji> Emojis { get; set; } = null!;
+        public virtual DbSet<ExternalLinksSection> ExternalLinksSections { get; set; } = null!;
         public virtual DbSet<Group> Groups { get; set; } = null!;
         public virtual DbSet<GroupsRead> GroupsReads { get; set; } = null!;
         public virtual DbSet<Member> Members { get; set; } = null!;
@@ -33,30 +37,53 @@ namespace ScSoMe.EF
         public virtual DbSet<Notification> Notifications { get; set; } = null!;
         public virtual DbSet<Participant> Participants { get; set; } = null!;
         public virtual DbSet<PostFirstRead> PostFirstReads { get; set; } = null!;
+        public virtual DbSet<ServicesSection> ServicesSections { get; set; } = null!;
         public virtual DbSet<TrackedMessage> TrackedMessages { get; set; } = null!;
         public virtual DbSet<Translation> Translations { get; set; } = null!;
+        public virtual DbSet<WorkExperience> WorkExperiences { get; set; } = null!;
+        public virtual DbSet<WorkExperienceSection> WorkExperienceSections { get; set; } = null!;
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
             {
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-               optionsBuilder.UseSqlServer("Server=(LOCAL);Database=ScSoMe;user id=scadmin;password='r4szbK5we4j#';");
-               //optionsBuilder.UseSqlServer("Server=(LOCAL)\\SQLExpress;Database=ScSoMe;Trusted_Connection=True;");
-                
+                optionsBuilder.UseSqlServer("Server=localhost;Database=ScSoMe;Trusted_Connection=True;");
             }
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.UseCollation("Latin1_General_CI_AS");
-
             modelBuilder.Entity<ActiveMember>(entity =>
             {
                 entity.HasKey(e => new { e.MemberId, e.LoginDate })
                     .HasName("PK__ActiveMe__5DE43ACF109BA182");
 
                 entity.Property(e => e.LoginDate).HasPrecision(6);
+            });
+
+            modelBuilder.Entity<ActivitySection>(entity =>
+            {
+                entity.HasKey(e => e.MemberId)
+                    .HasName("PK__Activity__B29B853454B4129F");
+
+                entity.ToTable("ActivitySection");
+
+                entity.Property(e => e.MemberId)
+                    .ValueGeneratedNever()
+                    .HasColumnName("member_id");
+
+                entity.Property(e => e.Content)
+                    .HasColumnType("text")
+                    .HasColumnName("content");
+
+                entity.Property(e => e.PrivacySetting).HasColumnName("privacy_setting");
+
+                entity.HasOne(d => d.Member)
+                    .WithOne(p => p.ActivitySection)
+                    .HasForeignKey<ActivitySection>(d => d.MemberId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK__ActivityS__membe__607251E5");
             });
 
             modelBuilder.Entity<BlockedMember>(entity =>
@@ -128,6 +155,30 @@ namespace ScSoMe.EF
                     .HasConstraintName("FK_Comments_Groups");
             });
 
+            modelBuilder.Entity<ContactsSection>(entity =>
+            {
+                entity.HasKey(e => e.MemberId)
+                    .HasName("PK__Contacts__B29B85342E9D6FA4");
+
+                entity.ToTable("ContactsSection");
+
+                entity.Property(e => e.MemberId)
+                    .ValueGeneratedNever()
+                    .HasColumnName("member_id");
+
+                entity.Property(e => e.Content)
+                    .HasColumnType("text")
+                    .HasColumnName("content");
+
+                entity.Property(e => e.PrivacySetting).HasColumnName("privacy_setting");
+
+                entity.HasOne(d => d.Member)
+                    .WithOne(p => p.ContactsSection)
+                    .HasForeignKey<ContactsSection>(d => d.MemberId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK__ContactsS__membe__55009F39");
+            });
+
             modelBuilder.Entity<CountryCode>(entity =>
             {
                 entity.Property(e => e.Id).HasColumnName("id");
@@ -141,6 +192,30 @@ namespace ScSoMe.EF
                 entity.Property(e => e.ShortName).HasColumnName("short_name");
             });
 
+            modelBuilder.Entity<DescriptionSection>(entity =>
+            {
+                entity.HasKey(e => e.MemberId)
+                    .HasName("PK__Descript__B29B85342BFE281D");
+
+                entity.ToTable("DescriptionSection");
+
+                entity.Property(e => e.MemberId)
+                    .ValueGeneratedNever()
+                    .HasColumnName("member_id");
+
+                entity.Property(e => e.Content)
+                    .HasColumnType("text")
+                    .HasColumnName("content");
+
+                entity.Property(e => e.PrivacySetting).HasColumnName("privacy_setting");
+
+                entity.HasOne(d => d.Member)
+                    .WithOne(p => p.DescriptionSection)
+                    .HasForeignKey<DescriptionSection>(d => d.MemberId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK__Descripti__membe__4F47C5E3");
+            });
+
             modelBuilder.Entity<Emoji>(entity =>
             {
                 entity.Property(e => e.EmojiId).HasColumnName("emoji_id");
@@ -150,6 +225,30 @@ namespace ScSoMe.EF
                 entity.Property(e => e.Description).HasColumnName("description");
 
                 entity.Property(e => e.EmojiIcon).HasColumnName("emoji_icon");
+            });
+
+            modelBuilder.Entity<ExternalLinksSection>(entity =>
+            {
+                entity.HasKey(e => e.MemberId)
+                    .HasName("PK__External__B29B853462B602DF");
+
+                entity.ToTable("ExternalLinksSection");
+
+                entity.Property(e => e.MemberId)
+                    .ValueGeneratedNever()
+                    .HasColumnName("member_id");
+
+                entity.Property(e => e.Content)
+                    .HasColumnType("text")
+                    .HasColumnName("content");
+
+                entity.Property(e => e.PrivacySetting).HasColumnName("privacy_setting");
+
+                entity.HasOne(d => d.Member)
+                    .WithOne(p => p.ExternalLinksSection)
+                    .HasForeignKey<ExternalLinksSection>(d => d.MemberId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK__ExternalL__membe__5224328E");
             });
 
             modelBuilder.Entity<Group>(entity =>
@@ -337,7 +436,7 @@ namespace ScSoMe.EF
 
             modelBuilder.Entity<Participant>(entity =>
             {
-                entity.HasIndex(e => new { e.ChatId, e.MemberId }, "UQ__Particip__A62DB345BA9B1053")
+                entity.HasIndex(e => new { e.ChatId, e.MemberId }, "UQ__Particip__A62DB345D32C878C")
                     .IsUnique();
 
                 entity.Property(e => e.Id).HasColumnName("id");
@@ -374,6 +473,30 @@ namespace ScSoMe.EF
                     .HasColumnName("first_dt");
             });
 
+            modelBuilder.Entity<ServicesSection>(entity =>
+            {
+                entity.HasKey(e => e.MemberId)
+                    .HasName("PK__Services__B29B8534DB81D5DD");
+
+                entity.ToTable("ServicesSection");
+
+                entity.Property(e => e.MemberId)
+                    .ValueGeneratedNever()
+                    .HasColumnName("member_id");
+
+                entity.Property(e => e.Content)
+                    .HasColumnType("text")
+                    .HasColumnName("content");
+
+                entity.Property(e => e.PrivacySetting).HasColumnName("privacy_setting");
+
+                entity.HasOne(d => d.Member)
+                    .WithOne(p => p.ServicesSection)
+                    .HasForeignKey<ServicesSection>(d => d.MemberId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK__ServicesS__membe__57DD0BE4");
+            });
+
             modelBuilder.Entity<TrackedMessage>(entity =>
             {
                 entity.HasKey(e => new { e.MemberId, e.PostId })
@@ -392,6 +515,64 @@ namespace ScSoMe.EF
                 entity.Property(e => e.LanguageCode)
                     .HasMaxLength(2)
                     .IsUnicode(false);
+            });
+
+            modelBuilder.Entity<WorkExperience>(entity =>
+            {
+                entity.ToTable("WorkExperience");
+
+                entity.Property(e => e.WorkExperienceId)
+                    .ValueGeneratedNever()
+                    .HasColumnName("workExperienceId");
+
+                entity.Property(e => e.CompanyName)
+                    .HasMaxLength(250)
+                    .IsUnicode(false)
+                    .HasColumnName("companyName");
+
+                entity.Property(e => e.EndDate)
+                    .HasColumnType("date")
+                    .HasColumnName("endDate");
+
+                entity.Property(e => e.MemberId).HasColumnName("member_id");
+
+                entity.Property(e => e.Position)
+                    .HasMaxLength(250)
+                    .IsUnicode(false)
+                    .HasColumnName("position");
+
+                entity.Property(e => e.PositionDescription)
+                    .HasColumnType("text")
+                    .HasColumnName("positionDescription");
+
+                entity.Property(e => e.StartDate)
+                    .HasColumnType("date")
+                    .HasColumnName("startDate");
+
+                entity.HasOne(d => d.Member)
+                    .WithMany(p => p.WorkExperiences)
+                    .HasForeignKey(d => d.MemberId)
+                    .HasConstraintName("FK__WorkExper__membe__5D95E53A");
+            });
+
+            modelBuilder.Entity<WorkExperienceSection>(entity =>
+            {
+                entity.HasKey(e => e.MemberId)
+                    .HasName("PK__WorkExpe__B29B85348C12267F");
+
+                entity.ToTable("WorkExperienceSection");
+
+                entity.Property(e => e.MemberId)
+                    .ValueGeneratedNever()
+                    .HasColumnName("member_id");
+
+                entity.Property(e => e.PrivacySetting).HasColumnName("privacy_setting");
+
+                entity.HasOne(d => d.Member)
+                    .WithOne(p => p.WorkExperienceSection)
+                    .HasForeignKey<WorkExperienceSection>(d => d.MemberId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK__WorkExper__membe__5AB9788F");
             });
 
             OnModelCreatingPartial(modelBuilder);

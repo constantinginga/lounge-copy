@@ -20,6 +20,12 @@ namespace ScSoMe.EF
         public string Email { get; set; } = null!;
         public string? Json { get; set; }
 
+        public virtual ActivitySection ActivitySection { get; set; } = null!;
+        public virtual ContactsSection ContactsSection { get; set; } = null!;
+        public virtual DescriptionSection DescriptionSection { get; set; } = null!;
+        public virtual ExternalLinksSection ExternalLinksSection { get; set; } = null!;
+        public virtual ServicesSection ServicesSection { get; set; } = null!;
+        public virtual WorkExperienceSection WorkExperienceSection { get; set; } = null!;
         public virtual ICollection<Participant> Participants { get; set; }
     }
 }
