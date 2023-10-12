@@ -1,0 +1,59 @@
+﻿@inherits NewPostBase
+@implements IDisposable
+@using Microsoft.JSInterop
+@using ScSoMe.RazorLibrary.Pages.Components.Comment
+@using ScSoMe.RazorLibrary.Pages.Components.AttachFiles
+@using Microsoft.AspNetCore.Components.Forms
+@using System.Text.Json
+@using Microsoft.Extensions.Logging
+@inject IJSRuntime JSRuntime
+@inject AppState AppState
+@inject ScSoMe.Common.ApiClientFactory apiClientFactory
+@inject NavigationManager NavManager
+@inject ILogger<NewPost> Logger
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+
+<div class="new-post-container">
+    <MudCard Class="mb-5 pt-4 new-post" Outlined="true">
+        <CommentHeader Author="CurrentUser" OnDelete=@DeletePost />
+        <MudCardContent Class="pt-0 d-flex flex-md-column gap-3">
+            <div class="quilledit-container">
+                <MudContainer class="d-flex align-center" MaxWidth=MaxWidth.Medium>
+                    <MudContainer class="quilledit" MaxWidth=MaxWidth.Medium>
+                        <QuillEditor @ref=@InRef HasToolBar="true" />
+                        <MudContainer Class="m-0 p-0 mt-3 gap-3 d-flex align-center">
+                            <MudButton OnClick="@CreatePost" Variant="Variant.Filled" Color="MudBlazor.Color.Info" Disabled="_processing" Class="mt-0 z-0">
+                                @if (_processing)
+                                {
+                                    <MudProgressCircular Class="ms-n1 mr-3" Size="MudBlazor.Size.Small" Indeterminate="true" />
+                                }
+                                <MudText>Post</MudText>
+                            </MudButton>
+
+                            <AttachFileButton />
+
+                        </MudContainer>
+
+                        @*<AttachFile @ref="attachFile" />*@
+
+
+                        @if (errorMessage != null)
+                        {
+                            <MudText Color="MudBlazor.Color.Error" Class="mt-2">@errorMessage</MudText>
+                        }
+
+                    </MudContainer>
+                    <div class="newpost-emojibtn emoji-btn-container">
+                        <EmojiMudButton Editor="InRef" />
+                    </div>
+                </MudContainer>
+                <AttachFile @ref="attachFile" />
+            </div>
+        </MudCardContent>
+    </MudCard>
+</div>
+
+
+

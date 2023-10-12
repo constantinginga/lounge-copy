@@ -1,0 +1,9 @@
+﻿::deep .file-chip > .mud-chip-content {
+    white-space: break-spaces;
+}
+
+@media screen and (max-width: 700px) {
+    ::deep .attach-container {
+        padding: 0;
+    }
+}

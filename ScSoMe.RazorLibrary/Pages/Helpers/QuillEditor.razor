@@ -1,0 +1,188 @@
+﻿@using Microsoft.JSInterop
+@using PSC.RazorLibrary.Components.Helpers.Quill
+@using ScSoMe.RazorLibrary.Pages.Helpers
+@using System.Runtime.InteropServices
+@inject ApiClientFactory apiClientFactory
+@inject IJSRuntime JSRuntime
+
+    <div @ref="@ToolBar" id="@MsgId.ToString()">
+        @ToolbarContent
+    </div>
+
+<div @ref="@QuillElement">
+    <MarkupRenderer Markup=@Msg />
+</div>
+
+@code {
+    [Parameter] public bool HasToolBar { get; set; }
+    [Parameter] public long MsgId { get; set; }
+    [Parameter] public string Msg { get; set; }
+    [Parameter] public RenderFragment? EditorContent { get; set; }
+    [Parameter] public RenderFragment? ToolbarContent { get; set; }
+    [Parameter] public bool ReadOnly { get; set; } = false;
+    [Parameter] public string PostPlaceholder { get; set; } = "Write a post...";
+    [Parameter] public string CommentPlaceholder { get; set; } = "Write a comment...";
+    [Parameter] public string Theme { get; set; } = "snow";
+    [Parameter] public string DebugLevel { get; set; } = "info";
+    [Parameter] public string? MessageText { get; set; }
+    [Parameter] public string? InputValue { get; set; }
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    public bool readOnly { get; set; }
+
+    private ElementReference QuillElement;
+    private ElementReference ToolBar;
+
+    /*
+    [StructLayout(LayoutKind.Sequential)]
+    public struct RECT
+    {
+    public int left;
+    public int top;
+    public int right;
+    public int bottom;
+    }
+    [DllImport("user32.dll", SetLastError = true)]
+    static extern bool GetWindowRect(IntPtr hWnd, ref RECT Rect);
+    */
+    protected override async Task
+        OnAfterRenderAsync(bool firstRender)
+    {
+        var dim = new WindowDimension() { Height = 1000, Width = 600 };
+        if (apiClientFactory.IsMAUI && apiClientFactory.DeviceType.Equals("WinUI"))
+        {
+            dim.Width = 700;
+            /*
+            var handle = System.Diagnostics.Process.GetCurrentProcess().MainWindowHandle;
+            RECT Rect = new RECT();
+            if (GetWindowRect(handle, ref Rect))
+                dim = new WindowDimension() { Height = Rect.bottom - Rect.top, Width = Rect.right - Rect.left };
+        */
+        }
+        if (!apiClientFactory.IsMAUI && !apiClientFactory.DeviceType.Equals("WinUI")) // getWindowDimensions at least dont work in (WinUI) MAUIrc3
+        {
+            dim = await JSRuntime.InvokeAsync<WindowDimension>("getWindowDimensions");
+        }
+
+        if (firstRender)
+        {
+            // switch theme based on window width
+            //if (dim.Width < 700) Theme = "bubble";
+
+            if (apiClientFactory.DeviceType.Equals("Android"))
+            {
+                if (System.Environment.OSVersion.Version.Major == 28)
+                {
+                    // does not work on Android9.0 in MAUIrc3
+                    return;
+                }
+                // it works on Android 11
+            }
+
+            int retries = 5;
+            while (--retries > 0)
+            {
+                try
+                {
+                    await QuillInterop.CreateQuill(
+                        JSRuntime,
+                        QuillElement,
+                        ToolBar,
+                        HasToolBar,
+                        ReadOnly,
+                        (HasToolBar) ? PostPlaceholder : CommentPlaceholder,
+                        Theme,
+                        DebugLevel);
+                    retries = 0;
+                }
+                catch (Exception createError)
+                {
+                    // Console.WriteLine(retries);
+                    // count?
+                }
+            }
+        }
+    }
+
+    public async Task<string> GetText()
+    {
+        return await QuillInterop.GetText(
+            JSRuntime, QuillElement);
+    }
+
+    public async Task SetText(string Content)
+    {
+        await QuillInterop.SetQuillText(JSRuntime, QuillElement, Content);
+    }
+
+    public async Task<string> GetHTML()
+    {
+        return await QuillInterop.GetHTML(
+            JSRuntime, QuillElement);
+    }
+    public async Task LoadContent(string Content)
+    {
+        var QuillDelta =
+            await QuillInterop.LoadQuillContent(
+                JSRuntime, QuillElement, Content);
+    }
+
+    public async Task<string> GetContent()
+    {
+        return await QuillInterop.GetContent(
+            JSRuntime, QuillElement);
+    }
+
+    public async Task<string> GetSelection()
+    {
+        return await QuillInterop.GetQuillSelection(JSRuntime, QuillElement);
+    }
+
+    public async Task SetSelection(int index, int length)
+    {
+        await QuillInterop.SetQuillSelection(JSRuntime, QuillElement, index, length);
+    }
+
+    public async Task Focus()
+    {
+        await QuillInterop.QuillFocus(JSRuntime, QuillElement);
+    }
+
+    public async Task InsertText(int Index, string Content)
+    {
+        await QuillInterop.InsertQuillText(JSRuntime, QuillElement, Index, Content);
+    }
+
+    public async Task<string> GetEmbedded()
+    {
+        return await QuillInterop.GetQuillEmbedded(JSRuntime);
+    }
+
+    public async Task ClearEmbedded()
+    {
+        await QuillInterop.ClearQuillEmbedded(JSRuntime, QuillElement);
+    }
+
+    public async Task CreateEmbedded(string Url, string Img, string Title)
+    {
+        await QuillInterop.CreateQuillEmbedded(JSRuntime, QuillElement, Url, Img, Title);
+    }
+
+    @*public async Task<string> GetAttachedFiles()
+        {
+                return await QuillInterop.GetQuillAttachedFiles(JSRuntime, QuillElement);
+        }*@
+
+    //public async Task LoadContent(string Content)
+    //{
+    //    var QuillDelta =
+    //        await QuillInterop.LoadQuillContent(
+    //            JSRuntime, QuillElement, Content);
+    //}
+
+    //public async Task EnableEditor(bool mode)
+    //{
+    //    var QuillDelta =
+    //        await QuillInterop.EnableQuillEditor(
+    //            JSRuntime, QuillElement, mode);
+    //}
+}

@@ -1,0 +1,32 @@
+﻿@if (Title != null && Subtitle != null && ChildContent != null && IsHeading != null)
+{
+    <div>
+        <MudCarouselItem Transition="Transition.Slide" Class="auth-carousel-item">
+            <MudContainer Class="d-flex flex-column">
+                <MudText Class="item-title">@Title</MudText>
+                @if (IsHeading == true)
+                {
+                    <MudText Color="MudBlazor.Color.Tertiary" Class="item-subtitle" Typo="Typo.h1">@Subtitle</MudText>
+                }
+                else
+                {
+                    <MudText Color="MudBlazor.Color.Tertiary" Class="item-subtitle">@Subtitle</MudText>
+                }
+                <MudContainer Class="item-description">
+                    @ChildContent
+                </MudContainer>
+            </MudContainer>
+        </MudCarouselItem>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string Title { get; set; }
+    [Parameter]
+    public string Subtitle { get; set; }
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+    [Parameter]
+    public bool? IsHeading { get; set; }
+}

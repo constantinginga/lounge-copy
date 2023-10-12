@@ -1,0 +1,131 @@
+﻿.register-wrapper {
+    min-width: 500px;
+    max-width: 700px;
+    margin: 0 auto;
+    position: relative;
+/*    top: -5rem;*/
+}
+
+::deep .rocket-logo-container {
+    display: flex;
+    justify-content: center;
+    margin: 2rem 0;
+}
+
+::deep .rocket-logo-container > img {
+    /*    width: 100%;*/
+    height: auto;
+}
+
+.register-title-container {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+
+/*::deep .register-title {
+    font-size: 2rem;
+    color: #47B2B2;
+}*/
+
+::deep .register-title {
+    font-size: 24px;
+    font-weight: 700;
+}
+
+::deep .register-container {
+/*    border: 2px solid #CCC9C6;*/
+    border-radius: 10px;
+}
+
+@media only screen and (max-width: 800px) {
+    ::deep .register-container {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+/*    .register-wrapper {
+        top: -2rem;
+    }*/
+}
+
+::deep .register-footer {
+    background-color: #DAF0F0;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.btn-container {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem 0 0 0;
+    width: 100%;
+}
+
+.register-btn-container {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem 0;
+}
+
+.btn-container > .register-btn-container > ::deep .register-btn {
+    background-color: #3F3D56;
+    color: #fff;
+    height: 3rem;
+    text-transform: capitalize;
+    font-size: 1.2rem;
+    font-weight: 400;
+    padding-right: .5rem;
+    border-radius: 300px;
+}
+
+    .btn-container > ::deep .register-btn {
+        border-color: #47B2B2;
+        color: #47B2B2;
+        width: fit-content;
+        margin: 0 auto;
+        text-transform: capitalize;
+        border-radius: .5rem;
+    }
+
+    .btn-container > .register-btn-container > ::deep .register-container__link {
+        color: #47B2B2 !important;
+        width: fit-content;
+        margin: 0 auto;
+    }
+
+@media only screen and (max-width: 550px) {
+/*        .register-wrapper {
+            width: 95%;
+            top: -2rem;
+        }*/
+    }
+
+@media only screen and (max-width: 1000px) {
+    .register-wrapper {
+        min-width: auto;
+        margin: 0 auto;
+    }
+}
+
+::deep .register-btn-icon {
+    background-color: #fff;
+    width: 39px;
+    height: 39px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    ::deep .register-btn-icon > .mud-icon-root {
+        fill: #3F3D56;
+    }
+
+::deep .password-strength-container > .mud-progress-linear > .mud-progress-linear-bars > .mud-progress-linear-bar,
+::deep .password-strength-container > .mud-progress-linear::before {
+    background-color: #3F3D56 !important;
+}
+
+::deep .password-strength-text {
+    color: #3F3D56;
+}

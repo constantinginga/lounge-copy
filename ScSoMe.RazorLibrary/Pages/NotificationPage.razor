@@ -1,0 +1,22 @@
+﻿@page "/notifications"
+@using ScSoMe.RazorLibrary.Pages.Components.Notification
+@inject NavigationManager NavManager
+@inject AppState AppState
+
+<MudContainer Class="mt-4">
+    <NotificationList />
+</MudContainer>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        if (!AppState.IsLoggedIn)
+        {
+            NavManager.NavigateTo("./");
+            return;
+        }
+
+
+    }
+}
+

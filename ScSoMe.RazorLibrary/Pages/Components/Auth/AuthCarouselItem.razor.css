@@ -1,0 +1,25 @@
+﻿::deep .auth-carousel-item {
+    color: #FFF;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 6rem 4rem;
+    text-align: center;
+}
+
+::deep .auth-carousel-item > .mud-container {
+    gap: 2rem 0;
+}
+
+::deep .item-title,
+::deep .item-subtitle {
+    font-weight: 600;   
+}
+
+::deep .item-title {
+    font-size: 1.5rem;
+}
+
+::deep .item-subtitle {
+    font-size: 2.7rem;
+}

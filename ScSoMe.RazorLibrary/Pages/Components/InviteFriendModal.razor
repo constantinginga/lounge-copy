@@ -1,0 +1,30 @@
+﻿@inject AppState AppState
+@inject HttpClient HttpClient
+
+<MudDialog>
+    <DialogContent>
+        <MudTextField @bind-Value="email" Label="Enter friend's email" InputType="MudBlazor.InputType.Email" Variant="Variant.Outlined" Margin="MudBlazor.Margin.Dense"></MudTextField>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="MudBlazor.Color.Primary" OnClick="Submit">Invite</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    private string email { get; set; }
+
+    private async void Submit()
+    {
+        if (string.IsNullOrWhiteSpace(email) || AppState.CurrentUser == null)
+        {
+            return;    
+        }
+
+        await HttpClient.GetAsync($"https://www.startupcentral.dk/umbraco/api/MemberApi/SendFriendInvitation?friendEmail={email}&userId={AppState.CurrentUser.Id}");
+
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+    void Cancel() => MudDialog.Cancel();
+}

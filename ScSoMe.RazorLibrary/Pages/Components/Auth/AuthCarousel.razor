@@ -1,0 +1,54 @@
+﻿@using System.Net.Http.Json;
+@inject HttpClient Http
+
+<MudContainer Class="p-0 m-0 py-4">
+        <MudCarousel ShowArrows="true" ShowBullets="true" AutoCycle="true" TData="object" Style="height: 100%;" BulletsColor="MudBlazor.Color.Success">
+        <BulletTemplate Context="selected">
+            <div Class="@($"mud-button-root mud-icon-button mud-icon-button-color-inherit mud-ripple mud-ripple-icon {(selected ? "auth-carousel-bullet__active" : "auth-carousel-bullet")}")">
+                <span class="mud-icon-button-label"></span>
+            </div>
+        </BulletTemplate>
+        <ChildContent>
+            <AuthCarouselItem Title="Velkommen til Startup Lounge" Subtitle="Dit online iværksætternetværk" IsHeading="true">
+                <ChildContent>
+                    <MudText Class="item-description">Startup Lounge er et online netværk for iværksættere og selvstændige. Her kan du møde ligesindede, få gode tips og erfaring fra folk, som er lige så engageret i iværksætteri som dig.</MudText>
+                    <MudText Class="item-description">Med Startup Lounge i ryggen er du aldrig alene. Vi hepper på dig.</MudText>
+                </ChildContent>
+            </AuthCarouselItem>
+            <AuthCarouselItem Title="Opret dig uden betaling" Subtitle="Der er ikke brug for et kreditkort" IsHeading="false">
+                <ChildContent>
+                    <MudText Class="item-description">Tilmeld dig netværket nu.</MudText>
+                    <MudText Class="item-description">Startup Lounge findes også som en Facebookgruppe. Den kan du anmode om at få adgang til her:</MudText>
+                    <MudText Class="item-description"><MudLink Href="https://www.facebook.com/groups/startup.lounge" Target="_blank" Underline="Underline.Always">Startup Lounge Facebook</MudLink></MudText>
+                </ChildContent>
+            </AuthCarouselItem>
+            @if (benefitList != null)
+            {
+                <AuthCarouselItem Title="Netværk med andre iværksættere" Subtitle="Dit givende netværk tilbyder:" IsHeading="false">
+                    <ChildContent>
+                        <div>
+                            <MudContainer Class="m-0 p-0 item-description-benefits-list d-flex flex-column align-center">
+                                @foreach (var b in benefitList)
+                                {
+                                    <AuthBenefit Benefit="@b.Benefit" />
+                                }
+                            </MudContainer>
+                        </div>
+                    </ChildContent>
+                </AuthCarouselItem>
+            }
+        </ChildContent>
+        </MudCarousel>
+</MudContainer>
+
+@code {
+    private AuthBenefitData[] benefitList { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        string benefitListJson = System.IO.File.ReadAllText("wwwroot/data/auth-benefits.json");
+        benefitList = Newtonsoft.Json.JsonConvert.DeserializeObject<AuthBenefitData[]>(benefitListJson);
+    }
+}
+

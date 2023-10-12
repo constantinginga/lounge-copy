@@ -1,0 +1,32 @@
+﻿@using API
+@inject ScSoMe.Common.ApiClientFactory apiClientFactory
+
+<MudContainer Class="mx-0 px-0 d-flex align-center justify-space-between">
+    <MudAutocomplete T="string" Label="Member" Margin="MudBlazor.Margin.Dense" Dense=true @bind-Value="result" SearchFunc="@SearchForMember" Variant="Variant.Outlined">
+    </MudAutocomplete>
+    <MudButton OnClick="Select">Select</MudButton>
+</MudContainer>
+
+@code {
+    [EditorRequired]
+    [Parameter]    
+    public EventCallback<MinimalMemberInfo> OnMemberSelected { get; set; }
+
+    private string result;
+    private ICollection<MinimalMemberInfo> hits { get; set; }
+
+    private async Task<IEnumerable<string>> SearchForMember(string term)
+    {
+        var client = apiClientFactory.GetApiClient();
+
+        hits = await client.SearchMembersAsync(term);
+
+        return hits.Select(x => x.Name);
+    }
+
+    private async Task Select()
+    {
+        var callbackValue = hits.SingleOrDefault(x => x.Name == result);
+        await OnMemberSelected.InvokeAsync(callbackValue);
+    }
+}

@@ -1,0 +1,31 @@
+﻿@if (groupToDelete != null)
+{
+    <MudDialog>
+        <DialogContent>
+            <MudText>Are you sure you want to delete @groupToDelete forever?</MudText>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudButton Color="MudBlazor.Color.Success" OnClick="Submit">Yes</MudButton>
+        </DialogActions>
+    </MudDialog>
+}
+
+@code {
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter]
+    public string groupToDelete { get; set; }
+
+
+    private async Task Submit()
+    {
+            MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}
+

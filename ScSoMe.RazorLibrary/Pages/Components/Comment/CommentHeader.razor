@@ -1,0 +1,271 @@
+﻿@using Humanizer
+@using System.Text
+@using Microsoft.JSInterop
+@using System.Globalization
+@inject IJSRuntime JsRuntime
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject ScSoMe.Common.ApiClientFactory apiClientFactory
+@inject AppState appState
+@inject IDialogService DialogService
+
+@if (Author != null)
+{
+    <div class="comment-header-container">
+        <MudCardHeader class="mx-3 pt-0 comment-header">
+            <CardHeaderAvatar>
+                @if (string.IsNullOrWhiteSpace(Author.Avatar))
+                {
+                    <MudAvatar Color="MudBlazor.Color.Surface" Size="MudBlazor.Size.Large">@Author.Name[0]</MudAvatar>
+                }
+                else
+                {
+                    @if (Author.Alias.Equals("coach1"))
+                    {
+                        <MudLink Href="@("https://www.startupcentral.dk/coaches/" + Author.Name.Replace(' ', '-'))" Target="_blank">
+                            <MudTooltip Text="Message coach" Placement="MudBlazor.Placement.Top">
+                                <MudBadge Icon="@Icons.Filled.Message" Overlap="true" Color="MudBlazor.Color.Success">
+                                    <MudAvatar Image="@("https://www.startupcentral.dk" + Author.Avatar + "?width=100")" Size="MudBlazor.Size.Large" />
+                                </MudBadge>
+                            </MudTooltip>
+                        </MudLink>
+                    }
+                    else
+                    {
+                        <MudAvatar Image="@("https://www.startupcentral.dk" + Author.Avatar + "?width=100")" Size="MudBlazor.Size.Large" />
+                    }
+                }
+            </CardHeaderAvatar>
+            <CardHeaderContent>
+                @if (Author.Alias.Equals("coach1"))
+                {
+                    <CommentHeaderChip Name="@Author.Name" UserType="Coach" ChipColor="MudBlazor.Color.Success" />
+                }
+                else if (!Author.IsApproved && CurrentUser != null && (CurrentUser.IsAdmin || CurrentUser.Alias.Equals("coach1")))
+                {
+                    <CommentHeaderChip Name="@Author.Name" UserType="Free User" ChipColor="MudBlazor.Color.Default" />
+                }
+                else if (Author.IsAdmin)
+                {
+                    <CommentHeaderChip Name="@Author.Name" UserType="Admin" ChipColor="MudBlazor.Color.Tertiary" />
+                }
+                else
+                {
+                    <CommentHeaderChip Name="@Author.Name" />
+                }
+                @if (DateCreated != DateTimeOffset.MinValue)
+                {
+                    <MudContainer Class="d-flex gap-1 pa-0 align-center">
+                        @*Idk why, but I have to subtract an hour, otherwise it thinks it is in the future
+                            Even though the DateCreated is correct.
+                        *@
+                        <MudText Style="@("font-size: 12px;")" Color="MudBlazor.Color.Primary">
+                            @FormatDate(DateCreated.DateTime.AddHours(-1).Humanize(culture: CultureInfo.GetCultureInfo("en-US")))
+                        </MudText>
+                        @if (DateCreated.CompareTo(DateUpdated) != 0)
+                        {
+                            <MudText Style="@("font-size: 12px;")"> • Edited</MudText>
+                        }
+                        @if (Level == -1)
+                        {
+                            <MudText Style="@("font-size: 12px;")"> ~ @Views views</MudText>
+                        }
+                    </MudContainer>
+                }
+            </CardHeaderContent>
+            <CardHeaderActions>
+                @if (EditingEnabled != null && CurrentUser != null && Author != null)
+                {
+                    <MudMenu Icon="@Icons.Material.Outlined.MoreHoriz" Class="ml-3">
+                        @if (CurrentUser.Id != Author.Id)
+                        {
+                            <MudMenuItem OnTouch="OpenReportDialog" OnClick="OpenReportDialog">Report post</MudMenuItem>
+                        }
+                        @if (Level != -1 && CurrentUser.Id != Author.Id && !CurrentUser.IsAdmin)
+                        {
+
+                        }
+                        else
+                        {
+
+                            @if (CurrentUser.Id == Author.Id || CurrentUser.IsAdmin)
+                            {
+                                if (apiClientFactory.DeviceType.Equals("iOS", StringComparison.InvariantCultureIgnoreCase))
+                                {
+                                    <MudMenuItem OnTouch="EditMessage" OnClick="EditMessage">Edit</MudMenuItem>
+                                    <MudMenuItem OnTouch="DeleteMessage" OnClick="DeleteMessage">Delete</MudMenuItem>
+                                }
+                                else
+                                {
+                                    <MudMenuItem OnClick="EditMessage">Edit</MudMenuItem>
+                                    <MudMenuItem OnClick="DeleteMessage">Delete</MudMenuItem>
+                                }
+                            }
+                            @if (CurrentUser.Id != Author.Id)
+                            {
+                                if (apiClientFactory.DeviceType != null && apiClientFactory.DeviceType.Equals("ios", StringComparison.InvariantCultureIgnoreCase))
+                                {
+                                    <MudMenuItem OnClick="BlockUser" OnTouch="BlockUser">Block user</MudMenuItem>
+                                    <MudMenuItem OnClick="OpenReportUserDialog" OnTouch="OpenReportUserDialog">Report user</MudMenuItem>
+                                }
+                                else
+                                {
+                                    <MudMenuItem OnClick="BlockUser">Block user</MudMenuItem>
+                                    <MudMenuItem OnClick="OpenReportUserDialog">Report user</MudMenuItem>
+                                }
+                            }
+                            @if (Level == -1)
+                            {
+                                <MudMenuItem OnTouch="CopyToClipboard" OnClick="CopyToClipboard">Copy post link</MudMenuItem>
+                            }
+                        }
+                    </MudMenu>
+                }
+            </CardHeaderActions>
+        </MudCardHeader>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public API.MemberInfo? Author { get; set; }
+    [Parameter]
+    public EventCallback OnDelete { get; set; }
+    [Parameter]
+    public bool? EditingEnabled { get; set; }
+    [Parameter]
+    public EventCallback<bool> OnEditingEnabledChanged { get; set; }
+    [Parameter]
+    public DateTimeOffset DateCreated { get; set; }
+    [Parameter]
+    public DateTimeOffset DateUpdated { get; set; }
+    [Parameter]
+    public int Level { get; set; }
+    [Parameter]
+    public long? PostId { get; set; }
+    private bool _reportingEnabled { get; set; }
+    public API.MemberInfo? CurrentUser { get; set; }
+    public int? Views { get; set; } = null;
+    public API.ScSoMeApi? client { get; set; }
+    private const string APP_URI = "app://0.0.0.0/";
+    private const string NEW_LOUNGE_URI = "https://www.startupcentral.dk/lounge/";
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        client = apiClientFactory.GetApiClient();
+        CurrentUser = appState.CurrentUser;
+        ConfigureSnackbar();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Level == -1)
+        {
+            this.Views = await client.GetPostSeenAsync(this.PostId.Value);
+        }
+    }
+
+    private async Task DeleteMessage()
+    {
+        await OnDelete.InvokeAsync();
+    }
+
+    private async Task EditMessage()
+    {
+        await OnEditingEnabledChanged.InvokeAsync((bool)!EditingEnabled);
+    }
+
+    private void OpenReportDialog()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var parameters = new DialogParameters();
+        parameters.Add("MsgId", PostId);
+        DialogService.Show<ReportDialog>($"Report {((Level == -1) ? "post" : "comment")} for inappropriate content", parameters, options);
+    }
+
+    private void OpenReportUserDialog()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var parameters = new DialogParameters();
+        parameters.Add("ReportedUser", Author);
+        DialogService.Show<ReportDialog>($"Report {Author.Name}", parameters, options);
+    }
+
+    private void BlockUser()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var parameters = new DialogParameters();
+        parameters.Add("UserId", Author.Id);
+        DialogService.Show<BlockUserDialog>("Are you sure?", parameters, options);
+    }
+
+    private string DirectLink
+    {
+        get
+        {
+            var split = SplitUrl(NavigationManager.Uri);
+            var newUrl = NEW_LOUNGE_URI + split[0] + "/" + split[1];
+            if (NavigationManager.Uri.ToString().EndsWith(PostId.Value.ToString("D")))
+                return newUrl;
+            return $"{newUrl}/{PostId}";
+        }
+    }
+
+    private string[] SplitUrl(string url)
+    {
+        var newUrl = url.Replace(APP_URI, "");
+        string del = string.Empty;
+
+        if (newUrl.Contains("/"))
+        {
+            del = "/";
+        }
+        string[] splitUrl = newUrl.Split(del.ToCharArray());
+        return splitUrl;
+    }
+
+    private async Task CopyToClipboard()
+    {
+        await JsRuntime.InvokeVoidAsync("copyToClipboard", DirectLink);
+        Snackbar.Clear();
+        Snackbar.Add("Link copied to clipboard", Severity.Success);
+    }
+
+    private void ConfigureSnackbar()
+    {
+        Snackbar.Configuration.PreventDuplicates = true;
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomLeft;
+        Snackbar.Configuration.VisibleStateDuration = 2000;
+        Snackbar.Configuration.HideTransitionDuration = 400;
+        Snackbar.Configuration.ShowTransitionDuration = 400;
+    }
+
+    // this is stupid, replace later
+    private string FormatDate(string date)
+    {
+        StringBuilder sb = new StringBuilder(date);
+        sb.Replace("from now", "");
+        sb.Replace("ago", "");
+        sb.Replace("one", "1");
+        sb.Replace("hours", "h");
+        sb.Replace("hour", "h");
+        sb.Replace("seconds", "s");
+        sb.Replace("second", "s");
+        sb.Replace("minutes", "min");
+        sb.Replace("minute", "min");
+        sb.Replace("days", "d");
+        sb.Replace("day", "d");
+        sb.Replace("months", "mo");
+        sb.Replace("month", "mo");
+        sb.Replace("years", "y");
+        sb.Replace("year", "y");
+        sb.Replace("an", "1");
+        sb.Replace("a", "1");
+        sb.Replace(" ", "");
+        sb.Replace("yesterd", "yesterday");
+        sb.Replace("1sfromnow", "now");
+
+        return sb.ToString();
+    }
+}

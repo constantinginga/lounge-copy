@@ -1,0 +1,20 @@
+﻿@inherits ErrorBoundary
+
+@if (CurrentException is null)
+{
+    @ChildContent
+}
+else if (ErrorContent is not null)
+{
+    @foreach (var line in CurrentException.StackTrace.Split(Environment.NewLine))
+    {
+        <p>
+            @line
+        </p>
+    }
+    @ErrorContent(CurrentException)
+}
+else
+{
+    <div class="my-custom-error-ui">Oh no, there was a problem!</div>
+}

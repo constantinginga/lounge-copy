@@ -1,0 +1,77 @@
+﻿@using Microsoft.AspNetCore.SignalR.Client;
+@inject ScSoMe.Common.ApiClientFactory apiClientFactory
+@inject NavigationManager NavigationManager
+@inject AppState AppState
+
+<div>
+    <MudContainer Class="m-0 p-0 d-flex align-center gap-2">
+        
+            Messages
+       
+        @if (outstandingMessages > 0)
+        {
+            <MudContainer class="m-0 p-0 new-messages-counter">@outstandingMessages</MudContainer>
+        }
+    </MudContainer>
+</div>
+
+@code {
+
+    private int outstandingMessages;
+    private bool newMessages = false;
+    public API.ScSoMeApi? client { get; set; }
+    public HubConnection? hubConnection;
+    public static API.MemberInfo CurrentUser { get; set; }
+    
+
+    protected override async Task OnInitializedAsync()
+    {
+       
+        client = apiClientFactory.GetApiClient();
+        // reading outstanding messages and showing a notification dot
+        if (AppState.CurrentUser != null)
+        {
+            CurrentUser = AppState.CurrentUser;
+            outstandingMessages = await client.GetTotalUnreadMessageCountAsync(CurrentUser.Id);
+        }
+        if (outstandingMessages > 0)
+        {
+            newMessages = true;
+        }
+
+        // hub for real time notifications
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavigationManager.ToAbsoluteUri("https://startupcentral.dk/lounge/notificationshub"))
+            .Build();
+
+
+        await hubConnection.StartAsync();
+        if (hubConnection.State == HubConnectionState.Disconnected)
+        {
+            hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavigationManager.ToAbsoluteUri("https://groups.startupcentral.dk/notificationshub"))
+            .Build();
+            await hubConnection.StartAsync();
+        }
+
+        hubConnection.On<string, int>("Notify", (senderName,notification) =>
+        {
+            CurrentUser = AppState.CurrentUser;
+            if (!senderName.Equals(CurrentUser.Name) && notification == -1)
+            {
+                outstandingMessages++;
+            }
+
+            if (notification >= 0)
+            {
+                outstandingMessages = notification;
+            }
+
+            StateHasChanged();
+        });
+
+        StateHasChanged();
+        //await hubConnection.StartAsync();
+
+    }
+}

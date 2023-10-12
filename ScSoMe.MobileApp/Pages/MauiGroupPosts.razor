@@ -1,0 +1,11 @@
+﻿@page "/groups/{groupName}"
+@page "/groups/{groupName}/{selectedPostId:long}"
+
+<GroupPosts GroupName="@groupName" SelectedPostId="@selectedPostId"></GroupPosts>
+
+@code {
+    [Parameter]
+    public string groupName { get; set; } = "Lounge";
+    [Parameter]
+    public long? selectedPostId { get; set; }
+}

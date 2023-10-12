@@ -1,0 +1,449 @@
+﻿
+@using Microsoft.AspNetCore.Components.Web
+@namespace ScSoMe.BlazorServer.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@inject ScSoMe.Common.ApiClientFactory ApiClientFactory
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    @{
+        var lastRouteValue = this.Context.Request.RouteValues.Values.Last() + "";
+        if (!string.IsNullOrWhiteSpace(lastRouteValue) && ApiClientFactory.MemberId == 0)
+        {
+            var values = lastRouteValue.Split('/');
+            if (values.Length == 3 && values[0].ToLower().Equals("groups"))
+            {
+                if (long.TryParse(values[2], out long postId))
+                {
+                    var client = ApiClientFactory.GetApiClient();
+                    try
+                    {
+                        var seo = client.GetOpenGraphForPostAsync(postId).GetAwaiter().GetResult();
+
+                        <meta property="og:image" content="@seo.Image" />
+                        <meta property="og:title" content="@seo.Title" />
+                        <meta property="og:description" content="@seo.Description" />
+                        <meta property="og:updated_time" content="@seo.UnixTime" />
+                    }
+                    catch (Exception notFound)
+                    {
+                        // ignore
+                    }
+                }
+            }
+        }
+        else
+        {
+            <meta property="og:image" content="http://startupcentral.dk/media/kx0ndhuq/seo-img.png" />
+            <meta property="og:title" content="Startup Lounge">
+        }
+    }
+
+    <base href="~/" />
+    <link rel="apple-touch-icon" href="/media/apple-touch-icon.png" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css" integrity="sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.quilljs.com/1.3.6/quill.snow.css" />
+    <link rel="stylesheet" href="https://cdn.quilljs.com/1.3.6/quill.bubble.css" />
+    <link rel="stylesheet" href="https://rawgit.com/amka/quill-focus/master/src/focus.css">
+    <link rel="stylesheet" href="_content/MudBlazor/MudBlazor.min.css" />
+    <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="css/quill.mention.min.css" />
+    <link rel="stylesheet" href="css/site.css" />
+    <link rel="stylesheet" href="ScSoMe.BlazorServer.styles.css" />
+    <link rel="stylesheet" href="_content/Blazorise/blazorise.css" />
+    <link rel="stylesheet" href="_content/Blazorise.Bootstrap/blazorise.bootstrap.css" />
+    <link rel="stylesheet" href="css/embedded-link.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+    <style>
+        .emoji_completions,
+        .ql-bubble .ql-tooltip {
+            z-index: 1;
+        }
+
+        .ql-tooltip {
+            left: 0 !important;
+        }
+
+        .ql-video {
+            height: 400px;
+        }
+
+        .ql-editor > p > img {
+            height: 100%;
+            max-width: 250px;
+        }
+
+        .reply-emoji-button {
+            margin-left: -25px;
+        }
+
+        .ql-bubble {
+            border-bottom: 2px solid #47b2b2;
+        }
+
+        .search-highlight {
+            background-color: #BBE1E1;
+            padding: .2rem;
+            border-radius: .25rem;
+        }
+
+        .attached-files {
+            margin: .5rem 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+        }
+
+            .attached-files > img {
+                max-width: 18rem;
+            }
+
+        @@media only screen and (max-width: 700px) {
+            .attached-files > video {
+                width: 100%;
+            }
+
+            .ql-editor {
+                padding: 0 !important;
+            }
+        }
+
+        .sb-download-container {
+            display: flex;
+            gap: 1.5rem;
+            max-width: 125px;
+            align-items: center;
+            margin: 0 auto;
+        }
+
+            .sb-download-container > a {
+                width: 100%;
+            }
+
+                .sb-download-container > a > img {
+                    width: 100%;
+                    height: auto;
+                }
+
+        .sb-text {
+            font-size: 1.4rem;
+            text-align: center;
+            margin-bottom: .5rem;
+        }
+
+        /*center paylike popup*/
+        .paylike > .payment {
+            height: 100% !important;
+            justify-content: center !important;
+        }
+
+            .paylike > .payment > .close {
+                color: #000 !important;
+                top: 2rem !important;
+            }
+
+        .mud-nav-item > .mud-nav-link {
+            text-decoration: none;
+        }
+
+        .new-post-mobile {
+            margin-bottom: 1rem;
+        }
+
+        .new-post-mobile > .ql-container > .ql-editor {
+            height: 300px;
+            padding: .5rem 1rem !important;
+            font-size: 16px;
+        }
+
+        .ql-editor {
+            padding: .5rem 1rem !important;
+        }
+
+            .ql-editor::before {
+                left: auto !important;
+                right: auto !important;
+            }
+
+        .mobile-post-dialog {
+            position: relative;
+        }
+
+            .mobile-post-dialog > .outline-none {
+                position: relative;
+                height: 100%;
+            }
+
+                .mobile-post-dialog > .outline-none > .mud-dialog-actions {
+                    position: absolute;
+                    bottom: 0;
+                    right: 0;
+                }
+
+                .mobile-post-dialog > .outline-none > .mud-dialog-content > .new-post-mobile > .ql-toolbar > .ql-formats > .ql-picker {
+                    font-size: 18px;
+                }
+
+                .mobile-post-dialog > .outline-none > .mud-dialog-content > .new-post-mobile > .ql-toolbar > .ql-formats > button {
+                    height: 28px;
+                    width: 32px;
+                }
+
+        .mud-nav-link-text {
+            font-family: 'Poppins';
+        }
+
+        .mud-input.mud-input-outlined:focus-within .mud-input-outlined-border {
+            border-color: #3F3D56 !important;
+        }
+
+        .mud-input:focus-within ~ label.mud-input-label.mud-input-label-inputcontrol {
+            color: #3F3D56 !important;
+        }
+
+        .mud-nav-link.active,
+        .mud-nav-link:hover:not(.mud-nav-link-disabled) {
+            color: inherit !important;
+            background-color: inherit !important;
+        }
+
+        .mud-nav-link.active > .mud-nav-link-text > div > .mud-container > .group-txt,
+        .mud-nav-link.active > .mud-nav-link-text,
+        .mud-nav-link:hover:not(.mud-nav-link-disabled) > .mud-nav-link-text,
+        .mud-nav-link:hover:not(.mud-nav-link-disabled) > .mud-nav-link-text > div > .mud-container > .group-txt {
+            font-weight: 600;
+        }
+
+        .attached-media-container {
+            display: block;
+            cursor: pointer;
+            height: fit-content;
+            width: fit-content;
+            margin: 0 auto;
+            justify-content: center;
+        }
+
+        .attached-media-img {
+            max-width: 350px;
+        }
+
+        @@media only screen and (max-width: 700px) {
+            .attached-media-img {
+            max-width: 100%;
+        }
+        }
+
+        .attached-media-video {
+            max-width: 100%;
+            cursor: auto;
+        }
+
+        .item-description {
+            margin-bottom: .5rem;
+        }
+
+        .item-description:last-child {
+            margin-bottom: 0;
+        }
+
+        .item-description-benefits {
+            margin-bottom: .5rem;
+        }
+
+        .item-description-benefits:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+
+    <component type="typeof(HeadOutlet)" render-mode="ServerPrerendered" />
+</head>
+<body>
+    @RenderBody()
+
+    <div id="blazor-error-ui">
+        <environment include="Staging,Production">
+            An error has occurred. This application may no longer respond until reloaded.
+        </environment>
+        <environment include="Development">
+            An unhandled exception has occurred. See browser dev tools for details.
+        </environment>
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+
+    @*for attaching files*@
+    @*<input id="fileId" type="file" accept=".jpg, .jpeg, .png, .svg, .mp4, .mov, .wav, .mkv, .gif, .avi, .wmv, .avi" hidden />*@
+
+    @*<div id="components-reconnect-modal"></div>*@
+    <script>window.getWindowDimensions = function () {
+            return {
+                Width: window.innerWidth,
+                Height: window.innerHeight
+            }
+        };
+        function preventFocus() {
+            var ae = document.activeElement;
+            setTimeout(function () { ae.focus() }, 1);
+        };
+
+        window.copyToClipboard = function (txt) {
+            navigator.clipboard.writeText(txt);
+        };
+
+        window.onscroll = function () {
+            // bottom of the page
+            if (window.scrollInfoService != null && (window.innerHeight + window.scrollY) >= document.body.offsetHeight)
+                window.scrollInfoService.invokeMethodAsync('OnScroll', window.pageYOffset);
+        }
+
+        window.RegisterScrollInfoService = (scrollInfoService) => {
+            window.scrollInfoService = scrollInfoService;
+        }
+
+        window.addEventListener('click', e => {
+            let popup = document.querySelector('.emoji-popup-opened');
+            let emContainer = document.querySelectorAll('.emoji-btn-container');
+            console.log(emContainer);
+            emContainer.forEach(em => {
+                if (popup) {
+                    console.log(e.target.tagName);
+                    if (em &&
+                        !e.target.isEqualNode(em)) {
+                        let emojiBtn = em.childNodes[1];
+                        if (emojiBtn) emojiBtn = emojiBtn.childNodes[3];
+                        let searchInContainer = document.querySelector('.emoji-search-field');
+                        if (searchInContainer) {
+                            searchInContainer = searchInContainer.firstChild.childNodes[2].firstChild;
+                        }
+                        if (emojiBtn && !e.target.isEqualNode(emojiBtn) &&
+                            !e.target.isEqualNode(searchInContainer) &&
+                            !e.target.isEqualNode(emojiBtn.firstChild.childNodes[1]) &&
+                            e.target.tagName.toLowerCase() != 'path' && emojiBtn.classList.contains('mud-tertiary-text')) {
+                            emojiBtn.click();
+                        }
+                    }
+                }
+            });
+        });</script>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.min.js" integrity="sha384-VHvPCCyXqtD5DqJeNxl2dtTyhF78xXNXdkwX1CZeRusQfRKp+tA7hAShOK/B/fQ2" crossorigin="anonymous"></script>
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script src="https://unpkg.com/quill-magic-url@3.0.0/dist/index.js"></script>
+    <script src="https://rawgit.com/amka/quill-focus/master/src/focus.js"></script>
+    <script src="_framework/blazor.server.js"></script>
+    <script src="_content/Blazor-Analytics/blazor-analytics.js"></script>
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+    <script src="_content/BlazorAnimate/blazorAnimateInterop.js"></script>
+    
+    @*<script src="https://startupcentral.dk/scripts/LoungeScripts/external-link-popup.js"></script>*@
+    <script>
+        //window.handleExternalLinks = function (text) {
+        //    console.log("handleExternalLinks called with: " + text);
+        //    const regex = /<a\s+(?:[^>]*?\s+)?href=(["'])(https?:\/\/[^"']+)["'][^>]*>/i;
+        //    let newHTML = text;
+        //    let match;
+        //    while (match = regex.exec(newHTML)) {
+        //        const isExternal = isExternalLink(match[2]);
+        //        const linkClass = isExternal ? 'ext-link' : '';
+        //        const onClick = isExternal ? "if (confirm('Are you sure you want to leave this page?')) {window.location.href = '" + match[2] + "';}" : "";
+        //        const returnVal = '<a href="' + match[2] + '" class="' + linkClass + '" onclick="' + onClick + '">';
+        //        console.log(returnVal);
+        //        newHTML = newHTML.slice(0, match.index) + returnVal + newHTML.slice(match.index + match[0].length);
+        //        regex.lastIndex = match.index + returnVal.length;
+        //        console.log("in while loop");
+        //    }
+        //    console.log("IN JS function end: " + newHTML);
+        //    return newHTML;
+        //};
+
+        //function isExternalLink(href) {
+        //    console.log('check external link');
+        //    const linkhn = href.hostname.split('.').reverse();
+        //    const linkHref = linkhn[1] + '.' + linkhn[0];
+        //    const domainhn = window.location.hostname.split('.').reverse();
+        //    const domainHref = domainhn[1] + '.' + domainhn[0];
+        //    return !href.match(/^mailto\:/) && !href.match(/^tel\:/) && linkHref !== domainHref;
+        //}
+
+  </script>
+
+    @*    <script src="/js/quill-emoji.js"></script>
+    *@
+    <script src="https://startupcentral.dk/scripts/LoungeScripts/quill-emoji.js"></script>
+
+    @*    <script src="/js/quill.mention.min.js"></script>
+    *@
+    <script src="https://startupcentral.dk/scripts/LoungeScripts/quill.mention.min.js"></script>
+
+    <script src="https://unpkg.com/quill-magic-url@3.0.0/dist/index.js"></script>
+    @*    <script src="/js/embedded.js"></script>
+    *@
+    <script src="https://startupcentral.dk/scripts/LoungeScripts/embedded.js"></script>
+    @*<script src="/js/BlazorQuill.js"></script>*@
+
+    <script src="https://startupcentral.dk/scripts/LoungeScripts/BlazorQuill.js"></script>
+    @*<script src="https://cdn.jsdelivr.net/gh/T-vK/DynamicQuillTools@master/DynamicQuillTools.js"></script>*@
+    @*<script src="/js/VirtualScroll.js"></script>*@
+    <script src="https://sdk.paylike.io/10.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+        const paylike = Paylike({ key: '098ced7a-44aa-4411-a736-48758cc79fdc' });
+
+        window.pay = function (memberId, memberKey, subscriptionPeriod, promocode) {
+             
+            console.log("IN pay() method: " + promocode);
+
+
+            paylike.pay({
+                //test: true,
+                unplanned: { merchant: true },
+            }, function (err, r) {
+                $.ajax({
+                    type: "POST",
+                    crossDomain: true,
+                    url: "https://www.startupcentral.dk/umbraco/api/upodiapi/SavePaymentLounge",
+                    data: {
+                        MemberNodeId: memberId,
+                        UserId: memberKey,
+                        Token: r.transaction.id,
+                        PromoKode: promocode,
+                        SubscriptionType: subscriptionPeriod
+                    },
+                    success: function (data) {
+                        DotNet.invokeMethodAsync('ScSoMe.RazorLibrary', 'PayCallback', JSON.stringify(data))
+                            .then(function (response) {
+                                // Return the response to the server-side code
+                                return response;
+                            })
+                            .catch(function (error) {
+                                console.error("Error during PayCallback:", error);
+                                throw error; // Throw the error to the server-side code
+                            });
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error during AJAX request:", error);
+                        console.error("And the status is: " + status);
+                        console.error("xhr is " + xhr);
+                        throw error; // Throw the error to the server-side code
+                    }
+                });
+            });
+        }</script>
+    <script src="https://startupcentral.dk/scripts/LoungeScripts/password-strength.js"></script>
+    <script>window.checkPasswordStrength = function (input) {
+            return testStrength(input);
+        }</script>
+</body>
+</html>

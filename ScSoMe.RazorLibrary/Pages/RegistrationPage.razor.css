@@ -1,0 +1,33 @@
+﻿.rocket-logo-container {
+    display: flex;
+    justify-content: center;
+    margin: 2rem 0;
+}
+
+.register-title-container {
+    margin-bottom: 2rem;
+}
+
+::deep .register-title {
+    font-size: 2rem;
+    color: #47B2B2;
+}
+
+::deep .register-container {
+    border: 2px solid #CCC9C6;
+}
+
+::deep .register-footer {
+    background-color: #DAF0F0;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+::deep .register-btn {
+    background-color: #47B2B2;
+    color: #fff;
+    height: 3rem;
+    text-transform: capitalize;
+    font-size: 1.2rem;
+    font-weight: 400;
+}

@@ -1,0 +1,377 @@
+﻿@page "/chat"
+@using Microsoft.AspNetCore.SignalR.Client
+@using Microsoft.AspNetCore.Components.Forms
+@using API
+@using Blazorise.Extensions
+@using Margin = MudBlazor.Margin
+@inject IJSRuntime JSRuntime
+@using Microsoft.JSInterop;
+@using Size = MudBlazor.Size
+@using BlazorAnimate
+@using Color = MudBlazor.Color
+@using Breakpoint = MudBlazor.Breakpoint
+@implements IAsyncDisposable
+@inject AppState AppState
+@inject NavigationManager NavManager
+@inject IDialogService DialogService
+@inject ApiClientFactory ApiClientFactory
+
+
+
+<MudLayout>
+    <MudPaper Elevation="0" Style="background-color: #f2f2f2; display:flex;">
+        @if (_processing)
+        {
+            <MudProgressCircular Class="mt-3 mr-3" Size="MudBlazor.Size.Small" Indeterminate="true" />
+        }
+        else
+        {
+           
+            @if ((wd != null && wd.Width < 500 && !openedMessagingSection && _areWeSearching) || (wd != null && wd.Width > 500))
+            {
+                <MudPaper Elevation="0" Class="mr-1" Style="min-width:320px; max-width:400px; flex:1; background-color: #f2f2f2;">
+                <Animate Animation="Animations.FadeIn" Duration="TimeSpan.FromSeconds(0.5)">
+                    <div style="height:80px; width:auto; position:sticky; top: 0; background-color: #f2f2f2; z-index: 999">
+                        <MudText Style="font-weight:500; float:left;" Class="mt-4 ml-4 mb-4">Message</MudText>
+                        @*<MudIconButton Class="mb-2 mt-2 mr-4" Style="float:right" OnClick="WeGroupingBoys" Icon="@Icons.Filled.GroupWork"></MudIconButton>*@
+                        <MudIconButton Class="mb-2 mt-2 mr-4" Style="float:right" OnClick="WeSearchingBoys" Icon="@Icons.Filled.BorderColor"></MudIconButton>
+                    </div>
+                    <div>
+                        <MudPaper Style="background-color: #f2f2f2;" Class="disable-scrollbars flex-column" Elevation="0" Height="calc(100vh - 144px)"
+                          Square="true" Width="100%">
+                            <MudVirtualize  Context="item" Items="chatMembersInvited">                         
+                                <MudPaper Elevation="0" Style="background-color: #f2f2f2" Outlined="false" Square="true" Height="110px" Width="100%">
+                                    <MudDivider Style="height:1px; background-color:black"></MudDivider>
+                                    <MudButton Style="width:100%; height: 110px" OnClick="@(() => OpenSavedChat(item.groupUserIsIn, item.groupDisplayName, item.avatar, item.memberName, item.newDisplayName))">
+                                        <MudBadge Style="left: 0; position: absolute" Color="Color.Transparent" Overlap="true">
+                                            @if (item.avatar != null)
+                                            {
+                                                <MudAvatar Class="mr-2" Style="height: 80px; width: 80px; float:left; left: 10px" Image="@("https://www.startupcentral.dk" + item.avatar + "?width=100")" Alt="User avatar" />
+                                            }
+                                            else
+                                            {
+                                                <MudAvatar Class="mr-2" Style="height: 80px; width: 80px; float:left; left: 10px" Color="MudBlazor.Color.Surface" Alt="User avatar">@item.memberName[0]</MudAvatar>
+                                            }
+                                        </MudBadge>
+                                        @if (item.unreadMessages != 0)
+                                        {
+                                            <MudContainer>
+                                                <MudText Class="pl-16 ml-2" Style="float: left; text-overflow: ellipsis; overflow: hidden;
+                                                                  white-space: nowrap; font-size: 14px; max-width: 50ch; font-weight:800">
+                                                    @(@item.newDisplayName.IsNullOrEmpty() ? @item.memberName : @item.newDisplayName)
+                                                </MudText>
+                                                <MudText Style="float: right; font-size: 14px; font-weight:bold">
+                                                    @item.latestGroupMessageInfo.SentDate.ToString("MMM, dd")
+                                                </MudText>
+                                                <br />
+                                                <MudText Class="pl-16 ml-2" Style="float: left; font-size: 12px; text-overflow: ellipsis;
+                                                    max-width: 40ch; overflow: hidden; white-space: nowrap; overflow-wrap: break-word; font-weight:800">
+                                                    @item.latestGroupMessageInfo.Message
+                                                </MudText>
+                                            </MudContainer>
+                                        }
+                                        else
+                                        {
+                                            <MudContainer>
+                                                <MudText Class="pl-16 ml-2" Style="float: left; text-overflow: ellipsis; overflow: hidden;
+                                                                  white-space: nowrap; font-size: 14px; max-width: 50ch">
+                                                    @(@item.newDisplayName.IsNullOrEmpty() ? @item.memberName : @item.newDisplayName)
+                                                </MudText>
+                                                <MudText Style="float: right; font-size: 14px">
+                                                    @item.latestGroupMessageInfo.SentDate.ToString("MMM, dd")
+                                                </MudText>
+                                                <br />
+                                                <MudText Class="pl-16 ml-2" Style="float: left; font-size: 12px; text-overflow: ellipsis;
+                                                    max-width: 40ch; overflow: hidden; white-space: nowrap; overflow-wrap: break-word;">
+                                                    @item.latestGroupMessageInfo.Message
+                                                </MudText>
+                                            </MudContainer>
+                                        }
+                                    </MudButton>
+                                </MudPaper>
+                        </MudVirtualize>                   
+                            <MudVirtualize Context="item" Items="allGroupsUserIsIn">
+                                <MudPaper Elevation="0" Style="background-color: #f2f2f2" Outlined="false" Square="true" Height="110px" Width="100%">
+                                    <MudDivider Style="height:1px; background-color:black"></MudDivider>
+                                    <MudButton  Style="width:100%; height: 110px" OnClick="@(() => OpenSavedChat(item.groupUserIsIn, item.groupDisplayName, item.avatar, item.memberName, item.newDisplayName))">
+                                        <MudBadge Style="left: 0; position: absolute" Color="Color.Transparent" Overlap="true">
+                                            @if (item.avatar != null)
+                                            {
+                                                <MudAvatar Class="mr-2" Style="height: 80px; width: 80px; float:left; left: 10px" Image="@("https://www.startupcentral.dk" + item.avatar + "?width=100")" Alt="User avatar" />
+                                            }
+                                            else
+                                            {
+                                                <MudAvatar Class="mr-2" Style="height: 80px; width: 80px; float:left; left: 10px" Color="Color.Surface" Alt="User avatar">@item.memberName[0]</MudAvatar>
+                                            }
+                                        </MudBadge>
+                                        <MudContainer>
+
+                                            @if (item.unreadMessages != 0)
+                                            {
+                                                <MudText Class="pl-16 ml-2" Style="float: left; text-overflow: ellipsis; overflow: hidden;
+                                                                  white-space: nowrap; font-size: 14px; max-width: 50ch; font-weight:800">
+                                                    @(@item.newDisplayName.IsNullOrEmpty() ? @item.memberName : @item.newDisplayName)
+                                                </MudText>
+                                                <MudText Style="float: right; font-size: 14px; font-weight:bold">
+                                                    @item.latestGroupMessageInfo.SentDate.ToString("MMM, dd")
+                                                </MudText>
+                                                <br />
+                                                <MudText Class="pl-16 ml-2" Style="float: left; font-size: 12px; text-overflow: ellipsis;
+                                                    max-width: 40ch; overflow: hidden; white-space: nowrap; font-weight:800">
+                                                    @item.latestGroupMessageInfo.Message
+                                                    @* @_lastMessage *@
+                                                </MudText>
+
+                                            }
+                                            else
+                                            {
+                                                <MudText Class="pl-16 ml-2" Style="float: left; text-overflow: ellipsis; overflow: hidden;
+                                                                  white-space: nowrap; font-size: 14px; max-width: 50ch;">
+                                                    @(@item.newDisplayName.IsNullOrEmpty() ? @item.memberName : @item.newDisplayName)
+                                                </MudText>
+                                                <MudText Style="float: right; font-size: 14px">
+                                                    @item.latestGroupMessageInfo.SentDate.ToString("MMM, dd")
+                                                </MudText>
+                                                <br />
+                                                <MudText Class="pl-16 ml-2" Style="float: left; font-size: 12px; text-overflow: ellipsis;
+                                                    max-width: 40ch; overflow: hidden; white-space: nowrap; ">
+                                                    @item.latestGroupMessageInfo.Message
+                                                    @* @_lastMessage *@
+                                                </MudText>
+                                            }
+                                        </MudContainer>
+
+                                    </MudButton>
+                                </MudPaper>
+                            </MudVirtualize>                          
+                        </MudPaper>
+                    </div>
+                </Animate>
+                </MudPaper>
+                }
+            @if ((wd != null && wd.Width < 500 && openedMessagingSection) || (wd != null && wd.Width > 500))
+            {
+                <MudPaper Elevation="0" Style="min-width:320px; flex:1; background-color: #f2f2f2;">
+                <Animate Animation="Animations.FadeIn" Duration="TimeSpan.FromSeconds(0.5)">
+                    <MudPaper Class="overflow-auto flex-column" Elevation="0" Style="background-color: #f2f2f2">
+                        <div style="height:fit-content;min-height:80px; background-color: #f2f2f2">
+                            @if (!_areWeSearching)
+                            {
+                                <MudAvatarGroup Class="mt-2" Style="float: left" Max="2" Spacing="7">
+                                    @if (receiverAvatar != null)
+                                    {
+                                        <MudAvatar Class="mr-2" Style="height: 60px; width: 60px; float:left" Image="@("https://www.startupcentral.dk" + receiverAvatar + "?width=100")" Alt="User avatar" />
+                                    }
+                                    else
+                                    {
+                                        <MudAvatar Class="mr-2" Style="height: 60px; width: 60px; float:left" Color="MudBlazor.Color.Surface" Alt="User avatar">@receiverUsername[0]</MudAvatar>
+                                    }
+                                    @if (AppState.CurrentUser.Avatar != null)
+                                    {
+                                        <MudAvatar Class="mr-2" Style="height: 60px; width: 60px; float:left" Image="@("https://www.startupcentral.dk" + @AppState.CurrentUser.Avatar + "?width=100")" Alt="User avatar" />
+                                    }
+                                    else
+                                    {
+                                        <MudAvatar Class="mr-2" Style="height: 60px; width: 60px; float:left" Color="MudBlazor.Color.Surface" Alt="User avatar">@AppState.CurrentUser.Name[0]</MudAvatar>
+                                    }
+                                </MudAvatarGroup>
+                                <MudPaper Elevation="0" Style="background-color: #f2f2f2" Class="d-flex gap-1 pt-4 pl-2">
+                                    <MudText Style="word-break:break-all">
+                                        @displayedGroupName
+                                    </MudText>
+
+                                    <MudMenu Style="right: 0;" Dense="true" Size="Size.Small" Icon="@Icons.Material.Filled.Settings">
+                                        @*<MudMenuItem>
+                                            <MudIcon Icon="@Icons.Outlined.AccountCircle"></MudIcon>
+                                            Profile
+                                        </MudMenuItem>*@
+                                        <MudMenuItem OnClick="ToggleOpenEditChat">
+                                            <MudIcon Icon="@Icons.Outlined.Edit"></MudIcon>
+                                            Edit
+                                        </MudMenuItem>
+                                        <MudMenuItem OnClick="ToggleOpenDeleteChat">
+                                            <MudIcon Icon="@Icons.Outlined.Delete"></MudIcon>
+                                            Delete
+                                        </MudMenuItem>
+                                    </MudMenu>
+                                </MudPaper>
+
+                            }
+
+                            <MudDialog @bind-IsVisible="_deletePopover" Options="dialogOptions">
+                                <TitleContent>
+                                    Delete
+                                </TitleContent>
+                                <DialogContent>
+                                    <p>Are you sure you want to delete this conversation?</p>
+                                </DialogContent>
+                                <DialogActions>
+                                    <MudButton OnClick="ToggleOpenDeleteChat">Cancel</MudButton>
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="@(() => DeleteChat(groupNameInternal))" Class="px-10">Delete</MudButton>
+                                </DialogActions>
+                            </MudDialog>
+
+                            <MudDialog @bind-IsVisible="_weEditingBoys" Options="dialogOptions">
+                                <TitleContent>
+                                    Edit
+                                </TitleContent>
+                                <DialogContent>
+                                    <p>Write the new name of the chat!</p>
+                                    <MudTextField T="string" @bind-Value="newGroupName" Immediate="true"></MudTextField>
+                                </DialogContent>
+                                <DialogActions>
+                                    <MudButton OnClick="ToggleOpenEditChat">Cancel</MudButton>
+                                    <MudButton Variant="Variant.Filled" Disabled="@(string.IsNullOrEmpty(newGroupName))" Color="Color.Primary" @onclick="@(() => ChangeGroupName(newGroupName))" Class="px-10">Confirm</MudButton>
+                                </DialogActions>
+                            </MudDialog>
+
+                        </div>
+                        @if (_areWeSearching)
+                        {
+                            <MudPaper Elevation="0" Style="background-color: #f2f2f2" MaxWidth="100vh" Height="calc(100vh - 349px)">
+
+                                <MudItem Class="mb-4 pt-9" xs="6">
+                                    <MudText>New message</MudText>
+                                    <MudAutocomplete Margin="Margin.Dense" OpenIcon="" CloseIcon="" T="string"
+                                         Variant="Variant.Outlined" Placeholder="Type a name"
+                                         Style="align-content:center; "
+                                         @bind-Value="@search" SearchFunc="@SearchForUsers">
+                                    </MudAutocomplete>
+                                </MudItem>
+                            </MudPaper>
+
+                            <EditForm Style="max-width:720px" class="mb-4 pt-9" Model="@messageInput" OnValidSubmit="SendNewMessageAsync">
+                                <div>
+                                    <MudTextField @ref="MessageRefSearch" T="string" Class="object-position: bottom" Placeholder="Write a message ..."
+                                      @bind-Value="@messageInput.Message" Immediate="true" Variant="Variant.Outlined" Style="background-color:lightgrey" Lines="2">
+                                    </MudTextField>
+                                </div>
+                                @if (messageInput.Message.IsNullOrEmpty() == false && _weChattingBoys == false && messageInput.Message.IsNullOrEmpty() == _weChattingBoys)
+                                {
+                                    _isChattingAllowed = false;
+                                }
+                                
+                                   
+                            <MudElement Class="mt-2" Style="display:flex; flex-direction:row-reverse; max-width:730px">
+                                        <MudButton ButtonType="MudBlazor.ButtonType.Submit" Style="right: 0; width: 170px"
+                                        Color="Color.Dark" Variant="Variant.Filled" Disabled="@_isChattingAllowed">
+                                            <MudText>Send</MudText>
+                                        </MudButton>
+                                
+                                            <EmojiButtonChat Input="MessageRefSearch"/>
+                                            
+                                            </MudElement>
+                            </EditForm>
+                        }
+                        else
+                        {
+                            <MudList Clickable="false" Style="height:calc(100vh - 285px); overflow: scroll; display: flex; flex-direction: column-reverse; transform-style: preserve-3d">
+                                @foreach (var message in sentMessages)
+                                {
+                                    <MudListItem Class="pt-0 pb-3" Style="position: relative; max-width: 100%;  ">
+
+                                        @if (@message.senderId.Equals(AppState.CurrentUser.Id))
+                                        {
+                                            <MudPaper Style="hyphens: auto; height:fit-content; width:fit-content; float: left;  overflow-wrap: break-word; " MaxWidth="100vh">
+                                                <MudText Style="max-width: 140ch; background-color: #F9F9F9; border-radius: 2px; font-size: 12px;   overflow-wrap: break-word; white-space:pre-wrap" Class="pt-2 pb-2 pl-4 pr-4">
+                                                    @message.message
+                                                </MudText>
+                                            </MudPaper>
+                                        }
+                                        else
+                                        {
+                                            <MudPaper Style="hyphens: auto; background-color: #C2C1C5; height:100%; width:fit-content; float: left;  overflow-wrap: break-word;  white-space:pre-wrap" MaxWidth="100vh">
+                                                <MudText Style="max-width: 140ch; font-size: 12px;  overflow-wrap: break-word" Class="pt-2 pb-2 pl-4 pr-4">
+                                                    @message.message
+                                                </MudText>
+                                            </MudPaper>
+                                        }
+                                    </MudListItem>
+                                    <MudText Style="font-size: 14px" Class="pl-4 pb-0">
+                                        @(@message.senderId.Equals(AppState.CurrentUser.Id) ? "You" : @message.senderName)
+                                        <MudIcon Icon="@Icons.Material.Filled.Lens" Style="font-size: 5px"></MudIcon>
+                                        @(@message.sentDate.ToString("MMM dd, yyyy").Equals(DateTime.Today.ToString("MMM dd, yyyy")) ? "Today, " + @message.sentDate.ToString(("hh:mm tt")) : @message.sentDate.ToString(("MMM dd, yyyy")))
+                                        @if (message.senderId.Equals(AppState.CurrentUser.Id))
+                                        {
+                                            <MudMenu Dense="true" Size="Size.Small" Style="height: 20px" AnchorOrigin="Origin.BottomRight"
+                                 TransformOrigin="Origin.TopLeft" Icon="@Icons.Material.Filled.MoreVert">
+                                                <MudMenuItem @onclick="@(() => DeleteSingleRMessage(message))">
+                                                    <MudIcon Icon="@Icons.Outlined.Delete"></MudIcon>
+                                                    Delete
+                                                </MudMenuItem>
+                                            </MudMenu>
+                                        }
+                                    </MudText>
+                                }
+                                @foreach (var message in messageHistory)
+                                {
+                                    <MudListItem Class="pt-0 pb-3" Style="position: relative; max-width: 100%;  ">
+                                        @if (@message.SenderId.Equals(AppState.CurrentUser.Id))
+                                        {
+                                            <MudPaper Style="hyphens: auto; height:fit-content; width:fit-content; float: left;  overflow-wrap: break-word; " MaxWidth="100vh">
+                                                <MudText Style="max-width: 140ch; background-color: #F9F9F9; border-radius: 2px; font-size: 12px;  overflow-wrap: break-word; white-space:pre-wrap" Class="pt-2 pb-2 pl-4 pr-4">
+                                                    @message.Message
+                                                </MudText>
+                                            </MudPaper>
+                                        }
+                                        else
+                                        {
+                                            <MudPaper Style="hyphens: auto; background-color: #C2C1C5; height:100%; width:fit-content; float: left;  overflow-wrap: break-word;  white-space:pre-wrap" MaxWidth="100vh">
+                                                <MudText Style="max-width: 140ch; font-size: 12px;   overflow-wrap: break-word" Class="pt-2 pb-2 pl-4 pr-4">
+                                                    @message.Message
+                                                </MudText>
+                                            </MudPaper>
+                                        }
+                                    </MudListItem>
+                                    <MudText Style="font-size: 14px" Class="pl-4 pb-0">
+                                        @(@message.SenderId.Equals(AppState.CurrentUser.Id) ? "You" : @message.SenderName)
+                                        <MudIcon Icon="@Icons.Material.Filled.Lens" Style="font-size: 5px"></MudIcon>
+                                        @(@message.SentDate.ToString("MMM dd, yyyy").Equals(DateTime.Today.ToString("MMM dd, yyyy")) ? "Today, " + @message.SentDate.ToString(("hh:mm tt")) : @message.SentDate.ToString(("MMM dd, yyyy")))
+                                        @if (message.SenderId.Equals(AppState.CurrentUser.Id))
+                                        {
+                                            <MudMenu Dense="true" Size="Size.Small" Style="height: 20px" AnchorOrigin="Origin.BottomRight"
+                                 TransformOrigin="Origin.TopLeft" Icon="@Icons.Material.Filled.MoreVert">
+                                                <MudMenuItem @onclick="@(() => DeleteSingleDbMessage(message))">
+                                                    <MudIcon Icon="@Icons.Outlined.Delete"></MudIcon>
+                                                    Delete
+                                                </MudMenuItem>
+                                            </MudMenu>
+                                        }
+                                    </MudText>
+                                }
+                            </MudList>
+                            <EditForm Style="max-width:1080px" Model="@messageInput" OnValidSubmit="SendMessageButtonAction">
+                                <MudTextField @ref="MessageRef" Class="object-position: bottom" AutoFocus="@autofocus" Lines="@inputLines" Style="background-color:lightgrey"
+                                      Immediate="true" @bind-Value="@messageInput.Message" Variant="Variant.Outlined">
+                                    </MudTextField>
+                               
+                            <MudElement Class="mt-2" Style="display:flex; flex-direction:row-reverse; max-width:1090px">
+                                <MudButton ButtonType="MudBlazor.ButtonType.Submit" Style="right: 0; width: 170px"
+                               Color="Color.Dark" Variant="Variant.Filled">
+                                    <MudText>Send</MudText>
+                                </MudButton>
+
+                                <EmojiButtonChat Input="MessageRef" />
+
+                            </MudElement>
+                                </EditForm>
+                        }
+                    </MudPaper>
+                </Animate>
+                </MudPaper>
+            }
+             
+        }
+    </MudPaper>
+</MudLayout>
+<MudDialog @bind-IsVisible="_isTheChatDeletedPopup" Options="dialogOptions">
+    <TitleContent>
+        Chat was deleted
+    </TitleContent>
+    <DialogContent>
+        <p>This chat was deleted by the other user, you can no longer chat here.</p>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="ChatWasDeleted">Close</MudButton>
+    </DialogActions>
+</MudDialog>

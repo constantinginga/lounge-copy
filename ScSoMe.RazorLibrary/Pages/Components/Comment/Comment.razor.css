@@ -1,0 +1,100 @@
+﻿.comment {
+    padding-top: 1rem;
+    /*border-left: 2px solid #9E9E9E;*/
+}
+
+.indent {
+    margin-left: 1.5rem;
+    position: relative;
+}
+
+    .indent::before {
+        content: "";
+        display: block;
+        background-color: #9E9E9E;
+        height: 2px;
+        position: relative;
+        top: 90px;
+        left: -1.5rem;
+        width: 1.5rem;
+    }
+
+.post {
+    border-left: none !important;
+}
+
+@media only screen and (max-width: 400px) {
+    ::deep .comment-btns {
+        width: 100% !important;
+        gap: 0 !important;
+        padding: 0 0.5rem !important;
+        justify-content: space-between;
+    }
+
+    ::deep .toggle-reply-btn {
+        margin-right: 0 !important;
+    }
+
+    ::deep .comment-btns__btn {
+        padding: .5rem !important;
+    }
+}
+
+.mud-card-content {
+    padding-top: .5rem !important;
+    padding-bottom: 0 !important;
+}
+
+.btn-container {
+    display: flex;
+    gap: 0 1rem;
+    align-items: center;
+}
+
+.reply-paper {
+    width: 100%;
+}
+
+::deep .reply-container {
+    height: 75px;
+}
+
+.btn-container > ::deep .save-btn {
+    background-color: #47B2B2;
+    color: #fff;
+}
+
+@media screen and (max-width: 700px) {
+    .reply-paper {
+        width: 80%;
+    }
+}
+
+@media screen and (max-width: 500px) {
+    ::deep .reply-container {
+        margin-left: .5rem !important;
+    }
+
+    ::deep .reply-btn {
+        padding-right: 0;
+    }
+
+    .indent {
+        margin-left: .5rem !important;
+    }
+
+    .indent::before {
+        left: -0.5rem;
+        width: 0.5rem;
+    }
+}
+
+@media only screen and (max-width: 360px) {
+    ::deep .like-btn-container > .like-btn {
+        padding: 0;
+    }
+}
+
+::deep .reply-btn {
+    padding: 0;
+}

@@ -1,0 +1,49 @@
+﻿@inject ScSoMe.Common.ApiClientFactory apiClientFactory
+<div>
+    @{
+        //<MudText Class="m-0 p-0 group-txt" Style="@("font-family: 'Poppins';")">
+        //    @*<MudToggleIconButton Toggled="@IsTrackedGroup" ToggledChanged="@TrackGroup"
+        //Class="@("align-center py-0 pl-0 pr-2")"
+        //Icon="@Icons.Filled.NotificationsOff" Color="@MudBlazor.Color.Surface" Title="turn on"
+        //ToggledIcon="@Icons.Filled.NotificationsActive" ToggledColor="@MudBlazor.Color.Success" ToggledTitle="turn off">
+        //</MudToggleIconButton>*@
+        //    @(NewPosts > 0 ? ("(" + @NewPosts + ") ") : "")@Group.GroupName
+        //</MudText>
+    }
+    <MudContainer Class="m-0 p-0 d-flex align-center gap-2">
+        <MudText Class="m-0 p-0 group-txt">
+            @Group.GroupName
+        </MudText>
+        @if (NewPosts > 0)
+        {
+            <MudContainer class="m-0 p-0 new-post-counter">@NewPosts</MudContainer>
+        }
+    </MudContainer>
+</div>
+
+@code {
+    [EditorRequired]
+    [Parameter]
+    public API.ScGroup Group { get; set; }
+
+    int NewPosts = 0;
+
+    bool IsTrackedGroup = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var client = apiClientFactory.GetApiClient();
+        var setup = await client.NumberOfNewPostsAsync(Group.GroupId);
+        NewPosts = setup.NewPosts;
+        IsTrackedGroup = setup.Tracked;
+        StateHasChanged();
+    }
+
+    private async Task TrackGroup(bool isTracked)
+    {
+        var client = apiClientFactory.GetApiClient();
+        await client.GroupTrackedAsync(Group.GroupId, isTracked);
+        IsTrackedGroup = isTracked;
+        StateHasChanged();
+    }
+    }

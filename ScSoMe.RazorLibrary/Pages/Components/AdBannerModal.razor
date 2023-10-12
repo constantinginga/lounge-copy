@@ -1,0 +1,105 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@inject ApiClientFactory apiClientFactory
+@inject AppState AppState
+
+<MudDialog>
+    <DialogContent>
+        <MudContainer Style="@("max-height: 30rem; overflow-y: auto")">
+            @{
+                if (banners == null)
+                {
+                    if (temp.Count != 0)
+                    {
+                        Console.WriteLine(temp.Count);
+                        for (int i = 0; i < temp.Count; i++)
+                        {
+                            Console.WriteLine("i: " + i);
+                            <MudContainer class="banner-element pb-3">
+                                <MudContainer Class="d-flex align-center gap-4 pa-0">
+                                    <MudTextField T="string" @bind-Value="temp[i].Text" Label="Banner Text" Variant="Variant.Outlined" />
+                                    <MudText>and/or</MudText>
+                                    <MudTextField T="string" @bind-Value="temp[i].ImgUrl" Label="Image URL" Variant="Variant.Outlined" />
+                                </MudContainer>
+                            </MudContainer>
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (API.GroupBanner b in banners)
+                    {
+                        <MudContainer class="banner-element pb-3">
+                            <MudContainer Class="d-flex align-center gap-4 pa-0">
+                                <MudTextField T="string" @bind-Value="b.Text" Label="Banner Text" Variant="Variant.Outlined" />
+                                <MudText>and/or</MudText>
+                                <MudTextField T="string" @bind-Value="b.ImgUrl" Label="Image URL" Variant="Variant.Outlined" />
+                            </MudContainer>
+                        </MudContainer>
+                    }
+                }
+            }
+        </MudContainer>
+        <MudButton StartIcon="@Icons.Filled.Add" OnClick="NewBannerElement">Banner element</MudButton>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="MudBlazor.Color.Primary" OnClick="Submit">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+    [Parameter]
+    public string AdText { get; set; }
+    [Parameter]
+    public string ImgURL { get; set; }
+    [Parameter]
+    public List<API.GroupBanner> banners { get; set; }
+    public List<API.GroupBanner> temp { get; set; }
+    public API.ScSoMeApi client { get; set; }
+    // public int NumOfElements { get; set; }
+
+    public IList<IBrowserFile> files = new List<IBrowserFile>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        client = apiClientFactory.GetApiClient();
+        temp = new List<API.GroupBanner>();
+    }
+
+
+    //private void UploadFiles(InputFileChangeEventArgs e)
+    //{
+    //    foreach (var file in e.GetMultipleFiles())
+    //    {
+    //        files.Add(file);
+    //    }
+    //}
+
+    private void NewBannerElement()
+    {
+        temp.Add(new API.GroupBanner {GroupId = AppState.CurrentGroup, ImgUrl = null, Text = null });
+        // NumOfElements++;
+        StateHasChanged();
+        // temp.Capacity++;
+        // temp.Add(new API.GroupBanner {GroupId = AppState.CurrentGroup, Text = AdText, ImgUrl = ImgURL });
+    }
+
+
+    private async Task Submit()
+    {
+        if (banners != null)
+        {
+            foreach (API.GroupBanner b in banners)
+            {
+                // check if banner is already in the db
+
+                await client.CreateGroupBannerAsync(b);
+            }
+        }
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    void Cancel() => MudDialog.Cancel();
+}

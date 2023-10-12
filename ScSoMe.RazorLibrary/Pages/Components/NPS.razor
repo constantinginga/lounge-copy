@@ -1,0 +1,102 @@
+﻿@inject ScSoMe.Common.ApiClientFactory apiClientFactory
+@inject AppState appState
+
+@code {
+    bool render = false;
+    API.ScSoMeApi client;
+
+    protected override void OnInitialized()
+    {
+        client = apiClientFactory.GetApiClient();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (appState.IsLoggedIn)
+        {
+            render = await client.ShouldShowNpsInputAsync();
+        }
+    }
+}
+
+@if (render)
+{
+    <MudContainer class="my-3 group-post-container d-flex" MaxWidth="MaxWidth.ExtraLarge">
+        <MudContainer Class="p-0 m-0 group-posts" MaxWidth="MaxWidth.Medium">
+            <MudCard Outlined="true" Elevation="0" Class="rounded mt-3 p-4">
+
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudText Class="w-100">
+                            On a scale from 0-10, how likely are you to recommend us to a friend or colleague?
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="12">
+
+                        <div>
+                            <MudContainer class="p-0 m-0 w-fit">
+                                <MudChipSet @bind-SelectedChip="selected" Filter="false" Mandatory="true">
+                                    <MudChip Text="0" Variant=@variant Color="MudBlazor.Color.Primary">0</MudChip>
+                                    <MudChip Text="1" Variant=@variant Color="MudBlazor.Color.Primary">1</MudChip>
+                                    <MudChip Text="2" Variant=@variant Color="MudBlazor.Color.Primary">2</MudChip>
+                                    <MudChip Text="3" Variant=@variant Color="MudBlazor.Color.Primary">3</MudChip>
+                                    <MudChip Text="4" Variant=@variant Color="MudBlazor.Color.Primary">4</MudChip>
+                                    <MudChip Text="5" Variant=@variant Color="MudBlazor.Color.Primary">5</MudChip>
+                                    <MudChip Text="6" Variant=@variant Color="MudBlazor.Color.Primary">6</MudChip>
+                                    <MudChip Text="7" Variant=@variant Color="MudBlazor.Color.Primary">7</MudChip>
+                                    <MudChip Text="8" Variant=@variant Color="MudBlazor.Color.Primary">8</MudChip>
+                                    <MudChip Text="9" Variant=@variant Color="MudBlazor.Color.Primary">9</MudChip>
+                                    <MudChip Text="10" Variant=@variant Color="MudBlazor.Color.Primary">10</MudChip>
+                                </MudChipSet>
+
+                                <MudContainer Class="px-2 py-1 m-0 d-flex justify-space-between">
+                                    <MudText>Not at all likely</MudText>
+                                    <MudText>Extremely likely</MudText>
+                                </MudContainer>
+                            </MudContainer>
+                        </div>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField T="string" @bind-Value="@sugestion" Required="false" Variant="Variant.Text" Label="Do you have an improvement suggestion for us?" Lines="2" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        @*<MudButton Disabled="@disabled" OnClick="@SubmitFeedback">Submit feedback</MudButton>*@
+                        <MudButton OnClick="@SubmitFeedback" Variant="Variant.Filled" Disabled="@disabled" Color="MudBlazor.Color.Primary">Submit feedback</MudButton>
+                    </MudItem>
+                </MudGrid>
+
+            </MudCard>
+        </MudContainer>
+    </MudContainer>
+}
+
+
+@code {
+    MudChip selected;
+    bool disabled = true;
+    const Variant variant = Variant.Text;
+    String? sugestion = null;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (selected == null) return;
+        if (selected.IsSelected == disabled)
+        {
+            disabled = !selected.IsSelected;
+            StateHasChanged();
+        }
+        base.OnAfterRender(firstRender);
+    }
+
+    async Task SubmitFeedback()
+    {
+        await client.ReportNpsInputAsync(new API.NpsInput()
+        {
+            Nps = byte.Parse(selected.Text),
+            Sugestion = sugestion,
+        });
+        render = false;
+        StateHasChanged();
+    }
+
+}

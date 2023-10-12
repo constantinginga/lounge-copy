@@ -1,0 +1,9 @@
+﻿.wrapper {
+    display: flex;
+    width:100%;
+}
+
+iframe {
+    height: calc(100vh - 66px);
+    width: 100%;
+}

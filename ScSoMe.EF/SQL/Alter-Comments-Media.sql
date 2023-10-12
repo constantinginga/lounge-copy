@@ -1,0 +1,1 @@
+﻿ALTER TABLE [scSoMe].[dbo].[Comments] ADD has_media bit;

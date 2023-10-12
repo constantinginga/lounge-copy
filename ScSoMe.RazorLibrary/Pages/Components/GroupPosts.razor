@@ -1,0 +1,320 @@
+﻿@page "/groups/{groupName}"
+@page "/groups/{groupName}/{selectedPostId:long}"
+@inject AppState AppState
+@inject ScSoMe.Common.ApiClientFactory apiClientFactory
+@inject NavigationManager NavManager
+@inject IJSRuntime JSRuntime
+@inject IEventService EventService
+@inject IDialogService DialogService
+@using Ljbc1994.Blazor.IntersectionObserver.Components
+@using Microsoft.AspNetCore.Components
+@using Microsoft.JSInterop
+@using BlazorAnimate
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@using Microsoft.AspNetCore.WebUtilities
+
+@{
+    if (this.allPosts == null && SelectedPostId == null)
+    {
+        <MudProgressCircular Color="MudBlazor.Color.Primary" Indeterminate="true" />
+    }
+    else
+    {
+        <Animate Animation="Animations.FadeIn" Duration="TimeSpan.FromSeconds(0.5)">
+            <div>
+                <MudContainer class="my-3 group-post-container d-flex" MaxWidth="MaxWidth.ExtraLarge">
+                    <MudContainer Class="p-0 m-0 group-posts" MaxWidth="MaxWidth.Medium">
+                        @if (SelectedPostId == null)
+                        {
+                            @*<MudContainer Class="p-0 m-0 mb-3">
+                                    @if (apiClientFactory.DeviceType.Equals("iOS") || apiClientFactory.DeviceType.Equals("Android"))
+                                    {
+                                        <div>
+                                            <MudContainer Class="d-flex align-end mx-0 p-0 my-3 gap-3 group-title-container justify-space-between">
+                                                <MudImage Width="100" Src="@($"_content/ScSoMe.RazorLibrary/group-logos/{GroupName.ToLower()}.svg")" Class="mt-2" Alt="Group logo" />
+                                                <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" Class="mt-2 post-btn" Size="MudBlazor.Size.Small" StartIcon="@Icons.Filled.Add" OnClick="PopupPostMobile">
+                                                    <MudText>Post</MudText>
+                                                </MudButton>
+                                            </MudContainer>
+                                        </div>
+                                    }
+                                </MudContainer>*@
+                        }
+                        // hide nps for now
+                        @*@if (string.IsNullOrEmpty(searchInput))
+                            {
+                                <div>
+                                    <NPS />
+                                </div>
+                            }*@
+                        @{
+                            if (SelectedPostId == null)
+                            {
+                                if (string.IsNullOrEmpty(searchInput) && wd.Width > 700 && !_newPostVisible &&
+                                    !apiClientFactory.DeviceType.Equals("iOS") && !apiClientFactory.DeviceType.Equals("Android"))
+                                {
+                                    <MudContainer Class="p-0 m-0 mt-4 d-flex justify-end">
+                                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.Add" Color="MudBlazor.Color.Primary" OnClick="ShowNewPost" Class="post-btn">
+                                            <MudText>Post</MudText>
+                                        </MudButton>
+                                    </MudContainer>
+                                }
+                                if (_newPostVisible)
+                                {
+                                    <NewPost OnCreate="NewPostCallback" GroupId="@GroupId" />
+                                }
+                                if (Posts != null)
+                                {
+                                    foreach (var post in Posts)
+                                    {
+                                        if (!_blockedMembers.Any(m => m.BlockedMemberId == post.AuthorMemberId))
+                                        {
+                                            <Post GroupId=@GroupId PostId=@post.Id post="@post" @key="post.Id" OnDelete="HandleDelete" />
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                <Post GroupId=@GroupId PostId="@SelectedPostId.Value" IsCollapsed="@false" OnDelete="HandleDelete" />
+                                Task.Factory.StartNew(() => apiClientFactory.GetApiClient().SetPostSeenAsync(SelectedPostId.Value));
+                            }
+                        }
+                    </MudContainer>
+
+                    @*<Nyheder />*@
+
+                </MudContainer>
+            </div>
+
+            @if (string.IsNullOrEmpty(searchInput))
+            {
+                <div>
+                    @for (var i = 0; i < 10; i++)
+                    {
+                        <br />
+                    }
+                </div>
+                <IntersectionObserve>
+                    <div @ref="context.Ref.Current">
+                        @if (context.IsIntersecting)
+                        {
+                                Console.WriteLine("is intersecting");
+                            _ = GetNextPostAsync();
+                        }
+                        <div>
+                            @for (var i = 0; i < 10; i++)
+                            {
+                                <br />
+                            }
+                        </div>
+                    </div>
+                </IntersectionObserve>
+            }
+        </Animate>
+    }
+}
+
+
+
+@code {
+    private string? searchInput { get; set; }
+
+    private string? prevSearch { get; set; }
+
+    [Parameter]
+    public string GroupName { get; set; }
+
+    [Parameter]
+    public long? SelectedPostId { get; set; }
+
+    [Parameter]
+    public EventCallback<(long, int)> OnDelete { get; set; }
+
+    public int GroupId { get; set; }
+
+    public IList<API.Post>? Posts { get; set; }
+
+    public API.ScSoMeApi? client { get; set; }
+
+    private ICollection<API.Post> allPosts { get; set; }
+
+    private ICollection<API.BlockedMember> _blockedMembers { get; set; }
+
+    private WindowDimension wd { get; set; }
+
+    private bool _newPostVisible { get; set; }
+
+    private bool _isSearched { get; set; }
+
+    private bool reachedLastPost { get; set; } = false;
+
+    // runs only once
+    protected override async Task OnInitializedAsync()
+    {
+        //
+        await Task.Delay(100);
+        client = apiClientFactory.GetApiClient();
+        wd = await JSRuntime.InvokeAsync<WindowDimension>("getWindowDimensions");
+        EventService.OnEvent += NewPostCallback;
+        EventService.OnPostsEvent += RenderSearchResults;
+    }
+
+    // runs after the parameters are changed
+    protected override async Task OnParametersSetAsync()
+    {
+        Posts = null;
+        searchInput = null;
+        _newPostVisible = false;
+        // have to reset when switching groups, otherwise next posts don't load
+        reachedLastPost = false;
+
+        if (!AppState.IsLoggedIn)
+        {
+            AppState.PreviousPage = NavManager.Uri;
+            NavManager.NavigateTo((apiClientFactory.DeviceType.Equals("iOS") ||
+        apiClientFactory.DeviceType.Equals("Android") ||
+     apiClientFactory.DeviceType.Equals("MacCatalyst")) ? "/mauilogin" : "./login");
+            return;
+        }
+        //Console.WriteLine("Comp changed: " + GroupName);
+        if (AppState.AllGroups == null)
+        {
+            AppState.AllGroups = await client.GetGroupsAsync();
+        }
+        foreach (var g in AppState.AllGroups)
+        {
+            if (g.GroupName.Equals(GroupName, StringComparison.InvariantCultureIgnoreCase)) this.GroupId = g.GroupId;
+        }
+        AppState.CurrentGroup = GroupId;
+        //await JSRuntime.InvokeVoidAsync("setInitialTarget", initialPost.Id, initialPost.GroupId, initialPost.CreatedDt);
+
+        allPosts = await client.GetLatestPostsForGroupAsync(GroupId, null, 999, true);
+        _blockedMembers = await client.ListOfBlockedMembersAsync();
+        //allPosts = allPosts.Where(p => !_blockedMembers.Any(m => m.BlockedMemberId == p.AuthorMemberId)).ToList();
+
+        //paramsSetDt = DateTime.Now;
+    }
+
+    private async void PopupPostMobile()
+    {
+        var options = new DialogOptions { FullScreen = true, CloseButton = true };
+        var parameters = new DialogParameters();
+        Console.WriteLine(AppState.CurrentGroup);
+        parameters.Add("GroupId", AppState.CurrentGroup);
+        var d = DialogService.Show<NewPostMobile>("Create post", parameters, options);
+    }
+
+    private void NewPostCallback(API.Post? newPost)
+    {
+        if (newPost != null && Posts != null)
+        {
+            // Add newest post to the top
+            var PostsList = Posts.ToList();
+            PostsList.Insert(0, newPost);
+            Posts = PostsList;
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async void RenderSearchResults(List<API.Post> posts)
+    {
+        if (posts != null)
+        {
+            _isSearched = true;
+            Posts = posts;
+            await InvokeAsync(StateHasChanged);
+        }
+        else
+        {
+            _isSearched = false;
+            Posts = null;
+            if (client == null)
+            {
+                client = apiClientFactory.GetApiClient();
+            }
+            await client.MarkAsReadUntilNowAsync(GroupId);
+            await GetNextPostAsync();
+        }
+    }
+
+    private void DeletePostCallback(API.Post? post)
+    {
+        if (post != null && Posts != null)
+        {
+            Posts.Remove(post);
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1, 1);
+
+    private async Task GetNextPostAsync()
+    {
+        if (!_isSearched)
+        {
+            // https://blog.cdemi.io/async-waiting-inside-c-sharp-locks/
+            await semaphoreSlim.WaitAsync();
+            try
+            {
+                if (Posts != null)
+                {
+                    var postsCount = Posts.Count();
+                    if (postsCount > 0 && !reachedLastPost)
+                    {
+                        ICollection<API.Post> nextPosts = await client.GetLatestLimitedPostsForGroupAsync(GroupId, Posts.Last().CreatedDt.AddMilliseconds(1), 1, true);
+                        if (nextPosts.Count == 0)
+                        {
+                            reachedLastPost = true;
+                        }
+                        foreach (var post in nextPosts)
+                        {
+                            this.Posts.Add(post);
+                            //Console.WriteLine((DateTime.Now - paramsSetDt).TotalMilliseconds + " -> " + Posts.Count);
+                            await InvokeAsync(StateHasChanged);
+                        }
+                    }
+                }
+                else
+                {
+                    this.Posts = (await client.GetLatestLimitedPostsForGroupAsync(GroupId, null, 1, true)).ToList();
+                    // Mark as read when user opens group for the first time
+                    await client.MarkAsReadUntilNowAsync(GroupId);
+                    await InvokeAsync(StateHasChanged);
+                }
+            }
+            finally
+            {
+                semaphoreSlim.Release();
+            }
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        //loadMore = true;
+    }
+
+    private void ShowNewPost()
+    {
+        _newPostVisible = true;
+    }
+
+    private void HandleDelete(long postId)
+    {
+        if (Posts != null)
+        {
+            var toRemove = Posts.FirstOrDefault(p => p.Id == postId);
+            if (toRemove != null)
+            {
+                Posts.Remove(toRemove);
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        EventService.OnEvent -= NewPostCallback;
+        EventService.OnPostsEvent -= RenderSearchResults;
+    }
+}

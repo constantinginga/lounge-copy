@@ -1,0 +1,45 @@
+﻿@inject ISnackbar Snackbar
+@inject ApiClientFactory apiClientFactory
+@inject AppState AppState
+
+@if (BlockedUser != null)
+{
+    <MudDialog>
+        <DialogContent>
+            <MudText>You will no longer see posts or comments from @(BlockedUser.Username)</MudText>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudButton Color="MudBlazor.Color.Primary" OnClick="Submit">Submit</MudButton>
+        </DialogActions>
+    </MudDialog>
+}
+
+
+@code {
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; }
+    [Parameter]
+    public int? UserId { get; set; }
+    private API.MemberInfo BlockedUser { get; set; }
+    public API.ScSoMeApi? client { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        client = apiClientFactory.GetApiClient();
+        BlockedUser = await client.GetMemberInfoByIdAsync(UserId);
+    }
+
+    private async Task Submit()
+    {
+        if (client != null)
+        {
+            MudDialog.Close(DialogResult.Ok(true));
+            await client.BlockMemberAsync(BlockedUser.Id);
+            Snackbar.Add("User successfully blocked", Severity.Success);
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}
+

@@ -1,0 +1,26 @@
+﻿@if (!string.IsNullOrEmpty(Name))
+{
+    if (!string.IsNullOrEmpty(UserType))
+    {
+        <MudContainer Class="p-0 m-0 d-flex align-center gap-1">
+            <MudText Color="MudBlazor.Color.Dark" Style="@("word-break: break-word")">@Name</MudText>
+            <MudHidden Breakpoint="MudBlazor.Breakpoint.Xs">
+                <MudChip Label="true" Color="@ChipColor" Size="MudBlazor.Size.Small" Variant="Variant.Text">@UserType</MudChip>
+            </MudHidden>
+        </MudContainer>
+    }
+    else
+    {
+        <MudText Color="MudBlazor.Color.Dark" Style="@("word-break: break-word")">@Name</MudText>
+    }
+}
+
+@code {
+    [Parameter]
+    public string Name { get; set; }
+    [Parameter]
+    public string UserType { get; set; }
+    [Parameter]
+    public MudBlazor.Color ChipColor { get; set; }
+}
+

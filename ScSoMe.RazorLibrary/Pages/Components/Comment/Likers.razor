@@ -1,0 +1,63 @@
+﻿@using Microsoft.JSInterop
+@inject IJSRuntime JsRuntime
+
+@inject ApiClientFactory apiClientFactory
+
+@if (LikersList == null || PostLiked == null)
+{
+    <MudButton Variant="Variant.Text" DisableElevation="true" Color="MudBlazor.Color.Tertiary" Style="@("white-space: nowrap")">
+        <MudText>.. Likes</MudText>
+    </MudButton>
+}
+else
+{
+ <MudTooltip>
+    <ChildContent>
+        <MudButton Variant="Variant.Text" DisableElevation="true" Color="MudBlazor.Color.Tertiary" Style="@("white-space: nowrap")">
+            <MudText>@NumberOfLikes Likes</MudText>
+        </MudButton>
+    </ChildContent>                         
+    <TooltipContent>        
+        @foreach (var item in LikersList)
+        {
+            <MudText>@item.MemberName</MudText>
+        }
+    </TooltipContent>
+</MudTooltip>   
+}
+
+@code {
+    [EditorRequired]
+    [Parameter] // Casscadding ??
+    public long MessageId { get; set; }
+    [Parameter]
+    public bool? PostLiked { get; set; }
+    [Parameter]
+    public int NumberOfLikes { get; set; }
+    [Parameter]
+    public EventCallback<int> NumberOfLikesChanged { get; set; }
+    ICollection<API.MemberLike>? LikersList { get; set; } = null;
+
+    public async Task GetLikersList()
+    {
+        if (this.LikersList == null)
+        {
+            var client = apiClientFactory.GetApiClient();
+            await Task.Delay(23 /* wait for a possible like-change to be ready for retrieval from the db */);
+            LikersList = await client.GetLikersAsync(MessageId);
+        }
+        else
+        {
+            LikersList = new List<API.MemberLike>();
+        }
+
+        NumberOfLikes = LikersList.Count();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        this.LikersList = null;
+        await GetLikersList();
+    }
+}

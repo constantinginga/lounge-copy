@@ -1,0 +1,160 @@
+﻿@inherits LayoutComponentBase
+@inject AppState AppState
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject IJSRuntime JsRuntime
+@inject NavigationManager NavigationManager
+@inject IDialogService DialogService
+@inject ScSoMe.Common.ApiClientFactory apiClientFactory
+@using ScSoMe.RazorLibrary.Pages.Components.ManageGroups
+@using ScSoMe.RazorLibrary.Pages.Components.Notification
+
+<MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme" />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+@{
+    //var layoutStyles = DeviceInfo.Platform.ToString().Equals("iOS") ? "pt-10" : "pt-8";
+}
+
+<MudLayout class="@(!NavigationManager.Uri.Contains("login") && !NavigationManager.Uri.Contains("register") && !NavigationManager.Uri.Contains("chat")  && !NavigationManager.Uri.Contains("coaches")
+ && !NavigationManager.Uri.Contains("partners") ? "pt-10" : "")">
+    @if (AppState.IsLoggedIn)
+    {
+        <MudAppBar Elevation="1" Class="@(!NavigationManager.Uri.Contains("chat") && !NavigationManager.Uri.Contains("coaches")
+ && !NavigationManager.Uri.Contains("partners") ? "pt-10" : "")">
+            @if (wd != null && wd.Width < 1000)
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="MudBlazor.Color.Default" Edge="Edge.Start" OnClick="@DrawerToggle" />
+            }
+            <MudHidden Breakpoint="MudBlazor.Breakpoint.Xs">
+                <MudSpacer />
+            </MudHidden>
+            @if (!NavigationManager.Uri.Contains("chat") && !NavigationManager.Uri.Contains("coaches")
+           && !NavigationManager.Uri.Contains("partners"))
+            {
+            <div class="custom-appbar-container">
+                <MudContainer Elevation="0" Square="true" Class="d-flex align-center gap-3 p-0">
+                    @if (!_isSearchbarShown)
+                    {
+                        <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" StartIcon="@Icons.Filled.Add" OnClick="PopupPostMobile" Class="post-btn-desktop">Post</MudButton>
+                        <NotificationButton />
+                        <MudIconButton Icon="@Icons.Material.Filled.Search" aria-label="search" OnClick="@(() => _isSearchbarShown = true)" Color="@(_isSearchbarShown ? MudBlazor.Color.Primary : MudBlazor.Color.Default)"></MudIconButton>
+                    }
+                    else
+                    {
+                        <MudIconButton Icon="@Icons.Filled.KeyboardDoubleArrowRight" OnClick="@(() => _isSearchbarShown = false)" Class="m-0 p-0"></MudIconButton>
+                        <SearchInput />
+                    }
+                </MudContainer>
+            </div>
+            }
+        </MudAppBar>
+        <MudDrawer @bind-Open="@_drawerOpen" Elevation="3" ClipMode="DrawerClipMode.Never" Variant="@DrawerVariant.Responsive" Class="py-sm-0" Style="@("border-top-right-radius: 10px;")">
+            <MudDrawerHeader>
+                <MudContainer Class="p-0 m-0 d-flex align-center justify-center">
+                    <MudImage Src="_content/ScSoMe.RazorLibrary/suc-drawer-logo.png" Fluid="true" />
+                </MudContainer>
+            </MudDrawerHeader>
+            <NavMenu />
+            @*<MudSpacer />*@
+            @*<ManageGroupsButtons />*@
+            @*<MudSwitch @bind-Checked="@_isDarkMode" Color="MudBlazor.Color.Primary" Class="ma-4 d-none" T="bool" Label="Toggle Dark Mode" />*@
+        </MudDrawer>
+    }
+    @{
+        string mainContentStyleCoachesAndPartners = "min-height: 100vh;";
+        mainContentStyleCoachesAndPartners += (_isDarkMode ? "background-color: #27272fff;" : "background-color: #FFFFF;");
+        string mainContentStyle = "min-height: 100vh;";
+        mainContentStyle += (_isDarkMode ? "background-color: #27272fff;" : "background-color: #f2f2f2;");
+        if (!AppState.IsLoggedIn)
+        {
+            mainContentStyle += "margin-left: 0;";
+        }
+        if (NavigationManager.Uri.Contains("login") || NavigationManager.Uri.Contains("register"))
+        {
+            mainContentStyle += "background-image: url(\"_content/ScSoMe.RazorLibrary/login-bg.png\");background-repeat: no-repeat;background-size: cover;";
+        }
+    }
+
+    @if (NavigationManager.Uri.Contains("coaches") || NavigationManager.Uri.Contains("partners"))
+    {
+        <MudMainContent Class="d-flex align-center flex-column" Style="@mainContentStyleCoachesAndPartners">
+            @Body
+        </MudMainContent>
+    }
+    else
+    {
+        <MudMainContent Class="d-flex align-center flex-column" Style="@mainContentStyle">
+            <MudContainer MaxWidth="MaxWidth.Medium" Class="py-sm-0">
+                @Body
+                @*<MudScrollToTop>
+                        <MudFab Color="MudBlazor.Color.Tertiary" Icon="@Icons.Filled.ArrowUpward" />
+                    </MudScrollToTop>*@
+            </MudContainer>
+        </MudMainContent>
+    }
+</MudLayout>
+
+@code {
+    private MudTheme _theme = new();
+    private bool _isDarkMode;
+    bool _drawerOpen = true;
+    public API.MemberInfo? CurrentUser { get; set; }
+    public API.ScSoMeApi? client { get; set; }
+    public List<(string, string)> banners { get; set; }
+    private WindowDimension wd { get; set; }
+    private bool _isSearchbarShown { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        setTheme();
+        apiClientFactory.SetDeviceType(DeviceInfo.Platform.ToString());
+        client = apiClientFactory.GetApiClient();
+
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        wd = await JsRuntime.InvokeAsync<WindowDimension>("getWindowDimensions");
+    }
+
+    private void setTheme()
+    {
+        _theme.Palette.Primary = new MudBlazor.Utilities.MudColor("#47B2B2");
+        _theme.Palette.Info = new MudBlazor.Utilities.MudColor("#3F3D56");
+        _theme.Palette.Tertiary = new MudBlazor.Utilities.MudColor("#7E6FFF");
+        _theme.PaletteDark.Tertiary = new MudBlazor.Utilities.MudColor("#7E6FFF");
+        _theme.PaletteDark.Primary = new MudBlazor.Utilities.MudColor("#47B2B2");
+        _theme.PaletteDark.Info = new MudBlazor.Utilities.MudColor("#3F3D56");
+        _theme.Palette.AppbarBackground = MudBlazor.Colors.Shades.White;
+
+        _theme.Typography.Default = new Default() { FontFamily = new[] { "Poppins" } };
+        _theme.Typography.H1 = new H1() { FontFamily = new[] { "Poppins" } };
+        _theme.Typography.H2 = new H2() { FontFamily = new[] { "Poppins" } };
+        _theme.Typography.H3 = new H3() { FontFamily = new[] { "Poppins" } };
+        _theme.Typography.H4 = new H4() { FontFamily = new[] { "Poppins" } };
+        _theme.Typography.H5 = new H5() { FontFamily = new[] { "Poppins" } };
+        _theme.Typography.H6 = new H6() { FontFamily = new[] { "Poppins" } };
+        _theme.Typography.Body1 = new Body1() { FontFamily = new[] { "Poppins" } };
+        _theme.Typography.Body2 = new Body2() { FontFamily = new[] { "Poppins" } };
+        _theme.Typography.Button = new MudBlazor.Button() { FontFamily = new[] { "Poppins" } };
+        _theme.Typography.Caption = new Caption() { FontFamily = new[] { "Poppins" } };
+        _theme.Typography.Overline = new Overline() { FontFamily = new[] { "Poppins" } };
+        _theme.Typography.Subtitle1 = new Subtitle1() { FontFamily = new[] { "Poppins" } };
+        _theme.Typography.Subtitle2 = new Subtitle2() { FontFamily = new[] { "Poppins" } };
+    }
+
+    void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    private async void PopupPostMobile()
+    {
+        var options = new DialogOptions { FullScreen = true, CloseButton = true };
+        var parameters = new DialogParameters();
+        Console.WriteLine(AppState.CurrentGroup);
+        parameters.Add("GroupId", AppState.CurrentGroup);
+        var d = DialogService.Show<NewPostMobile>("Create post", parameters, options);
+    }
+}

@@ -1,0 +1,9 @@
+﻿<MudContainer Class="d-flex item-description-benefits gap-1 p-0 m-0">
+    <MudIcon Icon="@Icons.Material.Filled.Check" Title="Checkmark" Color="MudBlazor.Color.Tertiary" />
+    <MudText>@Benefit</MudText>
+</MudContainer>
+
+@code {
+    [Parameter]
+    public string Benefit { get; set; }
+}

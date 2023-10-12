@@ -1,0 +1,81 @@
+﻿@using System.Text.Json
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@inject ScSoMe.Common.ApiClientFactory apiClientFactory
+
+@if ( Input != null && Emojis != null)
+{
+    <div>
+        <MudHidden Breakpoint="MudBlazor.Breakpoint.Xs">
+            <MudIconButton OnClick="EmojiButtonClicked" Icon="@Icons.Filled.EmojiEmotions" Variant="Variant.Text" Class="ml-2 p-2"></MudIconButton>
+            <MudPopover Style="@("max-width: 400px")" Open="@_isPopoverOpen" Fixed="true" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" MaxHeight="200" class="@((_isPopoverOpen) ? "pl-2 " + "emoji-popup-opened" : "pl-2")">
+                <MudContainer Class="pa-4">
+                    <MudTextField class="emoji-search-field" @bind-Value="SearchEmoji" TextChanged="FilterEmojis" Label="Search" Immediate="true" Variant="Variant.Outlined" Adornment="Adornment.End" T="string" AdornmentIcon="@Icons.Filled.Search" Margin="MudBlazor.Margin.Dense" Clearable="true" />
+                </MudContainer>
+                @if (FilteredEmojis.Count() != 0)
+                {
+                    <Virtualize Items="@FilteredEmojis" Context="emoji">
+                        <MudButton OnClick="@(() => SelectEmoji(emoji.EmojiIcon))" Style="@("font-size: 2rem")">@emoji.EmojiIcon</MudButton>
+                    </Virtualize>
+                }
+                else
+                {
+                    <MudText Align="Align.Center" Class="mb-3">No emojis found.</MudText>
+                }
+            </MudPopover>
+        </MudHidden>
+    </div>
+}
+
+@code {
+    
+    [Parameter]
+    public MudTextField<string> Input { get; set; }
+    private bool isPopoverEnabled { get; set; }
+    private bool _isPopoverOpen { get; set; }
+    public API.ScSoMeApi? client { get; set; }
+    public ICollection<API.Emoji> Emojis { get; set; }
+    public List<API.Emoji> FilteredEmojis { get; set; }
+    List<string> emojiList { get; set; } = new List<string>();
+    public string SearchEmoji { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        client = apiClientFactory.GetApiClient();
+        Emojis = await client.GetEmojiListAsync();
+        FilteredEmojis = Emojis.ToList();
+
+        foreach (var e in Emojis)
+        {
+            emojiList.Add(e.EmojiIcon);
+        }
+    }
+
+    private void EmojiButtonClicked()
+    {
+        _isPopoverOpen = !_isPopoverOpen;
+    }
+
+    void OnClickOutside()
+    {
+        _isPopoverOpen = false;
+    }
+
+    private void SelectEmoji(string emoji)
+    {
+            Input.SetText(Input.Value + emoji);
+    }
+
+    private void FilterEmojis(string searchTerm)
+    {
+        FilteredEmojis = Emojis.Where(e => e.Description.ToLower().Contains(searchTerm.ToLower())).ToList();
+    }
+}
+
+@functions {
+
+    private class QuillSelection
+    {
+        public int index { get; set; }
+        public int length { get; set; }
+    }
+}

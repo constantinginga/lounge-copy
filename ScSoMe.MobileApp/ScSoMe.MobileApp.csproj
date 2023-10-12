@@ -1,0 +1,139 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+	<PropertyGroup>
+		<TargetFrameworks>net6.0-android;net6.0-ios</TargetFrameworks>
+		<!--<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net6.0-windows10.0.19041.0</TargetFrameworks>-->
+		<!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
+		<!-- <TargetFrameworks>$(TargetFrameworks);net6.0-tizen</TargetFrameworks> -->
+		<OutputType>Exe</OutputType>
+		<RootNamespace>ScSoMe.MobileApp</RootNamespace>
+		<UseMaui>true</UseMaui>
+		<SingleProject>true</SingleProject>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<EnableDefaultCssItems>false</EnableDefaultCssItems>
+		<!--<MtouchUseLlvm>False</MtouchUseLlvm>-->
+		<!-- Display name -->
+		<ApplicationTitle>Startup Lounge</ApplicationTitle>
+		<!-- App Identifier -->
+		<ApplicationId>com.companyname.scsome.mobileapp</ApplicationId>
+		<ApplicationIdGuid>71B75104-FD9A-4110-A276-028A5EF1CD10</ApplicationIdGuid>
+		<!-- Versions -->
+		<ApplicationDisplayVersion>1.1.4</ApplicationDisplayVersion>
+		<ApplicationVersion>61</ApplicationVersion>
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">14.2</SupportedOSPlatformVersion>
+		<!--<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">14.0</SupportedOSPlatformVersion>-->
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">24.0</SupportedOSPlatformVersion>
+		<!--<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>-->
+		<!--<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>-->
+		<!--<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>-->
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+		<WarningLevel>4</WarningLevel>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6.0-ios|AnyCPU'">
+		<EnableCodeSigning>false</EnableCodeSigning>
+	</PropertyGroup>
+	<ItemGroup>
+		<!-- App Icon -->
+		<!--<MauiIcon Condition="$(TargetFramework.Contains('-ios'))" Include="Resources\AppIcon\greenrocket.png" BaseSize="128,128" Color="#FFFFFF" />-->
+		<MauiIcon Condition="$(TargetFramework.Contains('-android'))" Include="Resources\AppIcon\greenrocket_android.png" BaseSize="128,128" Color="#FFFFFF" />
+		<!-- Splash Screen -->
+		<MauiSplashScreen Condition="$(TargetFramework.Contains('-android'))" Include="Resources\Splash\splash_android.png" Color="#FFFFFF" />
+		<MauiSplashScreen Condition="$(TargetFramework.Contains('-ios'))" Include="Resources\Splash\splash.png" Color="#FFFFFF" />
+		<!-- Images -->
+		<MauiImage Include="Resources\Images\*" />
+		<MauiFont Include="Resources\Fonts\*" />
+		<!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
+		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Blazor-Analytics" Version="3.11.0" />
+		<PackageReference Include="Blazored.LocalStorage" Version="4.2.0" />
+		<PackageReference Include="Blazorise" Version="1.0.4" />
+		<PackageReference Include="Blazorise.Bootstrap" Version="1.0.4" />
+		<PackageReference Include="Blazorise.Icons.FontAwesome" Version="1.0.4" />
+		<PackageReference Include="Humanizer" Version="2.14.1" />
+		<PackageReference Include="MudBlazor" Version="6.0.10" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.2-beta1" />
+		<PackageReference Include="NSwag.ApiDescription.Client" Version="13.15.10">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Paylike.NETStandard" Version="1.0.3" />
+		<PackageReference Include="Plugin.LocalNotification" Version="9.2.0" />
+		<PackageReference Include="Quill.Delta" Version="1.0.7" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.RazorPages" Version="2.2.5" />
+		<PackageReference Include="BlazorIntersectionObserver" Version="3.1.0" />
+		<PackageReference Include="Plugin.Firebase" Version="1.2.0" />
+		<PackageReference Include="Xamarin.Essentials" Version="1.7.5" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\ScSoMe.Common\ScSoMe.Common.csproj" />
+		<ProjectReference Include="..\ScSoMe.RazorLibrary\ScSoMe.RazorLibrary.csproj" />
+	</ItemGroup>
+	<!--<ItemGroup>
+		<Content Remove="wwwroot\js\" />
+		<Content Remove="wwwroot\media\suc_green_navbar_logo_smaller.png" />
+		<Content Remove="wwwroot\media\" />
+		<Content Remove="Platforms\Android\google-services.json" />
+	</ItemGroup>-->
+	<ItemGroup>
+		<Content Update="wwwroot\favicon.ico">
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+	</ItemGroup>
+	<!--<ItemGroup>
+		<None Remove="Microsoft.AspNetCore.Mvc" />
+		<None Remove="Pages\" />
+		<None Remove="Microsoft.AspNetCore.Mvc.RazorPages" />
+		<None Remove="Shared\" />
+		<None Remove="BlazorIntersectionObserver" />
+		<None Remove="Platforms\Android\Services\" />
+		<None Remove="Models\" />
+		<None Remove="Plugin.Firebase" />
+		<None Remove="Platforms\iOS\GoogleService-Info.plist" />
+		<None Remove="GoogleService-Info.plist" />
+	</ItemGroup>-->
+	<ItemGroup>
+		<Folder Include="wwwroot\js\" />
+		<Folder Include="wwwroot\media\" />
+		<Folder Include="Shared\" />
+		<Folder Include="Platforms\Android\Services\" />
+		<Folder Include="Models\" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Include="wwwroot\media\suc_green_navbar_logo_smaller.png" />
+	</ItemGroup>
+	<PropertyGroup Condition="$(TargetFramework.Contains('-android')) and '$(Configuration)' == 'Release'">
+		<AndroidKeyStore>True</AndroidKeyStore>
+		<AndroidSigningKeyStore>key.keystore</AndroidSigningKeyStore>
+		<AndroidSigningKeyPass>Scsome1213</AndroidSigningKeyPass>
+		<AndroidSigningKeyAlias>ScSoMeAlias</AndroidSigningKeyAlias>
+		<AndroidSigningStorePass>Scsome1213</AndroidSigningStorePass>
+	</PropertyGroup>
+	<!--<PropertyGroup Condition="$(TargetFramework.Contains('-ios'))">
+		<RuntimeIdentifier>ios-arm64</RuntimeIdentifier>
+		<CodesignEntitlement>Entitlements.plist</CodesignEntitlement>
+		<CodesignKey>iPhone Distribution: Startup Central ApS (23V49556TC)</CodesignKey>
+		<CodesignProvision>mauiios</CodesignProvision>
+	</PropertyGroup>-->
+	<!--<PropertyGroup Condition="$(TargetFramework.Contains('-ios'))">
+		<RuntimeIdentifier>ios-arm64</RuntimeIdentifier>
+		<CodesignEntitlement>Entitlements.plist</CodesignEntitlement>
+		<CodesignKey>iPhone Distribution: Startup Central ApS (23V49556TC)</CodesignKey>
+		<CodesignProvision>testdeeplink</CodesignProvision>
+	</PropertyGroup>-->
+	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0-android'">
+		<PackageReference Include="Xamarin.GooglePlayServices.Base" Version="118.1.0" />
+		<PackageReference Include="Xamarin.Firebase.Messaging" Version="123.0.8" />
+		<PackageReference Include="Xamarin.Google.Dagger" Version="2.41.0.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<GoogleServicesJson Include="Platforms\Android\google-services.json" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<BundleResource Include="GoogleService-Info.plist" />
+	</ItemGroup>
+</Project>

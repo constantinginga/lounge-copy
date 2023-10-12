@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "242716899251",
+    "project_id": "startup-lounge-78316",
+    "storage_bucket": "startup-lounge-78316.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:242716899251:android:a6264601a8dd1ee0063dc6",
+        "android_client_info": {
+          "package_name": "com.companyname.scsome.mobileapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "242716899251-ihas97km98a363jmtgcvk3r2cm1bsvuq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCDtIXZGTxTIj0JZq28Hqap_Dxk_QOT4h8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "242716899251-ihas97km98a363jmtgcvk3r2cm1bsvuq.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "242716899251-5dkpsvg54unf4686t82gtbesj62gj63c.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.companyname.scsome.mobileapp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,215 @@
+﻿@page "/login"
+@using Microsoft.JSInterop
+@using System.Diagnostics
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+@using ScSoMe.RazorLibrary.Pages.Components.Auth
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject IJSRuntime JsRuntime
+@inject NavigationManager NavManager
+@inject ScSoMe.Common.ApiClientFactory apiClientFactory
+@inject AppState AppState
+
+<MudContainer Class="p-0 m-0 d-flex gap-4" Style="@("margin: 0 auto !important;")">
+    @if (wd != null && wd.Width > 1000)
+    {
+        <AuthCarousel />
+    }
+    <div class="login-wrapper">
+        <MudPaper Outlined="true" Elevation="0" class="py-2 mx-auto login-container">
+            <MudContainer Class="m-0 mt-4 py-0 px-5 rocket-logo-container">
+                <MudImage Src="_content/ScSoMe.RazorLibrary/suc-drawer-logo.png" Width="200" Alt="Startup Lounge" />
+            </MudContainer>
+            <div class="login-title-container">
+                <MudText Typo="Typo.h3" Align="Align.Center" class="my-2 login-title" Color="MudBlazor.Color.Tertiary">Log In</MudText>
+            </div>
+            <MudContainer Class="px-5">
+                <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors" Class="d-flex flex-column align-items-center">
+
+                    <MudTextField T="string" @bind-Value="Email" Required="true" Variant="Variant.Outlined" Label="E-mail" RequiredError="E-mail is required" InputType="InputType.Email" Class="mb-3 w-100"
+                                  Validation="@(new EmailAddressAttribute() {ErrorMessage = "The e-mail address is invalid"})" Margin="MudBlazor.Margin.Dense" />
+                    <MudTextField OnKeyUp="Enter" T="string" @bind-Value="Password"
+                                  Required="true" Variant="Variant.Outlined" Label="Password" RequiredError="Password is required"
+                                  InputType="PasswordInput" Class="mb-4 w-100" Adornment="Adornment.End" AdornmentIcon="@PasswordVisibilityIcon"
+                                  OnAdornmentClick="TogglePasswordVisibility" AdornmentAriaLabel="Show Password" Margin="MudBlazor.Margin.Dense" />
+                    @*<MudCheckBox @bind-Checked="@RememberMe" Label="Remember me" Color="MudBlazor.Color.Tertiary" Class="align-self-start gap-2 remember-me-cb"></MudCheckBox>*@
+                    @*<MudCheckBox @bind-Checked="@IsRemembered" Size="MudBlazor.Size.Medium" Color="MudBlazor.Color.Tertiary" Style="@("display: none")">
+                    <MudText Typo="Typo.body1">Gem min e-mailadresse til næste gang</MudText>
+                    <MudText Typo="Typo.caption">(Anbefales ikke til offentlige eller delte computere)</MudText>
+                    </MudCheckBox>*@
+                    <div class="btn-container">
+                        <div class="login-btn-container">
+                            <MudButton OnClick="LoginAction" Variant="Variant.Filled" _Disabled="@(!success)" Disabled="_processing" class="login-btn d-flex justify-space-between">
+                                <MudText Style="@("font-size: 1.2rem;")">Log In</MudText>
+                                @if (_processing)
+                                {
+                                    <MudProgressCircular Class="ms-n1 mr-3" Size="MudBlazor.Size.Small" Indeterminate="true" />
+                                }
+                                else
+                                {
+                                    <MudContainer class="p-0 m-0 login-btn-icon">
+                                        <MudIcon Icon="@Icons.Filled.ArrowForwardIos" />
+                                    </MudContainer>
+                                }
+                            </MudButton>
+                            <MudText Align="Align.Center" Color="MudBlazor.Color.Error" Class="mt-2">@UserHint</MudText>
+                            <MudLink Href="#" class="login-container__link" Underline="Underline.Always" Style="@("display: none")">Kan du ikke logge ind?</MudLink>
+                        </div>
+                        <MudContainer Class="m-0 mb-4 p-0 d-flex align-center gap-2">
+                            <MudText>New user?</MudText>
+                            @*<MudButton OnClick="RegisterLink" Variant="Variant.Text" class="register-btn">Sign Up</MudButton>*@
+                            <MudLink Href="./register" Color="MudBlazor.Color.Tertiary">Sign up</MudLink>
+                        </MudContainer>
+                    </div>
+                </MudForm>
+            </MudContainer>
+            @*<div>
+            <MudContainer class="login-footer d-flex justify-center py-3 mt-4">
+            <MudImage Src="media/suc-logo__blue.svg" Alt="Startup Central Logo" Width="120" />
+            </MudContainer>
+            </div>*@
+        </MudPaper>
+    </div>
+</MudContainer>
+
+@code {
+    public bool IsRemembered { get; set; } = false;
+    private bool _processing { get; set; } = false;
+    private string PasswordVisibilityIcon { get; set; } = Icons.Material.Filled.VisibilityOff;
+    private bool _isPasswordShown { get; set; }
+    private InputType PasswordInput { get; set; } = InputType.Password;
+    bool success;
+    string[]? errors;
+    MudForm? form;
+    String? styles;
+    @*private readonly IHttpContextAccessor _contextAccessor;*@
+    string? Email { get; set; }
+    string? Password { get; set; }
+    string UserHint { get; set; } = "";
+    public bool RememberMe { get; set; } = false;
+    private WindowDimension wd { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        wd = await JsRuntime.InvokeAsync<WindowDimension>("getWindowDimensions");
+        Console.WriteLine(wd.Width);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        @*var token = await localStorage.GetItemAsync<string>("Token");
+            if (token != null)
+            {
+                apiClientFactory.SetToken(token);
+                var client = apiClientFactory.GetApiClient();
+                try
+                {
+                    await client.RememberMeAutoLoginAsync();
+                }
+                catch (Exception missingMemberSessionMissingTokenOnServer)
+                {
+                    await localStorage.RemoveItemAsync("Token");
+                    UserHint = "Manglende identifikation af brugeren. Log ind igen.";
+                    StateHasChanged();
+                    return;
+                }
+                if (AppState.AllGroups == null)
+                {
+                    AppState.AllGroups = await client.GetGroupsAsync();
+                }
+                AppState.IsLoggedIn = true;
+                AppState.CurrentUser = await client.GetMyMemberInfoAsync();
+                NavManager.NavigateTo((AppState.PreviousPage == null) ? "./groups/Lounge" : AppState.PreviousPage);
+            }*@
+    }
+
+    async Task LoginAction()
+    {
+        if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password))
+        {
+            return;
+        }
+
+        _processing = true;
+        var crossSessionUniqueClientID = await localStorage.GetItemAsync<string>("CrossSessionUniqueClientID");
+        if (crossSessionUniqueClientID == null)
+        {
+            crossSessionUniqueClientID = Guid.NewGuid().ToString();
+            // should never be cleared on this client/device
+            await localStorage.SetItemAsync("CrossSessionUniqueClientID", crossSessionUniqueClientID);
+        }
+
+        API.LoginResult loginResult = null;
+        try
+        {
+            loginResult = await apiClientFactory.LoginAsync(Email, Password, crossSessionUniqueClientID);
+        }
+        catch (Exception loginException)
+        {
+            _processing = false;
+            UserHint = "Maybe the server is down? " + loginException.Message;
+            StateHasChanged();
+            return;
+        }
+
+        if (loginResult.Success)
+        {
+            if (RememberMe == true)
+            {
+                await localStorage.SetItemAsync("Token", loginResult.Token);
+            }
+            //UserHint = "Now you can open the Dashboard";
+
+            var client = apiClientFactory.GetApiClient();
+            AppState.AllGroups = await client.GetGroupsAsync();
+            AppState.IsLoggedIn = true;
+            var memberInfo = await client.GetMyMemberInfoAsync();
+            AppState.CurrentUser = memberInfo;
+            var approved = memberInfo.IsApproved;
+            AppState.IsFreeUser = !approved;
+            NavManager.NavigateTo((AppState.PreviousPage == null) ? "./groups/lounge" : AppState.PreviousPage);
+            return;
+        }
+        else
+        {
+            UserHint = "Log ind mislykkede" +
+                (loginResult.AccountLockedOut.HasValue && loginResult.AccountLockedOut.Value ? " og din profil:" + Email + " er spærret!" : " Tjek brugernavn eller kodeord for bruger: " + Email + ". Du har kun " + loginResult.LeftLoginAttempts + " forsøg.");
+            StateHasChanged();
+        }
+
+        _processing = false;
+    }
+
+    public async Task Enter(KeyboardEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password)) return;
+
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        {
+            await LoginAction();
+        }
+    }
+
+    private void TogglePasswordVisibility()
+    {
+        if (_isPasswordShown)
+        {
+            _isPasswordShown = false;
+            PasswordVisibilityIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordInput = InputType.Password;
+        }
+        else
+        {
+            _isPasswordShown = true;
+            PasswordVisibilityIcon = Icons.Material.Filled.Visibility;
+            PasswordInput = InputType.Text;
+        }
+    }
+
+    public void RegisterLink()
+    {
+        NavManager.NavigateTo("./register");
+        //NavManager.NavigateTo(NavManager.BaseUri.Contains("groups.startupcentral.dk") ? "/register" : "/lounge/register");
+        //NavManager.NavigateTo("https://www.startupcentral.dk/bliv-medlem/");
+    }
+}

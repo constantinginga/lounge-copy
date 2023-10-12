@@ -1,0 +1,114 @@
+﻿.loading-wrapper {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.login-wrapper {
+    width: 500px;
+    margin: 0 auto;
+}
+
+::deep .rocket-logo-container {
+    display: flex;
+    justify-content: center;
+    margin: 2rem 0;
+}
+
+    ::deep .rocket-logo-container > img {
+        /*    width: 100%;*/
+        height: auto;
+    }
+
+.login-title-container {
+    margin-top: 2rem;
+    margin-bottom: 5rem;
+}
+
+::deep .login-title {
+    font-size: 24px;
+    font-weight: 700;
+}
+
+::deep .login-container {
+    /*    border: 2px solid #CCC9C6;*/
+    border-radius: 10px;
+}
+
+@media only screen and (max-width: 800px) {
+    ::deep .login-container {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+    }
+}
+
+::deep .login-footer {
+    background-color: #DAF0F0;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.btn-container {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem 0;
+    width: 100%;
+    margin-top: 6rem;
+}
+
+.login-btn-container {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem 0;
+}
+
+::deep .login-btn-icon {
+    background-color: #fff;
+    width: 39px;
+    height: 39px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    ::deep .login-btn-icon > .mud-icon-root {
+        fill: #3F3D56;
+    }
+
+.btn-container > .login-btn-container > ::deep .login-btn {
+    background-color: #3F3D56;
+    color: #fff;
+    height: 50px;
+    text-transform: capitalize;
+    font-size: 1.2rem;
+    font-weight: 400;
+    padding-right: .5rem;
+    border-radius: 300px;
+}
+
+.btn-container > ::deep .register-btn {
+    border-color: #47B2B2;
+    color: #47B2B2;
+    width: fit-content;
+    margin: 0 auto;
+    text-transform: capitalize;
+    border-radius: .5rem;
+}
+
+.btn-container > .login-btn-container > ::deep .login-container__link {
+    color: #47B2B2 !important;
+    width: fit-content;
+    margin: 0 auto;
+}
+
+@media only screen and (max-width: 550px) {
+    .login-wrapper {
+        width: 95%;
+    }
+}
+
+::deep .remember-me-cb > .mud-icon-button {
+    padding: 0;
+}

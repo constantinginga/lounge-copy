@@ -1,0 +1,58 @@
+﻿@inject NavigationManager NavigationManager
+@inject ApiClientFactory apiClientFactory
+@inject AppState appState
+@implements IDisposable
+
+@{
+    //var notificationColor = NotificationCount == 0 ? MudBlazor.Color.Surface : MudBlazor.Color.Primary;
+    var notificationColor = MudBlazor.Color.Surface;
+    var bubbleColor = NotificationCount == 0 ? MudBlazor.Color.Surface : MudBlazor.Color.Tertiary;
+    <MudBadge Content="@NotificationCount" Overlap="true" Color="@bubbleColor">
+
+        <MudIconButton Icon="@Icons.Filled.Notifications" Color="@notificationColor" OnClick="OpenNotifications" Class="pa-1"></MudIconButton>
+    </MudBadge>
+}
+
+@code {
+    private int NotificationCount { get; set; }
+    public API.ScSoMeApi? client { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        client = apiClientFactory.GetApiClient();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {        
+        Update();
+    }
+
+    void Update()
+    {
+        if (client != null)
+        {
+            InvokeAsync(async () =>
+            {
+                var currentMember = appState.CurrentUser;
+                NotificationCount = await client.GetMemberNotificationsCountAsync(currentMember.Id);
+                StateHasChanged();
+            });
+        }
+    }
+
+    private void OpenNotifications()
+    {
+        NavigationManager.NavigateTo("./notifications");
+    }
+
+
+    protected override void OnInitialized()
+    {
+        appState.OnNotificationsChanged += Update;
+    }
+
+    public void Dispose()
+    {
+        appState.OnNotificationsChanged -= Update;
+    }
+}

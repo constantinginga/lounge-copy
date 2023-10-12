@@ -1,0 +1,16 @@
+﻿@inject AppState AppState
+
+<MudTooltip Text="Attach image/video">
+    <MudIconButton HtmlTag="label"
+                   Color="MudBlazor.Color.Default"
+                   Icon="@Icons.Filled.AttachFile"
+                   for="fileInput"
+                   Size="MudBlazor.Size.Medium"
+                   Disabled="AppState.IsMediaAttached"
+                   Class="p-2 ml-n2">
+    </MudIconButton>
+</MudTooltip>
+
+@code {
+
+}

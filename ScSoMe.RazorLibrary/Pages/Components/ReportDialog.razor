@@ -1,0 +1,46 @@
+﻿@inject ScSoMe.Common.ApiClientFactory apiClientFactory
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudTextField @bind-Value="Reason" Label="Enter reason here..." Variant="Variant.Outlined"></MudTextField>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="MudBlazor.Color.Primary" OnClick="(() => (ReportedUser != null) ? ReportUser() : ReportPost())">Submit</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; }
+    [Parameter]
+    public long MsgId { get; set; }
+    [Parameter]
+    public API.MemberInfo ReportedUser { get; set; }
+    private string Reason { get; set; }
+    public API.ScSoMeApi? client { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        client = apiClientFactory.GetApiClient();
+    }
+
+    private async Task ReportPost()
+    {
+        await client.ReportMessageIdAsync(new API.WriteMessage() { Id = MsgId, Text = string.IsNullOrWhiteSpace(Reason) ? "No reason specified" : Reason });
+        MudDialog.Close(DialogResult.Ok(true));
+        Snackbar.Add("Post reported successfully", Severity.Success);
+    }
+
+    private async Task ReportUser()
+    {
+        if (string.IsNullOrWhiteSpace(ReportedUser.Avatar)) ReportedUser.Avatar = "";
+        await client.ReportUserAsync(string.IsNullOrWhiteSpace(Reason) ? "-" : Reason, ReportedUser);
+        MudDialog.Close(DialogResult.Ok(true));
+        Snackbar.Add("User reported successfully", Severity.Success);
+    }
+
+    void Cancel() => MudDialog.Cancel();
+}

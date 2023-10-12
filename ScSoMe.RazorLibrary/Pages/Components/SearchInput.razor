@@ -1,0 +1,127 @@
+﻿@inject ApiClientFactory apiClientFactory
+@inject IEventService EventService
+@inject NavigationManager NavigationManager
+
+<div>
+    <MudTextField @bind-Value="searchInput" Label="@($"Search...")" Clearable="true" Variant="Variant.Outlined"
+                  Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" OnKeyUp="Search"
+                  OnAdornmentClick="SearchNoArg"
+                  OnClearButtonClick="ResetFilter" OnBlur="SearchNoArg" Class="search-input m-0"
+                  Margin="@MudBlazor.Margin.Dense"
+                  Style="@("max-width: 280px !important;")" />
+</div>
+
+@code {
+    private string? prevSearch { get; set; }
+    private string? searchInput { get; set; }
+    private ICollection<API.Post> allPosts { get; set; }
+    private API.ScSoMeApi? client { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        client = apiClientFactory.GetApiClient();
+        // currently searches only in Lounge
+        if (allPosts == null)
+        {
+            allPosts = await client.GetLatestPostsForGroupAsync(1, null, 999, true);
+        }
+    }
+
+    private async Task Search(KeyboardEventArgs e)
+    {
+
+        if (!string.IsNullOrEmpty(searchInput) && allPosts != null && e.Key.Equals("enter", StringComparison.InvariantCultureIgnoreCase))
+        {
+            if (!searchInput.Equals(prevSearch))
+            {
+                var highlightStartTag = "<span class=\"search-highlight\">";
+                var highlightEndTag = "</span>";
+                foreach (var p in allPosts)
+                {
+                    // remove highlight from previous search, if it exists
+                    if (p.Text.Contains(highlightStartTag))
+                    {
+                        Console.WriteLine("YEP");
+                        var temp = p.Text.Substring(p.Text.IndexOf(highlightStartTag));
+                        Console.WriteLine("SUBSTRING " + temp);
+                        temp = temp.Remove(temp.IndexOf(highlightStartTag), highlightStartTag.Length);
+                        temp = temp.Remove(temp.IndexOf(highlightEndTag), highlightEndTag.Length);
+                        Console.WriteLine(temp);
+                        p.Text = temp;
+                    }
+                }
+
+                prevSearch = searchInput;
+                var searchResults = allPosts.Where(p => p.Text.Contains(searchInput, StringComparison.InvariantCultureIgnoreCase)).ToList();
+                Console.WriteLine(searchResults.Count());
+                foreach (var p in searchResults)
+                {
+                    p.Text = HighlightTerm(p.Text, searchInput);
+                }
+
+                EventService.SendPostsEvent(searchResults);
+                //if (NavigationManager.Uri != null && !NavigationManager.Uri.Contains("groups/lounge"))
+                //{
+                //    NavigationManager.NavigateTo("./groups/lounge");
+                //}
+            }
+        }
+        else
+        {
+            if (e.Key.Equals("enter", StringComparison.InvariantCultureIgnoreCase))
+            {
+                await ResetFilter();
+            }
+        }
+    }
+
+    private async Task SearchNoArg()
+    {
+        await Search(new KeyboardEventArgs { Key = "Enter" });
+    }
+
+    private async Task ResetFilter()
+    {
+        searchInput = "";
+        prevSearch = null;
+        EventService.ClearPostsEvent();
+    }
+
+    private string HighlightTerm(string text, string term)
+    {
+        @*Console.WriteLine(text);
+            Console.WriteLine(term);*@
+        @*Console.WriteLine(text.IndexOf(term));
+            return text;*@
+        var location = text.IndexOf(term);
+
+
+        @*if (location != -1)
+            {
+                var newText = text.Insert(text.IndexOf(term), "<span class=\"search-highlight\">");
+                newText = newText.Insert(newText.IndexOf(term) + term.Length, "</span>");
+                return newText;
+            }*@
+
+        var highlightStartTag = "<span class=\"search-highlight\">";
+        var highlightEndTag = "</span>";
+        var highlightIndex = text.IndexOf(highlightStartTag);
+
+        // remove highlight from previous search, if it exists
+        @*if (highlightIndex != -1)
+            {
+                var newt = text.Remove(highlightIndex, highlightStartTag.Length);
+                var temp = text.Substring(highlightIndex);
+
+                    // string after word. How to get string before word???
+                    temp = temp.Remove(temp.IndexOf(highlightEndTag));
+
+            }*@
+        var newText = text.Insert(text.IndexOf(term, StringComparison.InvariantCultureIgnoreCase), "<span class=\"search-highlight\">");
+        newText = newText.Insert(newText.IndexOf(term, StringComparison.InvariantCultureIgnoreCase) + term.Length, "</span>");
+        return newText;
+
+        @*return text;*@
+    }
+}
+

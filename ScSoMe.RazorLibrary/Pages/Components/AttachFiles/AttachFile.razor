@@ -1,0 +1,41 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@using System.Collections.ObjectModel
+@using System.Net.Http.Headers
+@using Microsoft.Extensions.Logging
+@using System.Text.Json
+@inject ISnackbar Snackbar
+@inject AppState AppState
+@inject ScSoMe.Common.ApiClientFactory apiClientFactory
+
+<div>
+    <MudContainer Class="d-flex flex-column attach-container">
+        <InputFile id="fileInput" OnChange="@OnInputFileChange" hidden multiple accept=".jpg, .jpeg, .png, .svg, .mp4, .mov, .wav, .mkv, .gif, .avi, .wmv" />
+
+        <MudContainer Class="p-0 m-0 mt-2 d-flex flex-column gap-2 align-start">
+            @if (medias.Count > 0 && medias != null)
+            {
+                <MudContainer Class="p-0 m-0">
+                    @foreach (var file in medias)
+                    {
+                        @* different icon for video and image *@
+
+                        <div>
+                            <MudChip Variant="Variant.Outlined" Icon="@(_videoTypes.Contains(Path.GetExtension(file.Name)) ?
+                                                         Icons.Filled.Videocam : _imgTypes.Contains(Path.GetExtension(file.Name)) ?
+                                                         Icons.Filled.Image :
+                                                         Icons.Filled.InsertDriveFile)"
+                             Color="MudBlazor.Color.Default" OnClose="@(() => RemoveItem(file))" Class="file-chip">@file.Name</MudChip>
+                        </div>
+                    }
+                </MudContainer>
+                <MudButton Color="MudBlazor.Color.Error" StartIcon="@Icons.Material.Filled.DeleteSweep" OnClick="@ClearUploadedFiles">Clear all files</MudButton>
+            }
+        </MudContainer>
+    </MudContainer>
+</div>
+
+
+
+
+
+

@@ -1,0 +1,91 @@
+﻿@page "/registration"
+@*@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Mvc*@
+@inject NavigationManager NavManager
+@inject ScSoMe.Common.ApiClientFactory apiClientFactory
+
+
+
+<div class="register-wrapper">
+<MudPaper Outlined="true" Elevation="5" Class="my-16 pt-2 pb-0 mx-auto register-container">
+    <div class="rocket-logo-container">
+        <MudImage Src="media/suc-rocket__blue.svg" Height="60" Alt="Startup Central Rocket Logo" />
+    </div>
+    <div class="register-title-container">
+        <MudText Typo="Typo.h3" Align="Align.Center" Style="@("font-size: 2rem")" class="my-2 register-title">Register</MudText>
+    </div>
+    <MudContainer>
+        @if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <MudAlert Severity="Severity.Info">@ErrorMessage</MudAlert>
+        }
+        else if (IsRegistrationSuccessfull)
+        {
+            <MudAlert Severity="Severity.Success">Registered Successfully</MudAlert>
+
+        }
+    </MudContainer>
+    <MudContainer>
+    <MudForm @ref="form">
+        <MudTextField T="string" @bind-Value="Login" Variant="Variant.Outlined" Label="Username" AutoFocus="true" Required="true" RequiredError="Username is required!" Class="mb-3" />
+        <MudTextField T="string" @bind-Value="Email" Variant="Variant.Outlined" Label="Email" Required="true" RequiredError="Email is required!" InputType="InputType.Email" Class="mb-3" />
+        <MudTextField T="string" @bind-Value="FirstName" Variant="Variant.Outlined" Label="First name" Required="true" RequiredError="First name is required!" Class="mb-3" />
+        <MudTextField T="string" @bind-Value="LastName" Variant="Variant.Outlined" Label="Last name" Required="true" RequiredError="Last name is required!" Class="mb-3" />
+        <MudTextField T="string" @bind-Value="Password" Variant="Variant.Outlined" Label="Password" Required="true" RequiredError="Password is required!" InputType="InputType.Password" Class="mb-3" />
+        <MudTextField T="string" @bind-Value="ConfirmPassword" Variant="Variant.Outlined" Label="Repeat the password" Required="true" RequiredError="Password confirmation is required!" InputType="InputType.Password" Class="mb-4" />
+        <div>
+            <MudButton OnClick=@OnPostAsync Variant="Variant.Filled" Color="MudBlazor.Color.Primary" class="register-btn">Register</MudButton>
+        </div>
+    </MudForm>
+    </MudContainer>
+    <div>
+        <MudContainer class="register-footer py-3 d-flex justify-center mt-4">
+            <MudImage Src="media/suc-logo_blue.svg" Alt="Startup Central Logo" Width="120" />
+        </MudContainer>
+    </div>
+</MudPaper>
+</div>
+
+@code
+{
+    @*private readonly IHttpContextAccessor _contextAccessor;*@
+
+    @*[BindProperty]*@
+    public string Login { get; set; }
+    public string Email { get; set; }
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public string Password { get; set; }
+    public string ConfirmPassword { get; set; }
+    public bool IsRegistrationSuccessfull { get; set; } = false;
+    public string ErrorMessage { get; set; }
+    MudForm form;
+
+    public async Task NavigateToHomePage()
+    {
+        NavManager.NavigateTo("/");
+    }
+
+    //public async Task OnGetAsync()
+    //{
+    //    if (_contextAccessor.HttpContext.User.Identity.IsAuthenticated)
+    //    {
+    //        NavManager.NavigateTo("/");
+    //    }
+    //}
+    public async Task OnPostAsync()
+    {
+        var registration = await apiClientFactory.RegistrationAsync(Login, FirstName, LastName, Email, Password, ConfirmPassword);
+        if (!registration.Success)
+        {
+            ErrorMessage = registration.Message;
+        }
+        else
+        {
+            ErrorMessage = null;
+            IsRegistrationSuccessfull = true;
+            await Task.Delay(3000);
+            NavManager.NavigateTo("./login");
+        }
+    }
+}

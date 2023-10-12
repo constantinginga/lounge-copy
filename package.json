@@ -1,0 +1,34 @@
+{
+  "name": "scsome",
+  "version": "1.0.0",
+  "description": "* In SQL Mgmt Studio -> Import Data-tier Application... to restore the Database from\r https://startupcentral.sharepoint.com/sites/StartupCentral/Delte%20dokumenter/Forms/AllItems.aspx?id=%2Fsites%2FStartupCentral%2FDelte%20dokumenter%2FIT%2FScSoMe%2Fdb&viewid=70037813%2D5d56%2D441e%2D9e76%2Db08923a2aeca\r   * Note there is a diagram and the _Comments_ table holds both posts and comments",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "sass": "npx sass ./ScSoMe.Blazor/wwwroot/scss/style.scss ./ScSoMe.Blazor/wwwroot/css/style.css",
+    "sw": "npx sass --watch ./ScSoMe.Blazor/wwwroot/scss/style.scss ./ScSoMe.Blazor/wwwroot/css/style.css"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LarsOutzen/ScSoMe.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/LarsOutzen/ScSoMe/issues"
+  },
+  "homepage": "https://github.com/LarsOutzen/ScSoMe#readme",
+  "devDependencies": {
+    "quill-auto-links": "^0.1.3",
+    "sass": "^1.49.7"
+  },
+  "dependencies": {
+    "emoji-picker-element": "^1.11.1",
+    "quill": "^1.3.7",
+    "quill-emoji": "^0.2.0",
+    "quill-focus": "^1.1.2",
+    "quill-paste-smart": "^1.4.10"
+    "quill-emoji": "^0.2.0",
+    "quill-mention": "^3.1.0"
+  }
+}

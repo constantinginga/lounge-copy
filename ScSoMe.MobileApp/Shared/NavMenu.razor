@@ -1,0 +1,125 @@
+﻿@using ScSoMe.RazorLibrary.Pages.Group
+@using ScSoMe.RazorLibrary.Pages.ChatFeature
+@using ScSoMe.RazorLibrary.Pages.Components.FreeUser
+@inject AppState AppState
+@inject ScSoMe.Common.ApiClientFactory apiClientFactory
+@inject NavigationManager NavigationManager
+@inject IDialogService DialogService
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+
+<MudNavMenu Color="MudBlazor.Color.Tertiary" Class="relative flex-1">
+
+    <MudContainer Class="m-0 p-0 mt-4">
+        
+    <MudNavLink Href="./chat" Icon="@Icons.Outlined.Message">
+            <NewChatMessagesNavButton />
+    </MudNavLink>
+    </MudContainer>
+    <MudContainer Class="m-0 p-0 mt-4">
+        @foreach (var g in groups)
+        {
+            var groupIconObj = groupIcons.FirstOrDefault(gr => gr.Name.Equals(g.GroupName, StringComparison.InvariantCultureIgnoreCase));
+            var groupIcon = groupIconObj != null ? groupIconObj.Icon : null;
+            <MudNavLink Href="@("./groups/" + g.Url)" Icon="@groupIcon"><NewPostsInGroup Group="@g" /></MudNavLink>
+        }
+    </MudContainer>
+    <MudNavLink Href="/mauicoaches" Icon="@Icons.Outlined.Group" Style="@("text-style: none;")">Coaches</MudNavLink>
+    <MudNavLink Href="/mauipartners" Icon="@Icons.Outlined.Handshake">Partners</MudNavLink>
+    @if (AppState.IsFreeUser)
+    {
+        <MudContainer Class="d-flex justify-center my-10">
+            <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Tertiary" Style="@("border-radius: 20px;")" OnClick="UpgradeMembership" Class="flex-1">
+                <MudText>Upgrade to Pro</MudText>
+            </MudButton>
+        </MudContainer>
+    }
+    <MudContainer Class="d-flex flex-column gap-3 mt-0 mx-0 mb-4 absolute mobile-btn-container">
+        @if (AppState.IsFreeUser)
+        {
+            <MudButton FullWidth="true" Color="MudBlazor.Color.Tertiary" Variant="Variant.Outlined" OnClick="@(() => NavigationManager.NavigateTo("https://www.startupcentral.dk/"))">
+                <MudText>Go to Website</MudText>
+            </MudButton>
+        }
+        else
+        {
+            <MudButton FullWidth="true" Color="MudBlazor.Color.Tertiary" Variant="Variant.Outlined" OnClick="@(() => NavigationManager.NavigateTo("https://www.startupcentral.dk/login/min-side/"))">
+                <MudText>Member Page</MudText>
+            </MudButton>
+        }
+        <MudButton FullWidth="true" OnClick=@Logout Variant="Variant.Outlined" Color="MudBlazor.Color.Default">
+            <MudText>
+                Logout
+            </MudText>
+        </MudButton>
+    </MudContainer>
+</MudNavMenu>
+
+@code {
+
+    public ICollection<API.ScGroup>? groups { get; set; } = new List<API.ScGroup>();
+    private API.ScSoMeApi client { get; set; }
+    private List<API.ScGroup> _firstGroups { get; set; }
+    private bool _isGroupsExpanded { get; set; }
+    private IList<GroupIcon> groupIcons { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        while (!AppState.IsLoggedIn)
+        {
+            await Task.Delay(119);
+        }
+
+        groups = AppState.AllGroups;
+        _firstGroups = groups.Take(3).ToList();
+        _isGroupsExpanded = false;
+        client = apiClientFactory.GetApiClient();
+        groupIcons = new List<GroupIcon>();
+        groupIcons.Add(new GroupIcon() { Name = "Lounge", Icon = Icons.Outlined.Home });
+        groupIcons.Add(new GroupIcon() { Name = "Events", Icon = Icons.Outlined.Event });
+        StateHasChanged();
+    }
+
+    private void ExpandGroups()
+    {
+        _isGroupsExpanded = !_isGroupsExpanded;
+    }
+
+    private void UpgradeMembership()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        DialogService.Show<FreeUserPopup>("Pro membership", options);
+    }
+
+    private async void Logout()
+    {
+        var dt = Preferences.Get("DeviceToken", "");
+        var iOSToken = Preferences.Get("iOSToken", "");
+        var memberId = AppState.CurrentUser?.Id;
+        if ((dt != null || iOSToken != null) && memberId != null)
+        {
+            try
+            {
+                await client.StopPushedNotificationsAsync(memberId, apiClientFactory.DeviceType.Equals("iOS") ? iOSToken : dt);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                throw;
+            }
+        }
+
+        var signoutResult = await apiClientFactory.SignOut();
+        await localStorage.RemoveItemAsync("Token");
+        AppState.IsLoggedIn = false;
+        AppState.CurrentUser = null;
+        NavigationManager.NavigateTo("/");
+        SecureStorage.Default.RemoveAll();
+    }
+
+    private class GroupIcon
+    {
+        public string Name { get; set; }
+        public string Icon { get; set; }
+    }
+}

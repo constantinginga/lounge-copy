@@ -1,0 +1,23 @@
+﻿::deep .item-description-benefits-list {
+    margin: 0 auto !important;
+    width: 250px;
+}
+
+.auth-carousel-bullet,
+.auth-carousel-bullet__active {
+    margin: 0 .35rem;
+}
+
+.auth-carousel-bullet {
+    background-color: #8C8C8C;
+}
+
+.auth-carousel-bullet__active {
+    background-color: #FFF;
+}
+
+/*@media only screen and (max-width: 1000px) {
+    ::deep .auth-carousel-container {
+        display: none;
+    }
+}*/

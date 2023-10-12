@@ -1,0 +1,146 @@
+﻿@using Humanizer
+@using RazorLibrary.Pages
+@using System.Text.Json
+@using ScSoMe.RazorLibrary.Pages.Helpers
+@using Ljbc1994.Blazor.IntersectionObserver.Components
+@using System.Text.RegularExpressions
+@using BlazorAnimate
+@inject AppState AppState
+@inject IDialogService DialogService 
+
+@inject ScSoMe.Common.ApiClientFactory apiClientFactory
+
+@if (Message == null || MessageAuthor == null || IsPostLiked == null)
+{
+    <LoadingComment />
+    }
+    else
+    {
+        var commentIndent = "";
+        switch (Level)
+        {
+            case -1:
+                commentIndent = "post";
+                break;
+            case 1:
+            case 2:
+                commentIndent = "indent";
+                break;
+        }
+        string commentStyle = $"color:{Colors.Grey.Default} !important; padding-top: 1rem !important; padding-bottom: .5rem !important; border-radius: 2rem !important; background-color: #eee";
+        //commentStyle += (!MessageAuthor.IsAdmin) ? "background-color: #eee" : "background-color: #daf0f0";
+        <div class="comment @commentIndent" id="@((Level == -1) ? $"post-{Message.Id}" : null)">
+        <MudCard Outlined="false" Elevation="0" Class="rounded-lg pt-2 pb-3" Style="@((Level == -1) ? $"color:{Colors.Grey.Default} !important" : commentStyle)">            
+            <CommentHeader Level=@Level Author=@MessageAuthor DateCreated=@Message.CreatedDt DateUpdated=@Message.UpdatedDt
+                       EditingEnabled=@EditingEnabled OnDelete=@DeleteMessage OnEditingEnabledChanged=@((arg) => SetEditMode(arg))
+                       PostId=@(Level == -1 ? Message.Id : null) />
+            <MudCardContent Class="ml-3 mr-3 py-0 pb-2" Style="@("color: #424242ff")">
+                @if (!EditingEnabled)
+                {
+                    <div class="ql-editor">
+                        <MarkupRenderer Markup=@Message.Text />
+                    </div>
+                        <CommentEmbed Embedded=Embedded /> 
+                }
+                else
+                {
+                    <div>
+                        <QuillEditor @ref="EditRef" Msg=@Message.Text>
+                            <ToolbarContent>
+                            </ToolbarContent>
+                            <EditorContent>
+                            </EditorContent>
+                        </QuillEditor>
+                        <div class="btn-container mt-3">
+                            <MudButton OnClick="EditText" Variant="Variant.Filled" DisableElevation class="save-btn" Disabled="_processing">
+                            @if (_processing)
+                            {
+                                <MudProgressCircular Class="ms-n1 mr-3" Size="MudBlazor.Size.Small" Color="MudBlazor.Color.Primary" Indeterminate="true" />
+                            }
+                            <MudText>Save</MudText>
+                        </MudButton>
+                            <MudButton OnClick="() => SetEditMode(false)" Variant="Variant.Text" DisableElevation Color="MudBlazor.Color.Default" class="cancel-btn" Disabled=@(_processing ? true : false)>Cancel</MudButton>
+                        </div>
+                        @if (editErrorMessage != null)
+                        {
+                            <MudText Color="MudBlazor.Color.Error" Class="mt-2">@editErrorMessage</MudText>
+                        }
+                    </div>
+                }
+            </MudCardContent>
+
+            <div>
+                <IntersectionObserve>
+                    <div @ref="context.Ref.Current">
+                        @if (context.IsIntersecting) 
+                        {
+                            _ = client.SetPostSeenAsync(PostId);
+                            //Console.WriteLine("SetPostSeenAsync: " + PostId);
+                        }
+                    </div>
+                </IntersectionObserve>
+            </div>
+
+            <MudContainer Class="mx-0 px-0 d-flex align-center justify-space-between">
+                <MudContainer class="d-flex align-center mx-0 pr-0 mr-2 gap-1 comment-btns" Style=@("width: fit-content")>
+                    <div class="like-btn-container">
+                        <MudToggleIconButton Toggled="@IsPostLiked" ToggledChanged="@LikePost"
+                                         Icon="@Icons.Filled.RocketLaunch" Color="@MudBlazor.Color.Default" Title="Like"
+                                         ToggledIcon="@Icons.Filled.RocketLaunch" ToggledColor="@MudBlazor.Color.Secondary" ToggledTitle="Unlike" class="comment-btns__btn" />
+                    </div>
+                    <Likers MessageId=@Message.Id PostLiked=@IsPostLiked />
+                    <MudButton OnClick="ReplyToComment" Target="_parent" Variant="Variant.Text" class="mr-3 toggle-reply-btn" Align="Align.Center" Color="MudBlazor.Color.Default" Size="MudBlazor.Size.Small" hidden="@isHidden">
+                        <MudText>@(Level == -1 ? "Comment" : "Reply")</MudText>
+                    </MudButton>
+                    @if (commentIndent.Equals("post"))
+                    {
+                        @*<MudToggleIconButton Toggled="@IsTrackedPost" ToggledChanged="TrackPost"
+                                     Icon="@Icons.Filled.NotificationsOff" Color="@MudBlazor.Color.Surface" Title="turn on"
+                                     ToggledIcon="@Icons.Filled.NotificationsActive" ToggledColor="@MudBlazor.Color.Success"
+                                     ToggledTitle="turn off" class="comment-btns__btn" />*@
+                    }
+@*                        <MudIconButton Icon="@Icons.Filled.Translate" Color="@MudBlazor.Color.Info"  OnClick="TranslatePost" Disabled="@isTranslated" Title="Translate" />
+*@                        <MudToggleIconButton Toggled="@isTranslated" ToggledChanged="TranslatePost"
+                     Icon="@Icons.Filled.Translate" Color="@MudBlazor.Color.Info" Title="Tranlate to English" 
+                     ToggledIcon="@Icons.Filled.Translate" ToggledColor="@MudBlazor.Color.Default" ToggledTitle="Show original" class="comment-btns__btn" />
+                </MudContainer>
+            </MudContainer>
+            <MudCardActions Class="@((ReplyEnabled ? "d-flex " : "d-none ") + "align-center mx-sm-3 py-0 gap-3 mt-2")">
+                <MudHidden Breakpoint="MudBlazor.Breakpoint.Xs">
+                    @if (string.IsNullOrWhiteSpace(CurrentUser.Avatar))
+                    {
+                        <MudAvatar Color="MudBlazor.Color.Surface">@CurrentUser.Name[0]</MudAvatar>
+                    }
+                    else
+                    {
+                        <MudAvatar Image="@("https://www.startupcentral.dk" + CurrentUser.Avatar)" />
+                    }
+                </MudHidden>
+                <div class="reply-paper" hidden="@isHidden">
+                    <MudContainer Class="m-0 p-0">
+                        <MudPaper Width="100%" class="ml-3 reply-container">
+                            @*<QuillEditor @ref="ReplyRef" MsgId=@Message.Id />*@
+                            @*<MudTextField @ref="MobileInRef" @bind-Value="_mobileInputVal" Label="Write a comment..." Variant="Variant.Outlined" Lines="2"></MudTextField>*@
+                            <QuillEditor @ref="ReplyRef" HasToolBar="false" />
+                        </MudPaper>
+                    </MudContainer>
+                    @if (errorMessage != null)
+                    {
+                        <MudText Color="MudBlazor.Color.Error" Class="mt-2 ml-10">@errorMessage</MudText>
+                    }
+                </div>
+                <div id="reply-emoji-button" class="emoji-btn-container">
+                    <EmojiMudButton Editor="ReplyRef" />
+                </div>
+                @if (_processing)
+                {
+                    <MudProgressCircular Class="ml-2" Size="MudBlazor.Size.Small" Color="MudBlazor.Color.Primary" Indeterminate="true" />
+                }
+                else
+                {
+                    <MudIconButton OnClick="Reply" Icon="@Icons.Filled.Send" Variant="Variant.Text" Color="MudBlazor.Color.Primary" class="ml-2 reply-btn" hidden="@isHidden" />
+                }
+            </MudCardActions>
+        </MudCard>
+    </div>
+}

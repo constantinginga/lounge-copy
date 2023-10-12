@@ -1,0 +1,79 @@
+﻿@using System.Text.Json
+@using Newtonsoft.Json
+@using System.Collections.ObjectModel
+@using ScSoMe.RazorLibrary.Pages.Components.Comment
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@inject ScSoMe.Common.ApiClientFactory apiClientFactory
+@inject AppState AppState
+
+@if (post == null || PostToComment == null)
+{
+    //
+}
+else
+{
+    @if (PostAuthor == null)
+    {
+        PostAuthor = client.GetMemberInfoByIdAsync(PostToComment.AuthorMemberId).GetAwaiter().GetResult();
+    }
+    <MudCard Outlined="true" Elevation="0" Class="rounded-lg pt-2 pb-0 my-4">
+        <Comment Message="PostToComment" Level="-1" OnComment="CommentHandler" OnDelete="DeleteComment" PostId="post.Id" GroupId="post.GroupId" />
+        @*First level*@
+        @if (PostToComment.Responses != null && PostToComment.Responses.Count != 0)
+        {
+            <div id="comment-container-wrapper">
+                <Collapsible ButtonText="" Collapsed="@IsCollapsed" LabelText="@("(" + ReplyCount.ToString() + ")")">
+                    <ChildContent>
+                        @*// First level*@
+                        @if (PostToComment.Responses != null && PostToComment.Responses.Count != 0)
+                        {
+                            <div id="comment-container-wrapper">
+                                <MudCard Outlined="false" Elevation="0" Class="d-flex flex-column">
+                                    <Virtualize Items="@PostToComment.Responses" Context="firstLevel">
+                                        <ItemContent>
+                                            <Comment Message="firstLevel" Level="0" OnComment="CommentHandler" OnDelete="DeleteComment" PostId="post.Id" GroupId="post.GroupId" />
+                                        @if (firstLevel.Responses != null && firstLevel.Responses.Count != 0)
+                                        {
+                                            <Virtualize Items="@firstLevel.Responses" Context="secLevel">
+                                                <ItemContent>
+                                                    <div class="sec-level-comment">
+                                                    <Comment Message="secLevel" Level="1" OnComment="CommentHandler" OnDelete="DeleteComment" PostId="post.Id" GroupId="post.GroupId" />
+                                                </div>
+                                                @if (secLevel.Responses != null && secLevel.Responses.Count != 0)
+                                                {
+                                                    <Virtualize Items="@secLevel.Responses" Context="thirdLevel">
+                                                        <ItemContent>
+                                                            <div class="sec-level-comment">
+                                                            <div class="third-level-comment">
+                                                                <Comment Message="thirdLevel" Level="2" OnComment="CommentHandler" OnDelete="DeleteComment" PostId="post.Id" GroupId="post.GroupId" ParentId="@secLevel.Id" />
+                                                            </div>
+                                                        </div>
+                                                        </ItemContent>
+                                                        <Placeholder>
+                                                            <LoadingComment />
+                                                        </Placeholder>
+                                                    </Virtualize>
+                                                }
+                                                </ItemContent>
+                                                <Placeholder>
+                                                    <LoadingComment />
+                                                </Placeholder>
+                                            </Virtualize>
+                                        }
+                                        </ItemContent>
+                                        <Placeholder>
+                                            <LoadingComment />
+                                        </Placeholder>
+                                    </Virtualize>
+                                </MudCard>
+                            </div>
+                        }
+                    </ChildContent>
+                </Collapsible>
+            </div>
+        }
+    </MudCard>
+}
+
+
+

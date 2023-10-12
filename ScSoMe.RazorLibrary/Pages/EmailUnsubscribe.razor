@@ -1,0 +1,67 @@
+﻿@page "/emailsubscriptions"
+@using System.ComponentModel.DataAnnotations
+@inject ApiClientFactory apiClientFactory
+@inject NavigationManager NavManager
+@inject AppState AppState
+@inject ISnackbar Snackbar
+
+<div class="unsubscribe-wrapper">
+    <MudPaper Outlined="true" Elevation="5" class="my-16 pt-2 mx-auto" MaxWidth="500px">
+        <MudContainer Class="px-0">
+                <MudContainer Class="px-3 d-flex align-center flex-column mt-4">
+                <MudImage Src="media/unsubscribe.svg" Width="100" />
+                <MudText Typo="Typo.h4" Class="my-2">Email subscriptions</MudText>
+                @*<MudText Class="mb-2">Your email address is </MudText>*@
+                <MudText>Update your email preferences for Startup Lounge notifications</MudText>
+            </MudContainer>
+            <MudForm Class="px-3 mt-4">
+                <MudText>Select which notifications you want to receive emails on:</MudText>
+                <MudText></MudText>
+                <MudText> </MudText>
+                        <MudContainer Class="d-flex flex-column">
+                            <MudSwitch T="bool" @bind-Checked="@subscription.NewPosts" Label="New posts" Color="MudBlazor.Color.Primary" />
+                            <MudSwitch T="bool" @bind-Checked="@subscription.Comments" Label="Comments" Color="MudBlazor.Color.Primary" />
+                            <MudSwitch T="bool" @bind-Checked="@subscription.Mentions" Label="Mentions" Color="MudBlazor.Color.Primary" />
+                        </MudContainer>                    
+                <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" DisableElevation="true" StartIcon="@Icons.Filled.Unsubscribe" OnClick="OnUpdate">
+                    Update
+                </MudButton>
+                @*<MudText Color="MudBlazor.Color.Error" Class="mt-2">@error</MudText>*@
+            </MudForm>
+            <div class="unsubscribe-footer">
+                <MudContainer class="d-flex justify-center py-3 mt-4">
+                    <MudImage Src="media/suc-logo_blue.svg" Alt="Startup Central Logo" Width="150" />
+                </MudContainer>
+            </div> 
+        </MudContainer>
+    </MudPaper>
+</div>
+
+@code {
+
+    private API.ScSoMeApi client;
+
+    public API.EmailSubscriptions subscription { get; set; } = new API.EmailSubscriptions();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!AppState.IsLoggedIn)
+        {
+            AppState.PreviousPage = NavManager.Uri;
+            NavManager.NavigateTo("./login");
+            return;
+        }
+
+        client = apiClientFactory.GetApiClient();
+        subscription = await client.GetMemberEmailSubscriptionsAsync();
+        AppState.PreviousPage = null;
+    }
+
+    private void OnUpdate()
+    {
+        client.SetMemberEmailSubscriptionsAsync(subscription);
+        Snackbar.Add("Email preferences successfully updated.", Severity.Success);
+
+        NavManager.NavigateTo("./groups/Lounge");
+    }
+}

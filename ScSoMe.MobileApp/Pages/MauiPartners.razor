@@ -1,0 +1,22 @@
+﻿@page "/mauipartners"
+
+@if (_isLoaded)
+{
+    <Partners />
+}
+else
+{
+    <MudContainer Class="d-flex justify-center align-center" Style="@("height: calc(100vh - 150px);")">
+        <MudProgressCircular Color="MudBlazor.Color.Primary" Indeterminate="true" />
+    </MudContainer>
+}
+
+@code {
+    private bool _isLoaded;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Delay(3000); // TODO actual initialization job
+        _isLoaded = true;
+    }
+}

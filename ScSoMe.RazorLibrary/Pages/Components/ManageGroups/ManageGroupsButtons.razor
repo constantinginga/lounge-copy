@@ -1,0 +1,56 @@
+﻿@inject IDialogService DialogService
+@inject AppState AppState
+@inject ScSoMe.Common.ApiClientFactory apiClientFactory
+
+@if (AppState.CurrentUser != null && AppState.CurrentUser.IsAdmin)
+{
+    <MudContainer Class="d-flex flex-column align-center mt-3">
+        <MudText>Manage groups</MudText>
+        <MudContainer Class="d-flex justify-content-center gap-2">
+            <MudIconButton Icon="@Icons.Filled.AddCircleOutline" OnClick="CreateGroup" Color="MudBlazor.Color.Default"></MudIconButton>
+            <MudIconButton Icon="@Icons.Filled.RemoveCircleOutline" OnClick="RemoveGroup" Color="MudBlazor.Color.Default"></MudIconButton>
+        </MudContainer>
+    </MudContainer>
+}
+else
+{
+    //
+}
+
+@code {
+
+    public API.ScSoMeApi? client { get; set; }
+
+    private bool shouldRender;
+
+    protected override bool ShouldRender() => shouldRender;
+
+    protected override void OnInitialized()
+    {
+        client = apiClientFactory.GetApiClient();
+    }
+
+    private async Task CreateGroup()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var parameters = new DialogParameters { ["isDeleting"] = false };
+        var dialog = DialogService.Show<ManageGroupsDialog>("Create group", options);
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            // send event to update group somehow?
+        }
+    }
+
+    private async Task RemoveGroup()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var parameters = new DialogParameters { ["isDeleting"] = true };
+        var dialog = DialogService.Show<ManageGroupsDialog>("Remove group", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            // send event to update group somehow?
+        }
+    }
+}

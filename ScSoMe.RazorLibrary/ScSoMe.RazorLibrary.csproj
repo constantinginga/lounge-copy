@@ -1,0 +1,104 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+	  <!--<UseWindowsForms>true</UseWindowsForms>-->
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Pages\Components\Comment\CommentHeader.razor.css" />
+    <None Remove="Pages\EmailUnsubscribe.razor.css" />
+    <None Remove="Pages\Login.razor.css" />
+    <None Remove="Pages\RegistrationPage.razor.css" />
+    <None Remove="Microsoft.AspNetCore.Mvc.RazorPages" />
+    <None Remove="Microsoft.AspNetCore.Mvc.Core" />
+    <None Remove="Pages\Components\Notification\" />
+    <None Remove="HtmlAgilityPack" />
+    <None Remove="Microsoft.AspNetCore.WebUtilities" />
+    <None Remove="Pages\Components\ManageGroups\" />
+    <None Remove="Pages\Components\FreeUser\" />
+    <None Remove="Pages\Components\Auth\" />
+  </ItemGroup>
+
+  <!--<ItemGroup>
+    <Content Remove="Pages\Components\InviteFriendModal.razor" />
+    <Content Remove="wwwroot\group-logos\" />
+  </ItemGroup>-->
+  <ItemGroup>
+    <Content Include="Pages\Components\Comment\CommentHeader.razor.css" />
+    <Content Include="Pages\EmailUnsubscribe.razor.css" />
+    <Content Include="Pages\Login.razor.css" />
+    <Content Include="Pages\RegistrationPage.razor.css" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.14.1" />
+    <PackageReference Include="BlazorAnimate" Version="3.0.0" />
+    <PackageReference Include="Blazored.LocalStorage" Version="4.2.0" />
+    <PackageReference Include="BlazorIntersectionObserver" Version="3.1.0" />
+    <PackageReference Include="Blazorise" Version="1.0.4" />
+    <PackageReference Include="Blazorise.Bootstrap" Version="1.0.4" />
+    <PackageReference Include="Blazorise.Icons.FontAwesome" Version="1.0.4" />    
+    <PackageReference Include="Humanizer" Version="2.14.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="6.0.5" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="6.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.21.1" />
+    <PackageReference Include="MudBlazor" Version="6.0.10" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2-beta1" />
+    <PackageReference Include="Paylike.NETStandard" Version="1.0.3" />
+    <PackageReference Include="Plugin.LocalNotification" Version="9.2.0" />
+    <PackageReference Include="Quill.Delta" Version="1.0.7" />
+    <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="2.2.0" />
+    <PackageReference Include="Xam.Plugin.Media" Version="5.0.1" />
+    <PackageReference Include="Xamarin.Essentials" Version="1.7.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ScSoMe.Common\ScSoMe.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Pages\Components\Message" />
+    <Folder Include="Shared\" />
+    <Folder Include="Pages\Components\Notification\" />
+    <Folder Include="Pages\Components\ManageGroups\" />
+    <Folder Include="Pages\Components\FreeUser\" />
+    <Folder Include="wwwroot\group-logos\" />
+    <Folder Include="Pages\Components\Auth\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Pages\Register.razor.css">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+    <None Update="Pages\Components\SearchInput.razor.css">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </None>
+    <None Update="Pages\Components\NewPostMobile.razor.css">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </None>
+    <None Update="Pages\Components\Auth\AuthCarousel.razor.css">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </None>
+    <None Update="Pages\Components\Auth\AuthCarouselItem.razor.css">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </None>
+  </ItemGroup>
+
+  <!--<ItemGroup>
+    <UpToDateCheckInput Remove="Pages\Components\InviteFriendModal.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Pages\Components\InviteFriendModal.razor" />
+  </ItemGroup>-->
+</Project>

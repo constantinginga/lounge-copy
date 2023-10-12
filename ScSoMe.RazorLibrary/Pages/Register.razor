@@ -1,0 +1,230 @@
+﻿@page "/register"
+@using API
+
+@using Microsoft.JSInterop
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+@using ScSoMe.RazorLibrary.Pages.Components.Auth
+@inject IJSRuntime JSRuntime
+@inject AppState AppState
+@inject NavigationManager NavigationManager
+@inject IDialogService DialogService
+@inject ScSoMe.Common.ApiClientFactory apiClientFactory
+
+<MudContainer Class="p-0 m-0 d-flex gap-4" Style="@("margin: 0 auto !important;")">
+    @if (wd != null && wd.Width > 1000)
+    {
+        <AuthCarousel />
+    }
+    <div class="register-wrapper">
+        <MudPaper Outlined="true" Elevation="0" class="pt-2 mx-auto register-container">
+            <MudContainer Class="m-0 mt-4 py-0 px-5 rocket-logo-container">
+                <MudImage Src="_content/ScSoMe.RazorLibrary/suc-drawer-logo.png" Width="200" Alt="Startup Lounge" />
+            </MudContainer>
+            <div class="register-title-container">
+                <MudText Typo="Typo.h3" Align="Align.Center" class="my-2 register-title" Color="MudBlazor.Color.Tertiary">Sign Up</MudText>
+            </div>
+            <MudContainer Class="px-sm-5">
+                <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors" Class="d-flex flex-column align-items-center">
+
+                    <MudTextField T="string" @bind-Value="freeUser.Email" Required="true" Variant="Variant.Outlined" Label="E-mail" RequiredError="E-mail is required" InputType="InputType.Email" Class="mb-3 w-100"
+                                  Validation="@(new EmailAddressAttribute() {ErrorMessage = "The e-mail address is invalid"})" Margin="MudBlazor.Margin.Dense" />
+                    <MudContainer Class="m-0 p-0 d-flex gap-3">
+                        @if (_countryCodes != null)
+                        {
+                            <MudSelect T="string" Variant="Variant.Outlined" ValueChanged="UpdateCountry" Value="@($"{_selectedCountry.Flag} {_selectedCountry.ShortName}")" Style="@("max-width: 200px;")" Margin="MudBlazor.Margin.Dense">
+                                @foreach (var c in _countryCodes)
+                                {
+                                    <MudSelectItem Value="@c.Name">
+                                        <MudText Style="@("font-size: 14px;")">@($"{c.Flag} {c.Name}")</MudText>
+                                    </MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudTextField T="string" @bind-Value="freeUser.PhoneNumber" Required="true" Variant="Variant.Outlined" Label="Phone Number" RequiredError="Phone number is required" InputType="InputType.Telephone" Class="mb-3 w-100"
+                                          Adornment="Adornment.Start" AdornmentText="@(_selectedCountry != null ? _selectedCountry.DialCode : "")" Margin="MudBlazor.Margin.Dense" />
+                        }
+                        else
+                        {
+                            // placeholder before the _countryCodes loads
+                            <MudSelect T="string" Variant="Variant.Outlined" Margin="MudBlazor.Margin.Dense">
+                            </MudSelect>
+                            <MudTextField T="string" Variant="Variant.Outlined" Label="Phone Number" InputType="InputType.Telephone" Class="mb-3 w-100" Margin="MudBlazor.Margin.Dense" />
+                        }
+                    </MudContainer>
+                    <MudTextField T="string" @bind-Value="freeUser.Name" Required="true" Variant="Variant.Outlined" Label="Name" RequiredError="Name is required" InputType="InputType.Text" Class="mb-3 w-100" Margin="MudBlazor.Margin.Dense" />
+                    <MudTextField T="string" @bind-Value="freeUser.Cvr" MaxLength="8" Required="false" Variant="Variant.Outlined" Label="CVR (optional)" InputType="InputType.Text" Class="mb-3 w-100" Margin="MudBlazor.Margin.Dense" />
+                    <MudTextField T="string"
+                                  Required="true" Variant="Variant.Outlined" Label="Password" RequiredError="Password is required" ValueChanged="(val) => CheckPassword(val)"
+                                  InputType="PasswordInput" Class="mb-3 w-100" Adornment="Adornment.End" AdornmentIcon="@PasswordVisibilityIcon"
+                                  OnAdornmentClick="TogglePasswordVisibility" AdornmentAriaLabel="Show Password" Margin="MudBlazor.Margin.Dense" />
+                    <MudTextField OnKeyUp="Enter" T="string" @bind-Value="PasswordRepeat"
+                                  Required="true" Variant="Variant.Outlined" Label="Repeat password" RequiredError="Password is required"
+                                  InputType="PasswordInput" Class="mb-3 w-100" Adornment="Adornment.End" AdornmentIcon="@PasswordVisibilityIcon"
+                                  OnAdornmentClick="TogglePasswordVisibility" AdornmentAriaLabel="Show Password" Margin="MudBlazor.Margin.Dense" />
+                    @if (!string.IsNullOrWhiteSpace(freeUser.ClearTextPassword))
+                    {
+                        <MudContainer Class="mb-3 mx-0 px-0 d-flex flex-column password-strength-container">
+                            <MudProgressLinear Color="(_passwordStrength < 25) ? MudBlazor.Color.Error : (_passwordStrength >= 25 && _passwordStrength <= 50) ? MudBlazor.Color.Warning : MudBlazor.Color.Success" Rounded="true" Value="@_passwordStrength" />
+                            <MudText Class="mt-1 align-self-end password-strength-text">@((_passwordStrength < 25) ? "Weak" : (_passwordStrength >= 25 && _passwordStrength <= 50) ? "Medium" : "Strong")</MudText>
+                        </MudContainer>
+                    }
+
+                    <div class="btn-container">
+                        <div class="register-btn-container">
+                            <MudButton OnClick="RegisterAction" Variant="Variant.Filled" Disabled="_processing" class="register-btn d-flex justify-space-between">
+                                <MudText Style="@("font-size: 1.2rem;")">Register</MudText>
+                                @if (_processing)
+                                {
+                                    <MudProgressCircular Class="ms-n1 mr-3" Size="MudBlazor.Size.Small" Indeterminate="true" />
+                                }
+                                else
+                                {
+                                    <MudContainer class="p-0 m-0 register-btn-icon">
+                                        <MudIcon Icon="@Icons.Filled.ArrowForwardIos" />
+                                    </MudContainer>
+                                }
+                            </MudButton>
+                            @*<MudButton OnClick="Back" Variant="Variant.Text" StartIcon="@Icons.Filled.ArrowBack">Back</MudButton>*@
+                            <MudText Align="Align.Center" Color="MudBlazor.Color.Error" Class="mt-2">@UserHint</MudText>
+                        </div>
+                        <MudContainer Class="pp-tos-container m-0 p-0 mb-4">
+                            <MudText Align="Align.Center">By continuing, you agree to our <MudLink Href="https://www.startupcentral.dk/en/privacy-statement/" Color="MudBlazor.Color.Tertiary">Privacy Policy</MudLink> and <MudLink Href="https://www.startupcentral.dk/en/terms-and-conditions/" Color="MudBlazor.Color.Tertiary">Terms of Service</MudLink></MudText>
+                        </MudContainer>
+                        <MudContainer Class="m-0 mb-4 p-0 d-flex align-center gap-2">
+                            <MudText>Already have an account?</MudText>
+                            @*<MudButton OnClick="RegisterLink" Variant="Variant.Text" class="register-btn">Sign Up</MudButton>*@
+                            <MudLink Href="./" Color="MudBlazor.Color.Tertiary">Log in</MudLink>
+                        </MudContainer>
+                    </div>
+                </MudForm>
+            </MudContainer>
+            @*<div>
+                <MudContainer class="register-footer d-flex justify-center py-3 mt-4">
+                    <MudImage Src="media/suc-logo__blue.svg" Alt="Startup Central Logo" Width="120" />
+                </MudContainer>
+            </div>*@
+        </MudPaper>
+    </div>
+</MudContainer>
+
+@code {
+    private bool _processing { get; set; }
+    private CreateFreeMember? freeUser { get; set; }
+    private string? PasswordRepeat { get; set; }
+    private string? UserHint { get; set; }
+    private bool _isPasswordShown { get; set; }
+    private string PasswordVisibilityIcon { get; set; } = Icons.Material.Filled.VisibilityOff;
+    private InputType PasswordInput { get; set; } = InputType.Password;
+    private bool success;
+    private string[]? errors;
+    private MudForm? form;
+    public API.ScSoMeApi? client { get; set; }
+    private float _passwordStrength { get; set; }
+    private CountryCode? _selectedCountry { get; set; }
+    private ICollection<CountryCode>? _countryCodes { get; set; }
+    private WindowDimension? wd { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        client = apiClientFactory.GetApiClient();
+        freeUser = new CreateFreeMember();
+        wd = await JSRuntime.InvokeAsync<WindowDimension>("getWindowDimensions");
+        try
+        {
+            _countryCodes = await client.GetCountryCodesAsync();
+            UpdateCountry("Denmark");
+            Console.WriteLine("Count: " + _countryCodes.Count);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+    }
+
+    public async Task RegisterAction()
+    {
+        _processing = true;
+        if (freeUser.ClearTextPassword.Count() < 6)
+        {
+            UserHint = "Password must be at least 6 characters long.";
+            _processing = false;
+            return;
+        }
+
+        if (!PasswordRepeat.Equals(freeUser.ClearTextPassword))
+        {
+            UserHint = "Passwords do not match";
+            _processing = false;
+            return;
+        }
+
+        try
+        {
+            // if not Denmark, add dial code to phone number
+            if (!_selectedCountry.ShortName.Equals("DK", StringComparison.InvariantCultureIgnoreCase))
+            {
+                freeUser.PhoneNumber = freeUser.PhoneNumber.Insert(0, _selectedCountry.DialCode);
+            }
+            var reg = await client.CreateFreeUserAsync(freeUser);
+            // register user and log him in (or redirect to login page)
+            AppState.FreeUserId = reg;
+            AppState.IsFreeUser = true;
+            NavigationManager.NavigateTo("./groups/lounge");
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+        _processing = false;
+    }
+
+    private async void CheckPassword(string val)
+    {
+        freeUser.ClearTextPassword = val;
+        _passwordStrength = await JSRuntime.InvokeAsync<float>("checkPasswordStrength", freeUser.ClearTextPassword);
+        _passwordStrength *= 20;
+        // StateHasChanged();
+    }
+
+    private void Back()
+    {
+        NavigationManager.NavigateTo("./");
+    }
+
+    public async Task Enter(KeyboardEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(freeUser.Email) ||
+        string.IsNullOrWhiteSpace(freeUser.Name) ||
+    string.IsNullOrWhiteSpace(freeUser.PhoneNumber) ||
+    string.IsNullOrWhiteSpace(freeUser.ClearTextPassword) ||
+    string.IsNullOrWhiteSpace(PasswordRepeat)) return;
+
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        {
+            await RegisterAction();
+        }
+    }
+
+    private void TogglePasswordVisibility()
+    {
+        if (_isPasswordShown)
+        {
+            _isPasswordShown = false;
+            PasswordVisibilityIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordInput = InputType.Password;
+        }
+        else
+        {
+            _isPasswordShown = true;
+            PasswordVisibilityIcon = Icons.Material.Filled.Visibility;
+            PasswordInput = InputType.Text;
+        }
+    }
+
+    // have to do it this way, otherwise countries are not searchable
+    private void UpdateCountry(string selected)
+    {
+        _selectedCountry = _countryCodes.Where(c => c.Name.Equals(selected, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+    }
+}
+

@@ -1,0 +1,16 @@
+﻿::deep .group-txt {
+    font-family: 'Poppins';
+}
+
+::deep .new-post-counter {
+    background-color: #7E6FFF;
+    max-width: 30px;
+    height: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    /*padding: .1rem .7rem !important;*/
+    color: #FFF;
+    font-weight: normal !important;
+}

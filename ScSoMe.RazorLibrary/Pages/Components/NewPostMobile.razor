@@ -1,0 +1,53 @@
+﻿@using ScSoMe.RazorLibrary.Pages.Components.AttachFiles
+@inherits NewPostBase
+@inject IEventService EventService
+@inject ApiClientFactory apiClientFactory
+
+<MudDialog Class="mobile-post-dialog">
+    <DialogContent>
+        <div class="new-post-mobile">
+            <QuillEditor @ref=@_inRef HasToolBar="true" />
+        </div>
+        @*<AttachFileButton />
+        <AttachFile @ref="attachFile" />*@
+        <MudContainer Class="m-0 p-0 mt-3 d-flex gap-1">
+            <MudText>👉 Tip: Use</MudText>
+            <MudText Color="MudBlazor.Color.Primary" Style="@("font-weight: bold;")">@('@')</MudText>
+                <MudText>to mention other users.</MudText>
+            </MudContainer>
+        </DialogContent>
+        <DialogActions>
+            <MudButton Variant="Variant.Filled" OnClick="Submit" Class="m-3" Disabled="_processing" Color="MudBlazor.Color.Info">
+                @if (_processing)
+            {
+                <MudProgressCircular Class="ms-n1 mr-3" Size="MudBlazor.Size.Small" Indeterminate="true" />
+            }
+            <MudText Style="@("font-size: 18px;")">Post</MudText>
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public int GroupId { get; set; }
+    private QuillEditor? _inRef { get; set; }
+    private bool _processing { get; set; } = false;
+
+    private async Task Submit()
+    {
+        _processing = true;
+        if (_inRef != null)
+        {
+            base.InRef = _inRef;
+            var created = await base.CreatePost(GroupId);
+            if (created != null)
+            {
+                EventService.SendEvent(created);
+            }
+            _processing = false;
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

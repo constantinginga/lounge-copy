@@ -1,0 +1,58 @@
+﻿@using Humanizer
+
+@if (Msg == null)
+{
+    // Add loading 'ghost' notification
+}
+else
+{
+    <MudListItem Value="@Msg.PostId" OnClick="()=>Open(Msg.NotificationId)" Class="p-0 m-0">
+        @if (!Msg.IsRead)
+        {
+                <MudAlert Severity="Severity.Info" Style="@($"background-color: {TERTIARY_COLOR}")" Variant="Variant.Filled" NoIcon="true" Dense="true" ShowCloseIcon="true" CloseIconClicked="()=>Delete(Msg.NotificationId)">
+                    <MudContainer>
+                        <MudText>@Msg.Message</MudText>
+                        <MudContainer Class="p-0 m-0">
+                            <MudIcon Icon="@Icons.Filled.AccessTime" Style="@("font-size: 1rem;")"></MudIcon>
+                            <MudText Typo="Typo.caption" Color="MudBlazor.Color.Default">@Msg.CreatedDate.Humanize()</MudText>
+                        </MudContainer>
+                    </MudContainer>
+                </MudAlert>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Normal" Variant="Variant.Text" NoIcon="true" Dense="true" ShowCloseIcon="true" CloseIconClicked="()=>Delete(Msg.NotificationId)">
+                <MudContainer>
+                    <MudText>@Msg.Message</MudText>
+                    <MudContainer Class="p-0 m-0">
+                        <MudIcon Icon="@Icons.Filled.AccessTime" Style="@("font-size: 1rem;")"></MudIcon>
+                        <MudText Typo="Typo.caption" Color="MudBlazor.Color.Default">@Msg.CreatedDate.Humanize()</MudText>
+                    </MudContainer>
+                </MudContainer>
+            </MudAlert>
+        }
+    </MudListItem>
+}
+
+@code {
+
+    [Parameter]
+    public API.NotificationMessage Msg { get; set; }
+    [Parameter]
+    public EventCallback<int?> OnOpen { get; set; }
+    [Parameter]
+    public EventCallback<int> OnDelete { get; set; }
+
+    // don't know how to set another color for Severity, so this works for now..
+    private const string TERTIARY_COLOR = "#7E6FFF";
+
+    protected async Task Open(int? id)
+    {
+        await OnOpen.InvokeAsync(id);
+    }
+
+    protected async Task Delete(int id)
+    {
+        await OnDelete.InvokeAsync(id);
+    }
+}

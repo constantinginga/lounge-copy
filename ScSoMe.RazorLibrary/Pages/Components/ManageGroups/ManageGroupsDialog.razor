@@ -1,0 +1,79 @@
+﻿@inject IDialogService DialogService
+@inject ApiClientFactory apiClientFactory
+
+<MudDialog>
+    <DialogContent>
+        @if (!isDeleting)
+        {
+            <MudContainer Class="d-flex flex-column gap-3">
+                <MudTextField @bind-Value="@groupName" Label="Group name" Variant="Variant.Outlined"></MudTextField>
+                <MudTextField @bind-Value="@groupUrl" Label="Group URL" Variant="Variant.Outlined"></MudTextField>
+            </MudContainer>
+        }
+        else
+        {
+            <MudSelect T="string" @bind-Value="selectedGroup" Label="Choose group" AnchorOrigin="Origin.BottomCenter">
+                @if (groups != null)
+                {
+                    @foreach (var g in groups)
+                    {
+                        <MudSelectItem Value="@(g.GroupName)" />
+                    }
+                }
+            </MudSelect>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="MudBlazor.Color.Primary" OnClick="Submit">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public bool isDeleting { get; set; }
+    public API.ScSoMeApi? client { get; set; }
+    private ICollection<API.ScGroup> groups { get; set; }
+    private string groupName { get; set; }
+    private string groupUrl { get; set; }
+    private string selectedGroup { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        client = apiClientFactory.GetApiClient();
+        groups = await client.GetGroupsAsync();
+    }
+
+
+    private async Task Submit()
+    {
+        if (!isDeleting)
+        {
+            if (client != null && !string.IsNullOrWhiteSpace(groupName))
+            {
+                await client.CreateGroupAsync(groupName, (!string.IsNullOrWhiteSpace(groupUrl)) ? groupUrl : groupName);
+            }
+        }
+        else
+        {
+            var options = new DialogOptions { CloseOnEscapeKey = true };
+            var parameters = new DialogParameters { ["groupToDelete"] = selectedGroup };
+            var dialog = DialogService.Show<ConfirmationDialog>("Are you sure?", parameters, options);
+            var result = await dialog.Result;
+            if (client != null && !string.IsNullOrWhiteSpace(selectedGroup))
+            {
+                if (!result.Cancelled)
+                {
+                    await client.RemoveGroupAsync(selectedGroup);
+                }
+            }
+        }
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}

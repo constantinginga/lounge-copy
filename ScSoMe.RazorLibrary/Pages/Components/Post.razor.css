@@ -1,0 +1,27 @@
+#comment-container-wrapper {
+    margin: 0 .5rem .5rem .5rem;
+    overflow: auto;
+}
+
+.sec-level-comment {
+    margin-left: .5rem;
+}
+
+.third-level-comment {
+    margin-left: 2rem;
+}
+
+@media only screen and (max-width: 500px) {
+    .sec-level-comment {
+        margin-left: 0;
+    }
+
+    .third-level-comment {
+        margin-left: .5rem;
+    }
+}
+
+.sec-level-comment,
+.third-level-comment {
+    border-left: 2px solid #9E9E9E;
+}

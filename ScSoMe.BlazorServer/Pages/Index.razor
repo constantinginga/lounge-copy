@@ -1,0 +1,30 @@
+﻿@page "/"
+@inject NavigationManager NavManager
+@inject AppState AppState
+@using ScSoMe.BlazorServer.Pages
+@using Blazor.Analytics.Abstractions
+@using Blazor.Analytics
+@inject ITrackingNavigationState TrackingNavigationState
+@inject IAnalytics GlobalTracking
+
+
+@code {
+    bool isProd = Environment.MachineName.Equals("startupVM");
+    protected override async Task OnInitializedAsync()
+    {
+        //if (AppState.IsLoggedIn)
+        //{
+        //    NavManager.NavigateTo((AppState.SelectedPost == null) ? "/groups/Lounge" : $"/groups/Lounge/{AppState.SelectedPost}");
+        //}
+        //else
+        //{
+        //    NavManager.NavigateTo("/login");
+        //}
+        if (!isProd)
+        {
+                GlobalTracking.Disable();
+        }
+
+         NavManager.NavigateTo((!AppState.IsLoggedIn) ? "./login" : "./groups/lounge");
+    }
+}

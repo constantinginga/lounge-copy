@@ -1,0 +1,22 @@
+﻿@using System.Text.Json
+@if (Embedded != null)
+{
+    <div class="embedded-link-container">
+    <a href="@Embedded.Url" target="_blank">
+        <div class="embedded-link">
+            <div class="embedded-link-img">
+                <img src="@Embedded.Img" alt="Embedded link image">
+            </div>
+            <div class="embedded-link-text">
+                <p class="embedded-link-text__title">@Embedded.Title</p>
+                <p class="embedded-link-text__url">@Embedded.Url</p>
+            </div>
+        </div>
+    </a>
+</div>
+}
+
+@code {
+    [Parameter]
+    public API.Embedded Embedded { get; set; }
+}

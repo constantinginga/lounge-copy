@@ -1,0 +1,17 @@
+﻿@page "/"
+@inject NavigationManager NavManager
+@inject AppState AppState
+@using ScSoMe.RazorLibrary.Pages
+
+@code { protected override void OnParametersSet()
+    {
+            NavManager.NavigateTo((!AppState.IsLoggedIn) ? "/mauilogin" : "/groups/lounge");
+            base.OnParametersSet();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        @*Console.WriteLine("In index");
+        NavManager.NavigateTo((!AppState.IsLoggedIn) ? "/mauilogin" : "/groups/Lounge");*@
+    }
+}

@@ -1,0 +1,12 @@
+﻿::deep .notification-list {
+    max-width: 600px !important;
+    margin: 0 auto;
+}
+
+@media only screen and (max-width: 440px) {
+    ::deep .notification-header {
+        flex-direction: column;
+        gap: .5rem 0;
+        align-items: center;
+    }
+}

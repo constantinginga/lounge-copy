@@ -1,0 +1,295 @@
+﻿@using Microsoft.JSInterop;
+@using System.Net.Http.Json;
+@using Newtonsoft.Json;
+@using Paylike.NETStandard;
+@inject IJSRuntime JsRuntime
+@inject AppState AppState
+@inject NavigationManager NavigationManager
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject ScSoMe.Common.ApiClientFactory apiClientFactory
+@inject HttpClient Http
+
+@if (subscriptions != null && subscriptions.Count() != 0)
+{
+    <MudDialog>
+        <TitleContent>
+            <MudContainer Class="p-0 m-0 d-flex align-center gap-2">
+                <MudIcon Icon="@Icons.Filled.WorkspacePremium" Title="Locked feature" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium" />
+                <MudText>Buy membership</MudText>
+            </MudContainer>
+        </TitleContent>
+        <DialogContent>
+            <MudContainer Class="p-0 m-0 d-flex flex-column">
+                <MudContainer Class="p-0 m-0 d-flex flex-column gap-1">
+                    <MudContainer Class="p-0 m-0 d-flex gap-1">
+                        <MudIcon Icon="@Icons.Filled.Check" Title="feature" Color="MudBlazor.Color.Primary" />
+                        <MudText>Sparring with coaches</MudText>
+                    </MudContainer>
+                    <MudContainer Class="p-0 m-0 d-flex gap-1">
+                        <MudIcon Icon="@Icons.Filled.Check" Title="feature" Color="MudBlazor.Color.Primary" />
+                        <MudText>Partner deals</MudText>
+                    </MudContainer>
+                    <MudContainer Class="p-0 m-0 d-flex gap-1">
+                        <MudIcon Icon="@Icons.Filled.Check" Title="feature" Color="MudBlazor.Color.Primary" />
+                        <MudText>Events</MudText>
+                    </MudContainer>
+                    <MudContainer Class="p-0 m-0 d-flex gap-1">
+                        <MudIcon Icon="@Icons.Filled.Check" Title="feature" Color="MudBlazor.Color.Primary" />
+                        <MudText>Tools</MudText>
+                    </MudContainer>
+                    <MudContainer Class="p-0 m-0 d-flex gap-1">
+                        @*<MudText>...and much more</MudText>*@
+                        <MudText Style="font-style: italic">Read more about our subscriptions <MudLink Href="https://www.startupcentral.dk/bliv-medlem/" Underline="Underline.Always" Target="_blank">here</MudLink></MudText>
+                    </MudContainer>
+                </MudContainer>
+                <MudSelect T="SubscriptionType" @bind-Value="selectedValue" Label="Choose plan" AnchorOrigin="Origin.BottomCenter" Variant="Variant.Outlined" Class="mt-3 mb-2">
+                    @foreach (var s in subscriptions)
+                    {
+                        <MudSelectItem Value="@s" />
+                    }
+                </MudSelect>
+            </MudContainer>
+            @if (selectedValue != null)
+            {
+                <MudContainer Class="p-0 m-0 my-2 d-flex gap-1">
+                    <MudTextField @bind-Value="promocode" Label="Enter promocode" Variant="Variant.Outlined" Margin="MudBlazor.Margin.Dense"></MudTextField>
+                    <MudButton Variant="MudBlazor.Variant.Text" Color="MudBlazor.Color.Default" Size="MudBlazor.Size.Small" OnClick="ApplyPromocode" Disabled=@isLoading>
+                        @if (isLoading)
+                        {
+                            <MudProgressCircular Color="MudBlazor.Color.Default" Indeterminate="true" Size="MudBlazor.Size.Small" />
+                        }
+                        else
+                        {
+                            <MudText>Apply</MudText>
+                        }
+                    </MudButton>
+                </MudContainer>
+            }
+
+            @if (priceTxt != null)
+            {
+                <MudText Color="MudBlazor.Color.Success" Class="mt-2">@priceTxt</MudText>
+            }
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudButton Color="MudBlazor.Color.Primary" OnClick="Submit" Disabled="@(selectedValue == null)">Continue</MudButton>
+        </DialogActions>
+    </MudDialog>
+}
+
+@*<MudDialog>
+    <TitleContent>
+        <MudContainer Class="p-0 m-0 d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Filled.WorkspacePremium" Title="Locked feature" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium" />
+            <MudText>Pro 1 År</MudText>
+        </MudContainer>
+    </TitleContent>
+    <DialogContent>
+        <MudContainer Class="p-0 m-0 d-flex flex-column">
+            <MudContainer Class="p-0 m-0 d-flex flex-column gap-1">
+                <MudContainer Class="p-0 m-0 d-flex gap-1">
+                    <MudIcon Icon="@Icons.Filled.Check" Title="feature" Color="MudBlazor.Color.Primary" />
+                    <MudText>Rabatter</MudText>
+                </MudContainer>
+                <MudContainer Class="p-0 m-0 d-flex gap-1">
+                    <MudIcon Icon="@Icons.Filled.Check" Title="feature" Color="MudBlazor.Color.Primary" />
+                    <MudText>Erhvervssparring</MudText>
+                </MudContainer>
+                <MudContainer Class="p-0 m-0 d-flex gap-1">
+                    <MudIcon Icon="@Icons.Filled.Check" Title="feature" Color="MudBlazor.Color.Primary" />
+                    <MudText>Events</MudText>
+                </MudContainer>
+                <MudContainer Class="p-0 m-0 d-flex gap-1">
+                    <MudIcon Icon="@Icons.Filled.Check" Title="feature" Color="MudBlazor.Color.Primary" />
+                    <MudText>Værktøjer</MudText>
+                </MudContainer>
+                <MudContainer Class="p-0 m-0 d-flex gap-1">
+                    <MudText>
+                        ...og meget mere
+                    </MudText>
+                </MudContainer>
+            </MudContainer>
+            <MudContainer Class="p-0 m-0 my-2 d-flex gap-1">
+                <MudTextField @bind-Value="promocode" Label="Enter promocode" Variant="Variant.Outlined" Margin="MudBlazor.Margin.Dense"></MudTextField>
+                <MudButton Variant="MudBlazor.Variant.Text" Color="MudBlazor.Color.Default" Size="MudBlazor.Size.Small" OnClick="ApplyPromocode" Disabled=@isLoading>
+                    @if (isLoading)
+                    {
+                        <MudProgressCircular Color="MudBlazor.Color.Default" Indeterminate="true" Size="MudBlazor.Size.Small" />
+                    }
+                    else
+                    {
+                        <MudText>Apply</MudText>
+                    }
+                </MudButton>
+            </MudContainer>
+            <MudText Color="MudBlazor.Color.Tertiary" Class="mt-2">@priceTxt</MudText>
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="MudBlazor.Color.Primary" OnClick="Submit" Variant="MudBlazor.Variant.Filled">Continue</MudButton>
+    </DialogActions>
+</MudDialog>*@
+
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    private IList<SubscriptionType> subscriptions { get; set; }
+
+    private SubscriptionType selectedValue { get; set; }
+    private string? promocode { get; set; }
+    private PromoCodeResp? respVal { get; set; }
+    private PromoCodeReq reqObj { get; set; }
+    private float priceWithPromo { get; set; }
+    //private float basePrice { get; set; } = 1788;
+    //private float price { get; set; } = 1788;
+    private string priceTxt { get; set; }
+    private bool isLoading { get; set; }
+    private string results { get; set; }
+
+
+
+    protected override void OnInitialized()
+    {
+        // UPDATE PRICES WHEN THEY GET CHANGED
+        // TODO: Pull prices from Umbraco instead of hard-coding them
+        subscriptions = new List<SubscriptionType>();
+        subscriptions.Add(new SubscriptionType() { Name = "Pro Monthly", Abbreviation = "md", Period = 8, Amount = 299 });
+        subscriptions.Add(new SubscriptionType() { Name = "Pro Yearly", Abbreviation = "yr", Period = 12, Amount = 1788 });
+        subscriptions.Add(new SubscriptionType() { Name = "Premium", Abbreviation = "", Period = 16, Amount = 5999 });
+        //priceTxt = $"{selectedValue.Amount} kr. (*excl. VAT)";
+    }
+
+    private async Task ApplyPromocode()
+    {
+        if (string.IsNullOrWhiteSpace(promocode)) return;
+        isLoading = true;
+        var req = new HttpRequestMessage(HttpMethod.Post, "https://www.startupcentral.dk/umbraco/Surface/RegisterUserPayment/ApplyPromocode");
+        reqObj = new PromoCodeReq { promocode = promocode.Trim() };
+        req.Content = JsonContent.Create(reqObj);
+        var resp = await Http.SendAsync(req);
+        Console.WriteLine(resp.StatusCode.ToString());
+        var respStr = await resp.Content.ReadAsStringAsync();
+        try
+        {
+            PromoCodeResp? respVal = JsonConvert.DeserializeObject<PromoCodeResp>(respStr);
+            priceWithPromo = selectedValue.Amount;
+            priceWithPromo -= priceWithPromo * respVal.Item1;
+            if (respVal.Item2 != null)
+            {
+                priceTxt = $"{String.Format("{0:0.00}", priceWithPromo)} kr. for {respVal.Item2} {respVal.Item3} (*excl. VAT)";
+            }
+            else
+            {
+                priceTxt = $"{String.Format("{0:0.00}", priceWithPromo)} kr. (*excl. VAT)";
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+
+        promocode = "";
+        isLoading = false;
+    }
+
+    private class PromoCodeReq
+    {
+        public string promocode { get; set; }
+    }
+
+    private class PromoCodeResp
+    {
+        // Discount amount (e.g. 0.25 -> 25%)
+        public float Item1 { get; set; }
+        // Duration (e.g. 365)
+        public int? Item2 { get; set; }
+        // Duration measurement (e.g. "Days")
+        public string Item3 { get; set; }
+    }
+
+    private static Func<Task> ApproveMemberActionAsync;
+
+    private async Task Submit()
+    {
+        MudDialog.Close(DialogResult.Ok(true));
+
+        if (AppState.CurrentUser != null)
+        {
+            int subscriptionPeriod = -1;
+
+            HttpClient umbracoApiClient = new HttpClient();
+
+            // On Android/iOS, localhost is different
+            // https://learn.microsoft.com/en-us/dotnet/maui/data-cloud/local-web-services
+
+            var baseUmbracoUrl = //"http://10.0.2.2:1111";
+            "https://www.startupcentral.dk";
+            var uri = new Uri(baseUmbracoUrl + "/umbraco/api/upodiapi/GetMemberKey");
+            var parameters = new Dictionary<string, string>();
+            parameters.Add("UserId", AppState.CurrentUser.Id.ToString());
+
+            var postContent = new FormUrlEncodedContent(parameters);
+            HttpResponseMessage response = await umbracoApiClient.PostAsync(uri, postContent);
+            response.EnsureSuccessStatusCode(); //throw if httpcode is an error
+            var resultString = await response.Content.ReadAsStringAsync();
+            AppState.FreeUserId = resultString;
+
+            try
+            {
+                var resp = await JsRuntime.InvokeAsync<string>("pay", AppState.CurrentUser.Id, AppState.FreeUserId, selectedValue.Period, reqObj != null ? reqObj.promocode : null);
+                Console.WriteLine("RESP after paying:" + resp);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Exception " + e.Message);
+            }
+
+            ApproveMemberActionAsync += ApproveMember;
+        }
+
+    }
+
+    void Cancel() => MudDialog.Cancel();
+
+    private class SubscriptionType
+    {
+        public string Name { get; set; }
+        public string Abbreviation { get; set; }
+        public int Period { get; set; }
+        public int Amount { get; set; }
+
+        public override bool Equals(object o)
+        {
+            var other = o as SubscriptionType;
+            return other?.Name == Name;
+        }
+
+        public override int GetHashCode() => Name?.GetHashCode() ?? 0;
+
+        public override string ToString() => (!string.IsNullOrEmpty(Abbreviation)) ? $"{Name} - {Amount} kr./{Abbreviation}" : $"{Name} - {Amount} kr.";
+
+    }
+
+    [JSInvokable("PayCallback")]
+    public static async void PayCallback(string result)
+    {
+        // after paying, approve user
+        await ApproveMemberActionAsync?.Invoke();
+    }
+
+    private async Task ApproveMember()
+    {
+        var apiClient = apiClientFactory.GetApiClient();
+        await apiClient.SetMemberIsApprovedAsync(AppState.CurrentUser.Id, true);
+        var signoutResult = await apiClientFactory.SignOut();
+        await localStorage.RemoveItemAsync("Token");
+        AppState.IsLoggedIn = false;
+        AppState.CurrentUser = null;
+
+        AppState.IsFreeUser = false;
+        NavigationManager.NavigateTo("./");
+    }
+}
