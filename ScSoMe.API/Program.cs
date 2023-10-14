@@ -22,8 +22,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyAllowSpecificOrigins,
         policy =>
         {
-            policy.WithOrigins("https://localhost:7279", "https://0.0.0.0", "app://0.0.0.0");
-            //.AllowAnyOrigin();
+            policy.WithOrigins("http://localhost:5173/", "https://profile-page-orpin.vercel.app/","https://localhost:7279", "https://0.0.0.0", "app://0.0.0.0")
+            .AllowAnyOrigin().AllowAnyHeader();
         });
 });
 
@@ -73,7 +73,7 @@ if (app.Environment.IsProduction())
     app.UseSwaggerUI();
 
     app.UseCors(policy => policy
-    .WithOrigins("https://www.startupcentral.dk", "https://startupcentral.dk", "https://groups.startupcentral.dk", "https://testgroups.startupcentral.dk", "https://test.startupcentral.dk", "https://localhost:7279", "https://0.0.0.0", "app://0.0.0.0") // TODO: Set to production deployment endpoint !!! // https://youtu.be/5SLGQDDp0aI?t=1716
+    .WithOrigins("https://profile-page-orpin.vercel.app/", "https://www.startupcentral.dk", "https://startupcentral.dk", "https://groups.startupcentral.dk", "https://testgroups.startupcentral.dk", "https://test.startupcentral.dk", "https://localhost:7279", "https://0.0.0.0", "app://0.0.0.0") // TODO: Set to production deployment endpoint !!! // https://youtu.be/5SLGQDDp0aI?t=1716
     .AllowAnyMethod()
     .AllowAnyHeader()
     .AllowCredentials()
