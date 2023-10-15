@@ -8,8 +8,8 @@ using System.Diagnostics;
 using System.Net;
 using System.Text;
 using System.Text.Json;
-using Newtonsoft.Json;
 using ScSoMe.API.Controllers.Profiles;
+using System.Text.Json.Serialization;
 
 namespace ScSoMe.API.Controllers.Members.MembersController
 {
@@ -54,13 +54,21 @@ namespace ScSoMe.API.Controllers.Members.MembersController
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<Profile> GetProfile([FromBody] string memberId){
+        public async Task<string> GetProfile([FromBody] string memberId){
             try{
-                Profile response = await profileService.GetProfile(Int16.Parse(memberId));
-                return response;
+                Member response = await profileService.GetProfile(Int16.Parse(memberId));
+                JsonSerializerOptions options = new()
+                {
+                    ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                    WriteIndented = true
+                };
+                string serializedResponse = JsonSerializer.Serialize(response, options);
+                return serializedResponse;
             }
             catch(Exception e){
-                return null;
+                return JsonSerializer.Serialize(new ProfileResponse{
+                Message = e.Message,                    
+                StatusCode = HttpStatusCode.InternalServerError,});
             }
         }
     }

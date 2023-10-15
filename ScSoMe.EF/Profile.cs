@@ -9,9 +9,10 @@ namespace ScSoMe.EF
         public string Name { get; set; }
         public string Email { get; set; }
         public DescriptionSection DescriptionSection { get; set; }
-        // public ExternalLinksSections ExternalLinksSections { get; set; }
+        public ContactsSection ContactsSection { get; set; }
+        public ExternalLinksSection ExternalLinksSection { get; set; }
         public ServicesSection ServicesSection { get; set; }
-        // public SocialMediaSection SocialMediaSection { get; set; }
+        public ActivitySection ActivitySection { get; set; }
         public WorkExperienceSection WorkExperienceSection { get; set; }
         public bool isMember { get; set; }
     }
