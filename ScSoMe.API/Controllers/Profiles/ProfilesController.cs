@@ -26,6 +26,28 @@ namespace ScSoMe.API.Controllers.Members.MembersController
             profileService = new ProfileService();
         }
 
+        [HttpPost("GetProfile")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<string> GetProfile([FromBody] string memberId){
+            try{
+                Member response = await profileService.GetProfile(Int16.Parse(memberId));
+                JsonSerializerOptions options = new()
+                {
+                    ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                    WriteIndented = true
+                };
+                string serializedResponse = JsonSerializer.Serialize(response, options);
+                return serializedResponse;
+            }
+            catch(Exception e){
+                return JsonSerializer.Serialize(new ProfileResponse{
+                Message = e.Message,                    
+                StatusCode = HttpStatusCode.InternalServerError,});
+            }
+        }
+
         [HttpPost("SetProfileDescription")]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
@@ -50,26 +72,29 @@ namespace ScSoMe.API.Controllers.Members.MembersController
             };
         }
 
-        [HttpPost("GetProfile")]
+        [HttpPost("SetServices")]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<string> GetProfile([FromBody] string memberId){
-            try{
-                Member response = await profileService.GetProfile(Int16.Parse(memberId));
-                JsonSerializerOptions options = new()
-                {
-                    ReferenceHandler = ReferenceHandler.IgnoreCycles,
-                    WriteIndented = true
-                };
-                string serializedResponse = JsonSerializer.Serialize(response, options);
-                return serializedResponse;
+        public async Task<ProfileResponse> SetServices([FromBody]JsonElement services){
+            ServiceObject? d = services.Deserialize<ServiceObject>();
+            if(d != null){
+                ServicesSection existingService = await profileService.CheckIfMemberHasService(d.MemberId);
+                ProfileResponse response;
+                if(existingService != null){
+                    existingService.Content = d.Service;
+                    response = await profileService.UpdateService(existingService);
+                }
+                else{
+                    response = await profileService.AddProfileService(d.MemberId, d.Service);
+                }
+                return response;
             }
-            catch(Exception e){
-                return JsonSerializer.Serialize(new ProfileResponse{
-                Message = e.Message,                    
-                StatusCode = HttpStatusCode.InternalServerError,});
-            }
+            return new ProfileResponse{
+                Message = "Failed to deserialize service object",                    
+                StatusCode = HttpStatusCode.InternalServerError,
+            };
         }
+
     }
 }

@@ -19,4 +19,9 @@ namespace ScSoMe.API.Controllers.Profiles
         public int MemberId { get; set; }
         public string? Description { get; set; }
     }
+
+    public class ServiceObject{
+        public int MemberId { get; set; }
+        public string? Service { get; set; }
+    }
 }
