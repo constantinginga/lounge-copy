@@ -63,7 +63,8 @@ namespace ScSoMe.API.Controllers.Members.MembersController
                 test.DescriptionSection = new DescriptionSection();
                 test.DescriptionSection.Content = "This is a test";
                 test.ContactsSection = new ContactsSection();
-                test.ContactsSection.Content = "This is a test";
+                test.ContactsSection.Email = "This is a test";
+                test.ContactsSection.PhoneNumber = 15516546546;
                 test.ExternalLinksSection = new ExternalLinksSection();
                 test.ExternalLinksSection.ExternalLinks = new List<ExternalLink>();
                 test.ExternalLinksSection.ExternalLinks.Add(new ExternalLink { Title = "This is a test", Url = "url testing link" });
