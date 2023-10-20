@@ -35,8 +35,29 @@ namespace ScSoMe.API.Services
                 return null;
             }
             catch(Exception e){
-                Console.WriteLine("Pepe error" + e);
                 return null;
+            }
+        }
+
+        public async Task<ProfileResponse> UpdateProfile(Member newProfile){
+            try{
+                var propertyInfos = typeof(Member).GetProperties();
+                foreach (var prop in propertyInfos)
+                {
+                    Console.WriteLine("Name: " + prop.Name + ", Value: " + prop.GetValue(newProfile));
+                }
+                // db.Members.Update(newProfile);
+                // await db.SaveChangesAsync();
+                return new ProfileResponse{
+                    Message = "Profile updated",
+                    StatusCode = HttpStatusCode.OK,
+                };
+            }
+            catch(Exception e){
+                return new ProfileResponse{
+                    Message = e.Message,
+                    StatusCode = HttpStatusCode.InternalServerError,
+                };
             }
         }
 

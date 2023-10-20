@@ -26,13 +26,13 @@ namespace ScSoMe.API.Controllers.Members.MembersController
             profileService = new ProfileService();
         }
 
-        [HttpPost("GetProfile")]
+        [HttpGet("GetProfile")]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<string> GetProfile([FromBody] string memberId){
+        public async Task<string> GetProfile([FromQuery] int memberId){
             try{
-                Member response = await profileService.GetProfile(Int16.Parse(memberId));
+                Member response = await profileService.GetProfile(memberId);
                 JsonSerializerOptions options = new()
                 {
                     ReferenceHandler = ReferenceHandler.IgnoreCycles,
@@ -48,28 +48,47 @@ namespace ScSoMe.API.Controllers.Members.MembersController
             }
         }
 
-        [HttpPost("SetProfileDescription")]
+        [HttpPost("UpdateProfile")]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<ProfileResponse> SetProfileDescription([FromBody]JsonElement description){
-            DescriptionObject? d = description.Deserialize<DescriptionObject>();
-            if(d != null){
-                DescriptionSection existingDescription = await profileService.CheckIfMemberHasProfileDescription(d.MemberId);
-                ProfileResponse response;
-                if(existingDescription != null){
-                    existingDescription.Content = d.Description;
-                    response = await profileService.UpdateProfileDescription(existingDescription);
+        // public async Task<ProfileResponse> UpdateProfile([FromBody]JsonElement profile){
+        public async Task<ProfileResponse> UpdateProfile([FromBody]JsonElement profile){
+            try{
+                Member? newProfile = profile.Deserialize<Member>();
+                Member test = new Member();
+                test.MemberId = 1731;
+                test.Email = "usdenmarkus@gmail.com";
+                test.Name = "Ronni Vien";
+                test.DescriptionSection = new DescriptionSection();
+                test.DescriptionSection.Content = "This is a test";
+                test.ContactsSection = new ContactsSection();
+                test.ContactsSection.Content = "This is a test";
+                test.ExternalLinksSection = new ExternalLinksSection();
+                test.ExternalLinksSection.ExternalLinks = new List<ExternalLink>();
+                test.ExternalLinksSection.ExternalLinks.Add(new ExternalLink { Title = "This is a test", Url = "url testing link" });
+                test.ServicesSection = new ServicesSection();
+                test.ServicesSection.Content = "This is a test";
+                test.ActivitySection = new ActivitySection();
+                test.ActivitySection.Content = "This is a test";
+                test.WorkExperienceSection = new WorkExperienceSection();
+                test.WorkExperienceSection.WorkExperiences = new List<WorkExperience>();
+                test.WorkExperienceSection.WorkExperiences.Add(new WorkExperience { CompanyName = "Company testing link", StartDate = DateTimeOffset.Now.DateTime, EndDate = DateTimeOffset.Now.DateTime, Position = "Position testing link", PositionDescription = "Position description testing link" });
+                if (newProfile != null)
+                {
+                    ProfileResponse response = await profileService.UpdateProfile(test);
+                    return response;
                 }
-                else{
-                    response = await profileService.AddProfileDescription(d.MemberId, d.Description);
-                }
-                return response;
+                return new ProfileResponse{
+                    Message = "Failed to deserialize received member object",                    
+                    StatusCode = HttpStatusCode.InternalServerError,
+                };
             }
-            return new ProfileResponse{
-                Message = "Failed to deserialize description object",                    
-                StatusCode = HttpStatusCode.InternalServerError,
-            };
+            catch(Exception e){
+                return new ProfileResponse{
+                Message = e.Message,                    
+                StatusCode = HttpStatusCode.InternalServerError,};
+            }
         }
 
         [HttpPost("SetServices")]

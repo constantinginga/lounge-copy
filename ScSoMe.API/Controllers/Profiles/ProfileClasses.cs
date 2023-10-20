@@ -1,4 +1,5 @@
 using System.Net;
+using ScSoMe.EF;
 
 namespace ScSoMe.API.Controllers.Profiles
 {
