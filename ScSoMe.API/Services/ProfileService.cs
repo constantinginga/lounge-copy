@@ -41,10 +41,14 @@ namespace ScSoMe.API.Services
 
         public async Task<ProfileResponse> UpdateProfile(Member newProfile){
             try{
-                var propertyInfos = typeof(Member).GetProperties();
-                foreach (var prop in propertyInfos)
+                var currentMember = await GetProfile(newProfile.MemberId);
+                var currentPropertyInfos = typeof(Member).GetProperties();
+                var newPropertyInfos = typeof(Member).GetProperties();
+                foreach (var newMember in newPropertyInfos)
                 {
-                    Console.WriteLine("Name: " + prop.Name + ", Value: " + prop.GetValue(newProfile));
+                    if(currentPropertyInfos == newPropertyInfos){
+                        Console.WriteLine("Name: " + newMember.Name + ", Value: " + newMember.GetValue(newProfile));
+                    }
                 }
                 // db.Members.Update(newProfile);
                 // await db.SaveChangesAsync();

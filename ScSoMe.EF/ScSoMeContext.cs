@@ -66,7 +66,7 @@ namespace ScSoMe.EF
             modelBuilder.Entity<ActivitySection>(entity =>
             {
                 entity.HasKey(e => e.MemberId)
-                    .HasName("PK__Activity__B29B85340111587B");
+                    .HasName("PK__Activity__B29B8534E86D9488");
 
                 entity.ToTable("ActivitySection");
 
@@ -84,7 +84,7 @@ namespace ScSoMe.EF
                     .WithOne(p => p.ActivitySection)
                     .HasForeignKey<ActivitySection>(d => d.MemberId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__ActivityS__membe__09746778");
+                    .HasConstraintName("FK__ActivityS__membe__2F9A1060");
             });
 
             modelBuilder.Entity<BlockedMember>(entity =>
@@ -159,7 +159,7 @@ namespace ScSoMe.EF
             modelBuilder.Entity<ContactsSection>(entity =>
             {
                 entity.HasKey(e => e.MemberId)
-                    .HasName("PK__Contacts__B29B8534BAC58125");
+                    .HasName("PK__Contacts__B29B85341DB720C1");
 
                 entity.ToTable("ContactsSection");
 
@@ -167,9 +167,11 @@ namespace ScSoMe.EF
                     .ValueGeneratedNever()
                     .HasColumnName("member_id");
 
-                entity.Property(e => e.Content)
+                entity.Property(e => e.Email)
                     .HasColumnType("text")
-                    .HasColumnName("content");
+                    .HasColumnName("email");
+
+                entity.Property(e => e.PhoneNumber).HasColumnName("phoneNumber");
 
                 entity.Property(e => e.PrivacySetting).HasColumnName("privacy_setting");
 
@@ -177,7 +179,7 @@ namespace ScSoMe.EF
                     .WithOne(p => p.ContactsSection)
                     .HasForeignKey<ContactsSection>(d => d.MemberId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__ContactsS__membe__7E02B4CC");
+                    .HasConstraintName("FK__ContactsS__membe__24285DB4");
             });
 
             modelBuilder.Entity<CountryCode>(entity =>
@@ -196,7 +198,7 @@ namespace ScSoMe.EF
             modelBuilder.Entity<DescriptionSection>(entity =>
             {
                 entity.HasKey(e => e.MemberId)
-                    .HasName("PK__Descript__B29B85345A4006B9");
+                    .HasName("PK__Descript__B29B853496ED6FBC");
 
                 entity.ToTable("DescriptionSection");
 
@@ -214,7 +216,7 @@ namespace ScSoMe.EF
                     .WithOne(p => p.DescriptionSection)
                     .HasForeignKey<DescriptionSection>(d => d.MemberId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__Descripti__membe__756D6ECB");
+                    .HasConstraintName("FK__Descripti__membe__1B9317B3");
             });
 
             modelBuilder.Entity<Emoji>(entity =>
@@ -249,13 +251,13 @@ namespace ScSoMe.EF
                 entity.HasOne(d => d.Member)
                     .WithMany(p => p.ExternalLinks)
                     .HasForeignKey(d => d.MemberId)
-                    .HasConstraintName("FK__ExternalL__membe__7B264821");
+                    .HasConstraintName("FK__ExternalL__membe__214BF109");
             });
 
             modelBuilder.Entity<ExternalLinksSection>(entity =>
             {
                 entity.HasKey(e => e.MemberId)
-                    .HasName("PK__External__B29B85342B3F1040");
+                    .HasName("PK__External__B29B8534A4E9FBD1");
 
                 entity.ToTable("ExternalLinksSection");
 
@@ -269,7 +271,7 @@ namespace ScSoMe.EF
                     .WithOne(p => p.ExternalLinksSection)
                     .HasForeignKey<ExternalLinksSection>(d => d.MemberId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__ExternalL__membe__7849DB76");
+                    .HasConstraintName("FK__ExternalL__membe__1E6F845E");
             });
 
             modelBuilder.Entity<Group>(entity =>
@@ -497,7 +499,7 @@ namespace ScSoMe.EF
             modelBuilder.Entity<ServicesSection>(entity =>
             {
                 entity.HasKey(e => e.MemberId)
-                    .HasName("PK__Services__B29B85345EACE655");
+                    .HasName("PK__Services__B29B8534D9BBD875");
 
                 entity.ToTable("ServicesSection");
 
@@ -515,7 +517,7 @@ namespace ScSoMe.EF
                     .WithOne(p => p.ServicesSection)
                     .HasForeignKey<ServicesSection>(d => d.MemberId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__ServicesS__membe__00DF2177");
+                    .HasConstraintName("FK__ServicesS__membe__2704CA5F");
             });
 
             modelBuilder.Entity<TrackedMessage>(entity =>
@@ -573,13 +575,13 @@ namespace ScSoMe.EF
                 entity.HasOne(d => d.Member)
                     .WithMany(p => p.WorkExperiences)
                     .HasForeignKey(d => d.MemberId)
-                    .HasConstraintName("FK__WorkExper__membe__0697FACD");
+                    .HasConstraintName("FK__WorkExper__membe__2CBDA3B5");
             });
 
             modelBuilder.Entity<WorkExperienceSection>(entity =>
             {
                 entity.HasKey(e => e.MemberId)
-                    .HasName("PK__WorkExpe__B29B85348D9F0D78");
+                    .HasName("PK__WorkExpe__B29B8534C1078D9E");
 
                 entity.ToTable("WorkExperienceSection");
 
@@ -593,7 +595,7 @@ namespace ScSoMe.EF
                     .WithOne(p => p.WorkExperienceSection)
                     .HasForeignKey<WorkExperienceSection>(d => d.MemberId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__WorkExper__membe__03BB8E22");
+                    .HasConstraintName("FK__WorkExper__membe__29E1370A");
             });
 
             OnModelCreatingPartial(modelBuilder);

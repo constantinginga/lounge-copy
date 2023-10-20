@@ -53,9 +53,9 @@ namespace ScSoMe.API.Controllers.Members.MembersController
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
         // public async Task<ProfileResponse> UpdateProfile([FromBody]JsonElement profile){
-        public async Task<ProfileResponse> UpdateProfile([FromBody]JsonElement profile){
+        public async Task<ProfileResponse> UpdateProfile(){
             try{
-                Member? newProfile = profile.Deserialize<Member>();
+                // Member? newProfile = profile.Deserialize<Member>();
                 Member test = new Member();
                 test.MemberId = 1731;
                 test.Email = "usdenmarkus@gmail.com";
@@ -74,7 +74,7 @@ namespace ScSoMe.API.Controllers.Members.MembersController
                 test.WorkExperienceSection = new WorkExperienceSection();
                 test.WorkExperienceSection.WorkExperiences = new List<WorkExperience>();
                 test.WorkExperienceSection.WorkExperiences.Add(new WorkExperience { CompanyName = "Company testing link", StartDate = DateTimeOffset.Now.DateTime, EndDate = DateTimeOffset.Now.DateTime, Position = "Position testing link", PositionDescription = "Position description testing link" });
-                if (newProfile != null)
+                if (test != null)
                 {
                     ProfileResponse response = await profileService.UpdateProfile(test);
                     return response;
