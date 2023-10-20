@@ -40,55 +40,95 @@ namespace ScSoMe.API.Services
                     }
                     return member;
                 }
-                Console.WriteLine("Member not found");
                 return null;
             }
             catch(Exception e){
-                Console.WriteLine("Error: " + e.Message);
                 return null;
             }
         }
 
-        public async Task<ProfileResponse> UpdateProfile(Member newProfile){
+        public async Task<bool> UpdateProfile(Member newProfile){
             try{
                 var oldProfile = await GetProfile(newProfile.MemberId);
                 var propertyInfos = typeof(Member).GetProperties();
+                bool response = true;
                 foreach (var prop in propertyInfos)
                 {
                     if(prop.GetValue(newProfile) != prop.GetValue(oldProfile)){
                         if(prop.GetValue(oldProfile) == null){
                             //Add new value
-                            await AddProfileProp(newProfile.MemberId, prop.Name, prop.GetValue(newProfile));
+                            response = await AddProfileProp(newProfile.MemberId, prop.Name, prop.GetValue(newProfile));
                         }
                         else{
                             //Update value
-                            // UpdateProfileProp(newProfile.MemberId, prop.Name, prop.GetValue(newProfile));
+                            response = await UpdateProfileProp(newProfile.MemberId, prop.Name, prop.GetValue(newProfile));
                         }
                     }
-                    Console.WriteLine("Name: " + prop.Name + ", new Value: " + prop.GetValue(newProfile) + ", old Value: " + prop.GetValue(oldProfile));
                 }
-                // db.Members.Update(newProfile);
-                // await db.SaveChangesAsync();
-                return new ProfileResponse{
-                    Message = "Profile updated",
-                    StatusCode = HttpStatusCode.OK,
-                };
+                return response;
             }
             catch(Exception e){
-                return new ProfileResponse{
-                    Message = e.Message,
-                    StatusCode = HttpStatusCode.InternalServerError,
-                };
+                return false;
             }
         }
 
-        public async Task AddProfileProp(int memberId, string prop, Object newVal){
-            switch(newVal.GetType()){
-                // case typeOf(DescriptionSection)
+        public async Task<bool> AddProfileProp(int memberId, string prop, object newVal)
+        {
+            bool response = true;
+            switch (prop)
+            {
+                case nameof(DescriptionSection):
+                    response = await AddProfileDescription(memberId, (newVal as DescriptionSection).Content);
+                    break;
+                case nameof(ContactsSection):
+                    response = await AddProfileContacts(memberId, (newVal as ContactsSection).Email, (newVal as ContactsSection).PhoneNumber);
+                    break;
+                case nameof(ExternalLinksSection):
+                    response = await AddProfileExternalLinksSection(memberId, (newVal as ExternalLinksSection).ExternalLinks.ToList());
+                    break;
+                case nameof(ServicesSection):
+                    response = await AddProfileService(memberId, (newVal as ServicesSection).Content);
+                    break;
+                case nameof(ActivitySection):
+                    response = await AddProfileActivitySection(memberId, (newVal as ActivitySection).Content);
+                    break;
+                case nameof(WorkExperienceSection):
+                    response = await AddProfileWorkExperienceSection(memberId, (newVal as WorkExperienceSection).WorkExperiences.ToList());
+                    break;
             }
+            await db.SaveChangesAsync();
+            return response;
         }
 
-        public async Task<ProfileResponse> AddProfileDescription(int memberId, string? description){
+        public async Task<bool> UpdateProfileProp(int memberId, string prop, object newVal)
+        {
+            bool response = true;
+            switch (prop)
+            {
+                case nameof(DescriptionSection):
+                    response = await UpdateProfileDescription((newVal as DescriptionSection));
+                    break;
+                case nameof(ContactsSection):
+                    response = await UpdateContacts((newVal as ContactsSection));
+                    break;
+                case nameof(ExternalLinksSection):
+                    response = await UpdateProfileExternalLinksSection(memberId, (newVal as ExternalLinksSection));
+                    break;
+                case nameof(ServicesSection):
+                    response = await UpdateService((newVal as ServicesSection));
+                    break;
+                case nameof(ActivitySection):
+                    response = await UpdateProfileActivitySection((newVal as ActivitySection));
+                    break;
+                case nameof(WorkExperienceSection):
+                    response = await UpdateProfileWorkExperienceSection(memberId, (newVal as WorkExperienceSection));
+                    break;
+            }
+            await db.SaveChangesAsync();
+            return response;
+        }
+
+        public async Task<bool> AddProfileDescription(int memberId, string? description){
             try{
                 var newDescription = new DescriptionSection{
                         MemberId = memberId,
@@ -96,64 +136,24 @@ namespace ScSoMe.API.Services
                         PrivacySetting = true,
                 };
                 await db.DescriptionSections.AddAsync(newDescription);
-                await db.SaveChangesAsync();
-                return new ProfileResponse{
-                    Message = "Description added",
-                    StatusCode = HttpStatusCode.OK,
-                };
+                return true;
             }
             catch(Exception e){
-                return new ProfileResponse{
-                    Message = e.Message,
-                    StatusCode = HttpStatusCode.InternalServerError,
-                };
+                return false;
             }
         }
 
-        public async Task<ProfileResponse> UpdateProfileDescription(DescriptionSection description){
+        public async Task<bool> UpdateProfileDescription(DescriptionSection description){
             try{
                 db.DescriptionSections.Update(description);
-                await db.SaveChangesAsync();
-                return new ProfileResponse{
-                    Message = "Description updated",
-                    StatusCode = HttpStatusCode.OK,
-                };
+                return true;
             }
             catch(Exception e){
-                return new ProfileResponse{
-                    Message = e.Message,
-                    StatusCode = HttpStatusCode.InternalServerError,
-                };
+                return false;
             }
         }
 
-        public async Task<DescriptionSection> CheckIfMemberHasProfileDescription(int memberId){
-            try{
-                var description = await db.DescriptionSections.FirstOrDefaultAsync(d => d.MemberId == memberId);
-                if(description != null){
-                    return description;
-                }
-                return null;
-            }
-            catch(Exception e){
-                return null;
-            }
-        }
-
-        public async Task<ServicesSection> CheckIfMemberHasService(int memberId){
-            try{
-                var service = await db.ServicesSections.FirstOrDefaultAsync(s => s.MemberId == memberId);
-                if(service != null){
-                    return service;
-                }
-                return null;
-            }
-            catch(Exception e){
-                return null;
-            }
-        }
-
-        public async Task<ProfileResponse> AddProfileService(int memberId, string? service){
+        public async Task<bool> AddProfileService(int memberId, string? service){
             try{
                 var newService = new ServicesSection{
                         MemberId = memberId,
@@ -161,34 +161,169 @@ namespace ScSoMe.API.Services
                         PrivacySetting = true,
                 };
                 await db.ServicesSections.AddAsync(newService);
-                await db.SaveChangesAsync();
-                return new ProfileResponse{
-                    Message = "Service added",
-                    StatusCode = HttpStatusCode.OK,
-                };
+                return true;
             }
             catch(Exception e){
-                return new ProfileResponse{
-                    Message = e.Message,
-                    StatusCode = HttpStatusCode.InternalServerError,
-                };
+                return false;
             }
         }
 
-        public async Task<ProfileResponse> UpdateService(ServicesSection service){
+        public async Task<bool> UpdateService(ServicesSection service){
             try{
                 db.ServicesSections.Update(service);
-                await db.SaveChangesAsync();
-                return new ProfileResponse{
-                    Message = "Service updated",
-                    StatusCode = HttpStatusCode.OK,
-                };
+                return true;
             }
             catch(Exception e){
-                return new ProfileResponse{
-                    Message = e.Message,
-                    StatusCode = HttpStatusCode.InternalServerError,
+                return false;
+            }
+        }
+
+        public async Task<bool> AddProfileContacts(int memberId, string? email, long? phoneNumber){
+            try{
+                var newContacts = new ContactsSection{
+                        MemberId = memberId,
+                        Email = email,
+                        PhoneNumber = phoneNumber,
+                        PrivacySetting = true,
                 };
+                await db.ContactsSections.AddAsync(newContacts);
+                return true;
+            }
+            catch(Exception e){
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateContacts(ContactsSection contacts){
+            try{
+                db.ContactsSections.Update(contacts);
+                return true;
+            }
+            catch(Exception e){
+                return false;
+            }
+        }
+
+        public async Task<bool> AddProfileExternalLinksSection(int memberId, List<ExternalLink>? externalLinks = null){
+            try{
+                var newExternalLinksSection = new ExternalLinksSection{
+                        MemberId = memberId,
+                        PrivacySetting = true,
+                };
+                await db.ExternalLinksSections.AddAsync(newExternalLinksSection);
+                Member member = await GetProfile(memberId);
+                if(externalLinks != null){
+                    foreach(var externalLink in externalLinks){
+                        await AddProfileExternalLink(externalLink);
+                    }
+                }
+                return true;
+            }
+            catch(Exception e){
+                return false;
+            }  
+        }
+
+        public async Task<bool> UpdateProfileExternalLinksSection(int memberId, ExternalLinksSection externalLinksSection){
+           try{
+                Member member = await GetProfile(memberId);
+                //Remove old work experiences and afterwards add new
+                db.ExternalLinks.RemoveRange(member.ExternalLinksSection.ExternalLinks);
+                db.ExternalLinksSections.Update(externalLinksSection);
+                if(externalLinksSection.ExternalLinks != null){
+                    foreach (var externalLink in externalLinksSection.ExternalLinks)
+                    {
+                        await db.ExternalLinks.AddAsync(externalLink);
+                    }
+                }
+                return true;
+            }
+            catch(Exception e){
+                return false;               
+            }
+        }
+
+        public async Task<bool> AddProfileExternalLink(ExternalLink externalLink){
+            try{
+                await db.ExternalLinks.AddAsync(externalLink);
+                return true;
+            }
+            catch(Exception e){
+                return false;
+            }
+        }
+
+        public async Task<bool> AddProfileWorkExperienceSection(int memberId, List<WorkExperience> workExperiences = null){
+            try{
+                var newWorkExperienceSection = new WorkExperienceSection{
+                        MemberId = memberId,
+                        PrivacySetting = true,
+                };
+                await db.WorkExperienceSections.AddAsync(newWorkExperienceSection);
+                Member member = await GetProfile(memberId);
+                if(workExperiences != null){
+                    foreach(var workExperience in workExperiences){
+                        await AddProfileWorkExperience(workExperience);
+                    }
+                }
+                return true;
+            }
+            catch(Exception e){
+                return false;
+            }            
+        }
+
+        public async Task<bool> UpdateProfileWorkExperienceSection(int memberId, WorkExperienceSection workExperienceSection){
+            try{
+                Member member = await GetProfile(memberId);
+                //Remove old work experiences and afterwards add new
+                db.WorkExperiences.RemoveRange(member.WorkExperienceSection.WorkExperiences);
+                db.WorkExperienceSections.Update(workExperienceSection);
+                if(workExperienceSection.WorkExperiences != null){
+                    foreach (var workExperience in workExperienceSection.WorkExperiences)
+                    {
+                        await db.WorkExperiences.AddAsync(workExperience);
+                    }
+                }
+                return true;
+            }
+            catch(Exception e){
+                return false;            
+            }
+        }
+
+        public async Task<bool> AddProfileWorkExperience(WorkExperience workExperience){
+            try{
+                await db.WorkExperiences.AddAsync(workExperience);
+                return true;
+            }
+            catch(Exception e){
+                return false;
+            }
+        }
+
+        public async Task<bool> AddProfileActivitySection(int memberId, string? content){
+            try{
+                var newActivitySection = new ActivitySection{
+                        MemberId = memberId,
+                        Content = content,
+                        PrivacySetting = true,
+                };
+                await db.ActivitySections.AddAsync(newActivitySection);
+                return true;
+            }
+            catch(Exception e){
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateProfileActivitySection(ActivitySection activitySection){
+            try{
+                db.ActivitySections.Update(activitySection);
+                return true;
+            }
+            catch(Exception e){
+                return false;              
             }
         }
     }
