@@ -28,17 +28,23 @@ namespace ScSoMe.API.Services
                     var workExperiences = await db.WorkExperiences.Where(w => w.MemberId == memberId).ToListAsync();
                     member.DescriptionSection = description;
                     member.ContactsSection = contacts;
-                    member.ExternalLinksSection = externalLinksSection;
-                    member.ExternalLinksSection.ExternalLinks = externalLinks;
+                    if(externalLinksSection != null){
+                        member.ExternalLinksSection = externalLinksSection;
+                        member.ExternalLinksSection.ExternalLinks = new List<ExternalLink>(externalLinks);
+                    }
                     member.ServicesSection = services;
                     member.ActivitySection = activity;
-                    member.WorkExperienceSection = workExperienceSection;
-                    member.WorkExperienceSection.WorkExperiences = workExperiences;
+                    if(workExperienceSection != null){
+                        member.WorkExperienceSection = workExperienceSection;
+                        member.WorkExperienceSection.WorkExperiences = new List<WorkExperience>(workExperiences);
+                    }
                     return member;
                 }
+                Console.WriteLine("Member not found");
                 return null;
             }
             catch(Exception e){
+                Console.WriteLine("Error: " + e.Message);
                 return null;
             }
         }
@@ -77,8 +83,8 @@ namespace ScSoMe.API.Services
         }
 
         public async Task AddProfileProp(int memberId, string prop, Object newVal){
-            if(newVal == typeof(DescriptionSection)){
-
+            switch(newVal.GetType()){
+                // case typeOf(DescriptionSection)
             }
         }
 
