@@ -20,16 +20,20 @@ namespace ScSoMe.API.Services
                 if(member != null){
                     var description = await db.DescriptionSections.FirstOrDefaultAsync(d => d.MemberId == memberId);
                     var contacts = await db.ContactsSections.FirstOrDefaultAsync(c => c.MemberId == memberId);
-                    var externalLinks = await db.ExternalLinksSections.FirstOrDefaultAsync(e => e.MemberId == memberId);
+                    var externalLinksSection = await db.ExternalLinksSections.FirstOrDefaultAsync(e => e.MemberId == memberId);
+                    var externalLinks = await db.ExternalLinks.Where(e => e.MemberId == memberId).ToListAsync();
                     var services = await db.ServicesSections.FirstOrDefaultAsync(s => s.MemberId == memberId);
                     var activity = await db.ActivitySections.FirstOrDefaultAsync(a => a.MemberId == memberId);
-                    var workExperience = await db.WorkExperienceSections.FirstOrDefaultAsync(w => w.MemberId == memberId);
+                    var workExperienceSection = await db.WorkExperienceSections.FirstOrDefaultAsync(w => w.MemberId == memberId);
+                    var workExperiences = await db.WorkExperiences.Where(w => w.MemberId == memberId).ToListAsync();
                     member.DescriptionSection = description;
                     member.ContactsSection = contacts;
-                    member.ExternalLinksSection = externalLinks;
+                    member.ExternalLinksSection = externalLinksSection;
+                    member.ExternalLinksSection.ExternalLinks = externalLinks;
                     member.ServicesSection = services;
                     member.ActivitySection = activity;
-                    member.WorkExperienceSection = workExperience;
+                    member.WorkExperienceSection = workExperienceSection;
+                    member.WorkExperienceSection.WorkExperiences = workExperiences;
                     return member;
                 }
                 return null;
@@ -41,14 +45,21 @@ namespace ScSoMe.API.Services
 
         public async Task<ProfileResponse> UpdateProfile(Member newProfile){
             try{
-                var currentMember = await GetProfile(newProfile.MemberId);
-                var currentPropertyInfos = typeof(Member).GetProperties();
-                var newPropertyInfos = typeof(Member).GetProperties();
-                foreach (var newMember in newPropertyInfos)
+                var oldProfile = await GetProfile(newProfile.MemberId);
+                var propertyInfos = typeof(Member).GetProperties();
+                foreach (var prop in propertyInfos)
                 {
-                    if(currentPropertyInfos == newPropertyInfos){
-                        Console.WriteLine("Name: " + newMember.Name + ", Value: " + newMember.GetValue(newProfile));
+                    if(prop.GetValue(newProfile) != prop.GetValue(oldProfile)){
+                        if(prop.GetValue(oldProfile) == null){
+                            //Add new value
+                            await AddProfileProp(newProfile.MemberId, prop.Name, prop.GetValue(newProfile));
+                        }
+                        else{
+                            //Update value
+                            // UpdateProfileProp(newProfile.MemberId, prop.Name, prop.GetValue(newProfile));
+                        }
                     }
+                    Console.WriteLine("Name: " + prop.Name + ", new Value: " + prop.GetValue(newProfile) + ", old Value: " + prop.GetValue(oldProfile));
                 }
                 // db.Members.Update(newProfile);
                 // await db.SaveChangesAsync();
@@ -62,6 +73,12 @@ namespace ScSoMe.API.Services
                     Message = e.Message,
                     StatusCode = HttpStatusCode.InternalServerError,
                 };
+            }
+        }
+
+        public async Task AddProfileProp(int memberId, string prop, Object newVal){
+            if(newVal == typeof(DescriptionSection)){
+
             }
         }
 
