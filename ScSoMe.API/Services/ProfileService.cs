@@ -211,7 +211,7 @@ namespace ScSoMe.API.Services
             }
         }
 
-        public async Task<bool> AddProfileContacts(int memberId, string? email, long? phoneNumber){
+        public async Task<bool> AddProfileContacts(int memberId, string? email, string? phoneNumber){
             try{
                 var newContacts = new ContactsSection{
                         MemberId = memberId,
