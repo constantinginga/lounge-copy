@@ -13,31 +13,70 @@ namespace ScSoMe.API.Services
         {
             db = new ScSoMeContext();
         }
-
+        /**
+            * <summary>Gets a profile from the database</summary>
+            * <param name="memberId">The id of the member</param>
+            * Checks if the member has profile sections in DB, if not, adds them
+            * <returns>A member object</returns>
+        */
         public async Task<Member> GetProfile(int memberId){
             try{
                 var member = await db.Members.FirstAsync(m => m.MemberId == memberId);
                 if(member != null){
+                    //Description section
                     var description = await db.DescriptionSections.FirstOrDefaultAsync(d => d.MemberId == memberId);
+                    if(description == null){
+                        await AddProfileDescription(memberId, "");
+                    }
+                    else{
+                        member.DescriptionSection = description;
+                    }
+                    //Contacts section
                     var contacts = await db.ContactsSections.FirstOrDefaultAsync(c => c.MemberId == memberId);
+                    if(contacts == null){
+                        await AddProfileContacts(memberId, "", null);
+                    }
+                    else{
+                        member.ContactsSection = contacts;
+                    }
+                    //External links section
                     var externalLinksSection = await db.ExternalLinksSections.FirstOrDefaultAsync(e => e.MemberId == memberId);
-                    var externalLinks = await db.ExternalLinks.Where(e => e.MemberId == memberId).ToListAsync();
-                    var services = await db.ServicesSections.FirstOrDefaultAsync(s => s.MemberId == memberId);
-                    var activity = await db.ActivitySections.FirstOrDefaultAsync(a => a.MemberId == memberId);
-                    var workExperienceSection = await db.WorkExperienceSections.FirstOrDefaultAsync(w => w.MemberId == memberId);
-                    var workExperiences = await db.WorkExperiences.Where(w => w.MemberId == memberId).ToListAsync();
-                    member.DescriptionSection = description;
-                    member.ContactsSection = contacts;
-                    if(externalLinksSection != null){
+                    if(externalLinksSection == null){
+                        await AddProfileExternalLinksSection(memberId, null);
+                    }
+                    else{
                         member.ExternalLinksSection = externalLinksSection;
-                        member.ExternalLinksSection.ExternalLinks = new List<ExternalLink>(externalLinks);
                     }
-                    member.ServicesSection = services;
-                    member.ActivitySection = activity;
-                    if(workExperienceSection != null){
+                    //External links
+                    var externalLinks = await db.ExternalLinks.Where(e => e.MemberId == memberId).ToListAsync();
+                    member.ExternalLinksSection.ExternalLinks = new List<ExternalLink>(externalLinks);
+                    //Services section
+                    var services = await db.ServicesSections.FirstOrDefaultAsync(s => s.MemberId == memberId);
+                    if(services == null){
+                        await AddProfileService(memberId, "");
+                    }
+                    else{
+                        member.ServicesSection = services;
+                    }
+                    //Activity section
+                    var activity = await db.ActivitySections.FirstOrDefaultAsync(a => a.MemberId == memberId);
+                    if(activity == null){
+                        await AddProfileActivitySection(memberId, "");
+                    }
+                    else{
+                        member.ActivitySection = activity;
+                    }
+                    //Work experience section
+                    var workExperienceSection = await db.WorkExperienceSections.FirstOrDefaultAsync(w => w.MemberId == memberId);
+                    if(workExperienceSection == null){
+                        await AddProfileWorkExperienceSection(memberId, null);
+                    }
+                    else{
                         member.WorkExperienceSection = workExperienceSection;
-                        member.WorkExperienceSection.WorkExperiences = new List<WorkExperience>(workExperiences);
                     }
+                    //Work experiences
+                    var workExperiences = await db.WorkExperiences.Where(w => w.MemberId == memberId).ToListAsync();
+                    member.WorkExperienceSection.WorkExperiences = new List<WorkExperience>(workExperiences);
                     return member;
                 }
                 return null;
@@ -55,14 +94,7 @@ namespace ScSoMe.API.Services
                 foreach (var prop in propertyInfos)
                 {
                     if(prop.GetValue(newProfile) != prop.GetValue(oldProfile)){
-                        if(prop.GetValue(oldProfile) == null){
-                            //Add new value
-                            response = await AddProfileProp(newProfile.MemberId, prop.Name, prop.GetValue(newProfile));
-                        }
-                        else{
-                            //Update value
-                            response = await UpdateProfileProp(newProfile.MemberId, prop.Name, prop.GetValue(newProfile));
-                        }
+                        response = await UpdateProfileProp(newProfile.MemberId, prop.Name, prop.GetValue(newProfile));
                     }
                 }
                 return response;
@@ -72,35 +104,35 @@ namespace ScSoMe.API.Services
             }
         }
 
-        public async Task<bool> AddProfileProp(int memberId, string prop, object newVal)
+        public async Task<bool> AddProfileProp(int memberId, string prop, object? newVal)
         {
             bool response = true;
             switch (prop)
             {
                 case nameof(DescriptionSection):
-                    response = await AddProfileDescription(memberId, (newVal as DescriptionSection).Content);
+                    response = await AddProfileDescription(memberId, (newVal as DescriptionSection)?.Content);
                     break;
                 case nameof(ContactsSection):
-                    response = await AddProfileContacts(memberId, (newVal as ContactsSection).Email, (newVal as ContactsSection).PhoneNumber);
+                    response = await AddProfileContacts(memberId, (newVal as ContactsSection)?.Email, (newVal as ContactsSection)?.PhoneNumber);
                     break;
                 case nameof(ExternalLinksSection):
-                    response = await AddProfileExternalLinksSection(memberId, (newVal as ExternalLinksSection).ExternalLinks.ToList());
+                    response = await AddProfileExternalLinksSection(memberId, (newVal as ExternalLinksSection)?.ExternalLinks.ToList());
                     break;
                 case nameof(ServicesSection):
-                    response = await AddProfileService(memberId, (newVal as ServicesSection).Content);
+                    response = await AddProfileService(memberId, (newVal as ServicesSection)?.Content);
                     break;
                 case nameof(ActivitySection):
-                    response = await AddProfileActivitySection(memberId, (newVal as ActivitySection).Content);
+                    response = await AddProfileActivitySection(memberId, (newVal as ActivitySection)?.Content);
                     break;
                 case nameof(WorkExperienceSection):
-                    response = await AddProfileWorkExperienceSection(memberId, (newVal as WorkExperienceSection).WorkExperiences.ToList());
+                    response = await AddProfileWorkExperienceSection(memberId, (newVal as WorkExperienceSection)?.WorkExperiences.ToList());
                     break;
             }
             await db.SaveChangesAsync();
             return response;
         }
 
-        public async Task<bool> UpdateProfileProp(int memberId, string prop, object newVal)
+        public async Task<bool> UpdateProfileProp(int memberId, string prop, object? newVal)
         {
             bool response = true;
             switch (prop)
@@ -124,7 +156,6 @@ namespace ScSoMe.API.Services
                     response = await UpdateProfileWorkExperienceSection(memberId, (newVal as WorkExperienceSection));
                     break;
             }
-            await db.SaveChangesAsync();
             return response;
         }
 
@@ -145,7 +176,8 @@ namespace ScSoMe.API.Services
 
         public async Task<bool> UpdateProfileDescription(DescriptionSection description){
             try{
-                db.DescriptionSections.Update(description);
+                db.Entry(description).CurrentValues.SetValues(description);
+                await db.SaveChangesAsync();
                 return true;
             }
             catch(Exception e){
@@ -170,7 +202,8 @@ namespace ScSoMe.API.Services
 
         public async Task<bool> UpdateService(ServicesSection service){
             try{
-                db.ServicesSections.Update(service);
+                db.Entry(service).CurrentValues.SetValues(service);
+                await db.SaveChangesAsync();
                 return true;
             }
             catch(Exception e){
@@ -196,7 +229,8 @@ namespace ScSoMe.API.Services
 
         public async Task<bool> UpdateContacts(ContactsSection contacts){
             try{
-                db.ContactsSections.Update(contacts);
+                db.Entry(contacts).CurrentValues.SetValues(contacts);
+                await db.SaveChangesAsync();
                 return true;
             }
             catch(Exception e){
@@ -214,6 +248,7 @@ namespace ScSoMe.API.Services
                 Member member = await GetProfile(memberId);
                 if(externalLinks != null){
                     foreach(var externalLink in externalLinks){
+                        externalLink.MemberId = memberId;
                         await AddProfileExternalLink(externalLink);
                     }
                 }
@@ -227,15 +262,16 @@ namespace ScSoMe.API.Services
         public async Task<bool> UpdateProfileExternalLinksSection(int memberId, ExternalLinksSection externalLinksSection){
            try{
                 Member member = await GetProfile(memberId);
-                //Remove old work experiences and afterwards add new
                 db.ExternalLinks.RemoveRange(member.ExternalLinksSection.ExternalLinks);
-                db.ExternalLinksSections.Update(externalLinksSection);
+                db.Entry(externalLinksSection).CurrentValues.SetValues(externalLinksSection);
+                await db.SaveChangesAsync();
                 if(externalLinksSection.ExternalLinks != null){
                     foreach (var externalLink in externalLinksSection.ExternalLinks)
                     {
                         await db.ExternalLinks.AddAsync(externalLink);
                     }
                 }
+                await db.SaveChangesAsync();
                 return true;
             }
             catch(Exception e){
@@ -276,15 +312,17 @@ namespace ScSoMe.API.Services
         public async Task<bool> UpdateProfileWorkExperienceSection(int memberId, WorkExperienceSection workExperienceSection){
             try{
                 Member member = await GetProfile(memberId);
-                //Remove old work experiences and afterwards add new
                 db.WorkExperiences.RemoveRange(member.WorkExperienceSection.WorkExperiences);
-                db.WorkExperienceSections.Update(workExperienceSection);
+                db.Entry(workExperienceSection).CurrentValues.SetValues(workExperienceSection);
+                await db.SaveChangesAsync();
                 if(workExperienceSection.WorkExperiences != null){
                     foreach (var workExperience in workExperienceSection.WorkExperiences)
                     {
+                        workExperience.MemberId = memberId;
                         await db.WorkExperiences.AddAsync(workExperience);
                     }
                 }
+                await db.SaveChangesAsync();
                 return true;
             }
             catch(Exception e){
@@ -319,7 +357,8 @@ namespace ScSoMe.API.Services
 
         public async Task<bool> UpdateProfileActivitySection(ActivitySection activitySection){
             try{
-                db.ActivitySections.Update(activitySection);
+                db.Entry(activitySection).CurrentValues.SetValues(activitySection);
+                await db.SaveChangesAsync();
                 return true;
             }
             catch(Exception e){
