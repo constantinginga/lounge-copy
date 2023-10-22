@@ -176,7 +176,7 @@ namespace ScSoMe.API.Services
 
         public async Task<bool> UpdateProfileDescription(DescriptionSection description){
             try{
-                db.Entry(description).CurrentValues.SetValues(description);
+                db.DescriptionSections.Update(description);
                 await db.SaveChangesAsync();
                 return true;
             }
@@ -202,7 +202,7 @@ namespace ScSoMe.API.Services
 
         public async Task<bool> UpdateService(ServicesSection service){
             try{
-                db.Entry(service).CurrentValues.SetValues(service);
+                db.ServicesSections.Update(service);
                 await db.SaveChangesAsync();
                 return true;
             }
@@ -229,7 +229,7 @@ namespace ScSoMe.API.Services
 
         public async Task<bool> UpdateContacts(ContactsSection contacts){
             try{
-                db.Entry(contacts).CurrentValues.SetValues(contacts);
+                db.ContactsSections.Update(contacts);
                 await db.SaveChangesAsync();
                 return true;
             }
@@ -357,7 +357,7 @@ namespace ScSoMe.API.Services
 
         public async Task<bool> UpdateProfileActivitySection(ActivitySection activitySection){
             try{
-                db.Entry(activitySection).CurrentValues.SetValues(activitySection);
+                db.ActivitySections.Update(activitySection);
                 await db.SaveChangesAsync();
                 return true;
             }
