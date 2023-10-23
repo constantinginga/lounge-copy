@@ -97,10 +97,12 @@ namespace ScSoMe.API.Services
                         response = await UpdateProfileProp(newProfile.MemberId, prop.Name, prop.GetValue(newProfile));
                     }
                 }
+                response = await UpdateMemberDt(newProfile);
                 return response;
             }
             catch(Exception e){
-                return false;
+                Console.WriteLine("Update profile: " + e.Message);
+                throw new Exception(e.Message);
             }
         }
 
@@ -137,6 +139,9 @@ namespace ScSoMe.API.Services
             bool response = true;
             switch (prop)
             {
+                case nameof(Member.Name):
+                    response = await UpdateProfileName(memberId, (newVal as string));
+                    break;
                 case nameof(DescriptionSection):
                     response = await UpdateProfileDescription((newVal as DescriptionSection));
                     break;
@@ -159,6 +164,36 @@ namespace ScSoMe.API.Services
             return response;
         }
 
+        public async Task<bool> UpdateMemberDt(Member member){
+            try{
+                var oldMember = await db.Members.FirstAsync(m => m.MemberId == member.MemberId);
+                oldMember.UpdatedDt = DateTime.Now;
+                db.ChangeTracker.Clear();
+                db.Members.Update(oldMember);
+                await db.SaveChangesAsync();
+                return true;
+            }
+            catch(Exception e){
+                Console.WriteLine("Update memberDt: " + e.Message);
+                throw new Exception(e.Message);
+            }
+        }
+
+        public async Task<bool> UpdateProfileName(int memberId, string? name){
+            try{
+                var member = await db.Members.FirstAsync(m => m.MemberId == memberId);
+                member.Name = name;
+                db.ChangeTracker.Clear();
+                db.Members.Update(member);
+                await db.SaveChangesAsync();
+                return true;
+            }
+            catch(Exception e){
+                Console.WriteLine("Update profile name: " + e.Message);
+                throw new Exception(e.Message);
+            }
+        }
+
         public async Task<bool> AddProfileDescription(int memberId, string? description){
             try{
                 var newDescription = new DescriptionSection{
@@ -167,21 +202,25 @@ namespace ScSoMe.API.Services
                         PrivacySetting = true,
                 };
                 await db.DescriptionSections.AddAsync(newDescription);
+                await db.SaveChangesAsync();
                 return true;
             }
             catch(Exception e){
-                return false;
+                Console.WriteLine(e.Message);
+                throw new Exception(e.Message);
             }
         }
 
         public async Task<bool> UpdateProfileDescription(DescriptionSection description){
             try{
+                db.ChangeTracker.Clear();
                 db.DescriptionSections.Update(description);
                 await db.SaveChangesAsync();
                 return true;
             }
             catch(Exception e){
-                return false;
+                Console.WriteLine("Update profile description: " + e.Message);
+                throw new Exception(e.Message);
             }
         }
 
@@ -193,21 +232,25 @@ namespace ScSoMe.API.Services
                         PrivacySetting = true,
                 };
                 await db.ServicesSections.AddAsync(newService);
+                await db.SaveChangesAsync();
                 return true;
             }
             catch(Exception e){
-                return false;
+                Console.WriteLine(e.Message);
+                throw new Exception(e.Message);
             }
         }
 
         public async Task<bool> UpdateService(ServicesSection service){
             try{
+                db.ChangeTracker.Clear();
                 db.ServicesSections.Update(service);
                 await db.SaveChangesAsync();
                 return true;
             }
             catch(Exception e){
-                return false;
+                Console.WriteLine("Update service: " + e.Message);
+                throw new Exception(e.Message);
             }
         }
 
@@ -220,21 +263,25 @@ namespace ScSoMe.API.Services
                         PrivacySetting = true,
                 };
                 await db.ContactsSections.AddAsync(newContacts);
+                await db.SaveChangesAsync();
                 return true;
             }
             catch(Exception e){
-                return false;
+                Console.WriteLine(e.Message);
+                throw new Exception(e.Message);
             }
         }
 
         public async Task<bool> UpdateContacts(ContactsSection contacts){
             try{
+                db.ChangeTracker.Clear();
                 db.ContactsSections.Update(contacts);
                 await db.SaveChangesAsync();
                 return true;
             }
             catch(Exception e){
-                return false;
+                Console.WriteLine("Update contacts: " + e.Message);
+                throw new Exception(e.Message);
             }
         }
 
@@ -245,6 +292,7 @@ namespace ScSoMe.API.Services
                         PrivacySetting = true,
                 };
                 await db.ExternalLinksSections.AddAsync(newExternalLinksSection);
+                await db.SaveChangesAsync();
                 Member member = await GetProfile(memberId);
                 if(externalLinks != null){
                     foreach(var externalLink in externalLinks){
@@ -255,37 +303,41 @@ namespace ScSoMe.API.Services
                 return true;
             }
             catch(Exception e){
-                return false;
+                Console.WriteLine(e.Message);
+                throw new Exception(e.Message);
             }  
         }
 
         public async Task<bool> UpdateProfileExternalLinksSection(int memberId, ExternalLinksSection externalLinksSection){
            try{
                 Member member = await GetProfile(memberId);
+                db.ChangeTracker.Clear();
                 db.ExternalLinks.RemoveRange(member.ExternalLinksSection.ExternalLinks);
-                db.Entry(externalLinksSection).CurrentValues.SetValues(externalLinksSection);
+                await db.SaveChangesAsync();
+                db.ChangeTracker.Clear();
+                db.ExternalLinksSections.Update(externalLinksSection);
                 await db.SaveChangesAsync();
                 if(externalLinksSection.ExternalLinks != null){
-                    foreach (var externalLink in externalLinksSection.ExternalLinks)
-                    {
-                        await db.ExternalLinks.AddAsync(externalLink);
-                    }
+                    await db.ExternalLinks.AddRangeAsync(externalLinksSection.ExternalLinks);
+                    await db.SaveChangesAsync();
                 }
-                await db.SaveChangesAsync();
                 return true;
             }
             catch(Exception e){
-                return false;               
+                Console.WriteLine("Update external links: " + e.Message + " : " + e.StackTrace);
+                throw new Exception(e.Message);              
             }
         }
 
         public async Task<bool> AddProfileExternalLink(ExternalLink externalLink){
             try{
                 await db.ExternalLinks.AddAsync(externalLink);
+                await db.SaveChangesAsync();
                 return true;
             }
             catch(Exception e){
-                return false;
+                Console.WriteLine(e.Message);
+                throw new Exception(e.Message);
             }
         }
 
@@ -305,38 +357,41 @@ namespace ScSoMe.API.Services
                 return true;
             }
             catch(Exception e){
-                return false;
+                Console.WriteLine(e.Message);
+                throw new Exception(e.Message);
             }            
         }
 
         public async Task<bool> UpdateProfileWorkExperienceSection(int memberId, WorkExperienceSection workExperienceSection){
             try{
                 Member member = await GetProfile(memberId);
+                db.ChangeTracker.Clear();
                 db.WorkExperiences.RemoveRange(member.WorkExperienceSection.WorkExperiences);
-                db.Entry(workExperienceSection).CurrentValues.SetValues(workExperienceSection);
+                await db.SaveChangesAsync();
+                db.ChangeTracker.Clear();
+                db.WorkExperienceSections.Update(workExperienceSection);
                 await db.SaveChangesAsync();
                 if(workExperienceSection.WorkExperiences != null){
-                    foreach (var workExperience in workExperienceSection.WorkExperiences)
-                    {
-                        workExperience.MemberId = memberId;
-                        await db.WorkExperiences.AddAsync(workExperience);
-                    }
+                    await db.WorkExperiences.AddRangeAsync(workExperienceSection.WorkExperiences);
+                    await db.SaveChangesAsync();
                 }
-                await db.SaveChangesAsync();
                 return true;
             }
             catch(Exception e){
-                return false;            
+                Console.WriteLine("Update work experience: " + e.Message + " : " + e.StackTrace);
+                throw new Exception(e.Message);           
             }
         }
 
         public async Task<bool> AddProfileWorkExperience(WorkExperience workExperience){
             try{
                 await db.WorkExperiences.AddAsync(workExperience);
+                await db.SaveChangesAsync();
                 return true;
             }
             catch(Exception e){
-                return false;
+                Console.WriteLine(e.Message);
+                throw new Exception(e.Message);
             }
         }
 
@@ -348,21 +403,24 @@ namespace ScSoMe.API.Services
                         PrivacySetting = true,
                 };
                 await db.ActivitySections.AddAsync(newActivitySection);
+                await db.SaveChangesAsync();
                 return true;
             }
             catch(Exception e){
-                return false;
+                Console.WriteLine(e.Message);
+                throw new Exception(e.Message);
             }
         }
 
         public async Task<bool> UpdateProfileActivitySection(ActivitySection activitySection){
             try{
-                db.ActivitySections.Update(activitySection);
-                await db.SaveChangesAsync();
+                // db.ActivitySections.Update(activitySection);
+                // await db.SaveChangesAsync();
                 return true;
             }
             catch(Exception e){
-                return false;              
+                Console.WriteLine("Update profile activity: " + e.Message);
+                throw new Exception(e.Message);             
             }
         }
     }
