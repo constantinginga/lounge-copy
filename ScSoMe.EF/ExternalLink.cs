@@ -5,7 +5,7 @@ namespace ScSoMe.EF
 {
     public partial class ExternalLink
     {
-        public int ExternalLinkId { get; set; }
+        public string ExternalLinkId { get; set; } = null!;
         public int? MemberId { get; set; }
         public string? Title { get; set; }
         public string? Url { get; set; }

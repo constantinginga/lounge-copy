@@ -5,7 +5,7 @@ namespace ScSoMe.EF
 {
     public partial class WorkExperience
     {
-        public int WorkExperienceId { get; set; }
+        public string WorkExperienceId { get; set; } = null!;
         public int? MemberId { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }

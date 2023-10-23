@@ -312,15 +312,15 @@ namespace ScSoMe.API.Services
            try{
                 Member member = await GetProfile(memberId);
                 db.ChangeTracker.Clear();
-                db.ExternalLinks.RemoveRange(member.ExternalLinksSection.ExternalLinks);
-                await db.SaveChangesAsync();
-                db.ChangeTracker.Clear();
-                db.ExternalLinksSections.Update(externalLinksSection);
-                await db.SaveChangesAsync();
+                db.Entry(externalLinksSection).CurrentValues.SetValues(externalLinksSection);
                 if(externalLinksSection.ExternalLinks != null){
-                    await db.ExternalLinks.AddRangeAsync(externalLinksSection.ExternalLinks);
-                    await db.SaveChangesAsync();
+                    db.ExternalLinks.RemoveRange(member.ExternalLinksSection.ExternalLinks);
+                    db.SaveChanges();
+
+                    db.ExternalLinks.AddRange(externalLinksSection.ExternalLinks);
+                    db.SaveChanges();
                 }
+                db.SaveChanges();
                 return true;
             }
             catch(Exception e){
@@ -366,19 +366,19 @@ namespace ScSoMe.API.Services
             try{
                 Member member = await GetProfile(memberId);
                 db.ChangeTracker.Clear();
-                db.WorkExperiences.RemoveRange(member.WorkExperienceSection.WorkExperiences);
-                await db.SaveChangesAsync();
-                db.ChangeTracker.Clear();
-                db.WorkExperienceSections.Update(workExperienceSection);
-                await db.SaveChangesAsync();
+                db.Entry(workExperienceSection).CurrentValues.SetValues(workExperienceSection);
                 if(workExperienceSection.WorkExperiences != null){
-                    await db.WorkExperiences.AddRangeAsync(workExperienceSection.WorkExperiences);
-                    await db.SaveChangesAsync();
+                    db.WorkExperiences.RemoveRange(member.WorkExperienceSection.WorkExperiences);
+                    db.SaveChanges();
+
+                    db.WorkExperiences.AddRange(workExperienceSection.WorkExperiences);
+                    db.SaveChanges();
                 }
+                db.SaveChanges();
                 return true;
             }
             catch(Exception e){
-                Console.WriteLine("Update work experience: " + e.Message + " : " + e.StackTrace);
+                Console.WriteLine("Update work experience: " + e.Message + " : " + e.InnerException);
                 throw new Exception(e.Message);           
             }
         }
