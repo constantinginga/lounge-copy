@@ -82,5 +82,13 @@ namespace ScSoMe.API.Controllers.Members.MembersController
                 StatusCode = HttpStatusCode.InternalServerError,};
             }
         }
+
+        // [HttpPost("SyncUser")]
+        // [ProducesResponseType(200)]
+        // [ProducesResponseType(404)]
+        // [ProducesResponseType(500)]
+        // public async Task<ProfileResponse> SyncUser([FromBody]string? image){
+
+        // }
     }
 }

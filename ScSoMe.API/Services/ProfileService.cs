@@ -142,6 +142,9 @@ namespace ScSoMe.API.Services
                 case nameof(Member.Name):
                     response = await UpdateProfileName(memberId, (newVal as string));
                     break;
+                case nameof(Member.Image):
+                    response = await UpdateProfileImage(memberId, (newVal as string));
+                    break;
                 case nameof(DescriptionSection):
                     response = await UpdateProfileDescription((newVal as DescriptionSection));
                     break;
@@ -162,6 +165,25 @@ namespace ScSoMe.API.Services
                     break;
             }
             return response;
+        }
+
+        private readonly string baseUmbracoUrl = //"http://localhost:1111";
+            "https://www.startupcentral.dk";
+
+        public async Task<string> SyncUser(Member member){
+            HttpClient umbracoApiClient = new HttpClient();
+            var uri = new Uri(baseUmbracoUrl + "/umbraco/api/MemberApi/UpdateUserFromLounge");
+            var parameters = new Dictionary<string, string>();
+            parameters.Add("memberId", member.MemberId.ToString());
+            parameters.Add("name", member.Name);
+            parameters.Add("phoneNumber", member.ContactsSection.PhoneNumber);
+
+            var postContent = new FormUrlEncodedContent(parameters);
+            HttpResponseMessage response = await umbracoApiClient.PostAsync(uri, postContent);
+            response.EnsureSuccessStatusCode(); //throw if httpcode is an error
+            var resultString = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("Result from MW: " + resultString);
+            return resultString;
         }
 
         public async Task<bool> UpdateMemberDt(Member member){
@@ -190,6 +212,21 @@ namespace ScSoMe.API.Services
             }
             catch(Exception e){
                 Console.WriteLine("Update profile name: " + e.Message);
+                throw new Exception(e.Message);
+            }
+        }
+
+        public async Task<bool> UpdateProfileImage(int memberId, string? imageUrl){
+            try{
+                var member = await db.Members.FirstAsync(m => m.MemberId == memberId);
+                member.Image = imageUrl;
+                db.ChangeTracker.Clear();
+                db.Members.Update(member);
+                await db.SaveChangesAsync();
+                return true;
+            }
+            catch(Exception e){
+                Console.WriteLine("Update profile image: " + e.Message);
                 throw new Exception(e.Message);
             }
         }

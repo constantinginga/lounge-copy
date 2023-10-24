@@ -19,6 +19,7 @@ namespace ScSoMe.EF
         public string Password { get; set; } = null!;
         public string Email { get; set; } = null!;
         public string? Json { get; set; }
+        public string? Image { get; set; }
 
         public virtual ActivitySection ActivitySection { get; set; } = null!;
         public virtual ContactsSection ContactsSection { get; set; } = null!;
