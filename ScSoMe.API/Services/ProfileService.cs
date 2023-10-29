@@ -1,4 +1,5 @@
 using System.Net;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ScSoMe.API.Controllers.Members;
 using ScSoMe.API.Controllers.Profiles;
@@ -98,6 +99,9 @@ namespace ScSoMe.API.Services
                     }
                 }
                 response = await UpdateMemberDt(newProfile);
+                if(response){
+                    await SyncUser(newProfile);
+                }
                 return response;
             }
             catch(Exception e){
@@ -167,9 +171,13 @@ namespace ScSoMe.API.Services
             return response;
         }
 
-        private readonly string baseUmbracoUrl = //"http://localhost:1111";
-            "https://www.startupcentral.dk";
+        private readonly string baseUmbracoUrl = "http://localhost:1111";
+            // "https://www.startupcentral.dk";
 
+        [HttpPost("SyncUser")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
         public async Task<string> SyncUser(Member member){
             HttpClient umbracoApiClient = new HttpClient();
             var uri = new Uri(baseUmbracoUrl + "/umbraco/api/MemberApi/UpdateUserFromLounge");
@@ -180,10 +188,21 @@ namespace ScSoMe.API.Services
 
             var postContent = new FormUrlEncodedContent(parameters);
             HttpResponseMessage response = await umbracoApiClient.PostAsync(uri, postContent);
-            response.EnsureSuccessStatusCode(); //throw if httpcode is an error
+            response.EnsureSuccessStatusCode();
             var resultString = await response.Content.ReadAsStringAsync();
-            Console.WriteLine("Result from MW: " + resultString);
             return resultString;
+        }
+
+        public async Task<bool> SyncUserFromUmbraco(Member member){
+            var oldProfile = await GetProfile(member.MemberId);
+            bool response = true;
+            if(oldProfile.Name != member.Name){
+                response = await UpdateProfileName(member.MemberId, member.Name);
+            }
+            if(oldProfile.ContactsSection.PhoneNumber != member.ContactsSection.PhoneNumber){
+                response = await UpdateContacts(member.ContactsSection);
+            }
+            return response;
         }
 
         public async Task<bool> UpdateMemberDt(Member member){

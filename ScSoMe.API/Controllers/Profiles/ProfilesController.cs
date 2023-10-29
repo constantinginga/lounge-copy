@@ -83,12 +83,72 @@ namespace ScSoMe.API.Controllers.Members.MembersController
             }
         }
 
-        // [HttpPost("SyncUser")]
-        // [ProducesResponseType(200)]
-        // [ProducesResponseType(404)]
-        // [ProducesResponseType(500)]
-        // public async Task<ProfileResponse> SyncUser([FromBody]string? image){
+        [HttpPost("SyncUser")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<ProfileResponse> SyncUser([FromBody]JsonElement profile){
+            try{
+                Member? newProfile = profile.Deserialize<Member>();
+                if(newProfile != null){
+                    string? response = await profileService.SyncUser(newProfile);
+                    if(response != null){
+                        return new ProfileResponse{
+                            Message = response,                    
+                            StatusCode = HttpStatusCode.OK,
+                        };
+                    }
+                    else{
+                        return new ProfileResponse{
+                            Message = "Failed to sync user",                    
+                            StatusCode = HttpStatusCode.InternalServerError,
+                        };
+                    }
+                }
+                return new ProfileResponse{
+                    Message = "Failed to deserialize received member object",                    
+                    StatusCode = HttpStatusCode.InternalServerError,
+                };
+            }
+            catch(Exception e){
+                return new ProfileResponse{
+                Message = e.Message,                    
+                StatusCode = HttpStatusCode.InternalServerError,};
+            }
+        }
 
-        // }
+        [HttpPost("SyncUserFromUmbraco")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<ProfileResponse> SyncUserFromUmbraco([FromBody]JsonElement profile){
+            try{
+                Member? newProfile = profile.Deserialize<Member>();
+                if(newProfile != null){
+                    bool response = await profileService.SyncUserFromUmbraco(newProfile);
+                    if(response){
+                        return new ProfileResponse{
+                            Message = response.ToString(),                    
+                            StatusCode = HttpStatusCode.OK,
+                        };
+                    }
+                    else{
+                        return new ProfileResponse{
+                            Message = "Failed to sync user",                    
+                            StatusCode = HttpStatusCode.InternalServerError,
+                        };
+                    }
+                }
+                return new ProfileResponse{
+                    Message = "Failed to deserialize received member object",                    
+                    StatusCode = HttpStatusCode.InternalServerError,
+                };
+            }
+            catch(Exception e){
+                return new ProfileResponse{
+                Message = e.Message,                    
+                StatusCode = HttpStatusCode.InternalServerError,};
+            }
+        }
     }
 }
