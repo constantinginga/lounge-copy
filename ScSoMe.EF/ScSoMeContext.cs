@@ -320,6 +320,11 @@ namespace ScSoMe.EF
                     .ValueGeneratedNever()
                     .HasColumnName("member_id");
 
+                entity.Property(e => e.Banner)
+                    .HasMaxLength(250)
+                    .IsUnicode(false)
+                    .HasColumnName("banner");
+
                 entity.Property(e => e.CreatedDt).HasColumnName("created_dt");
 
                 entity.Property(e => e.Email)
