@@ -17,14 +17,12 @@ namespace ScSoMe.API.Services
 
         public async Task<bool> CheckToken(int memberId, string token){
             try{
+                Console.WriteLine(memberId + " " + token);
                 var member = await db.MemberTokens.FirstAsync(m => m.MemberId == memberId && m.DeviceId == token);
-                if(member != null){
-                    return true;
-                }
-                return false;
+                return true;
             }
             catch(Exception e){
-                Console.WriteLine("Check token: " + e.Message);
+                Console.WriteLine("Check token: " + e.Message + " " + e.InnerException);
                 // here it returns exception if no token is found, so also return false
                 return false;
             }
