@@ -26,27 +26,27 @@ namespace ScSoMe.API.Controllers.Members.MembersController
             profileService = new ProfileService();
         }
 
-        [HttpGet("GetProfile")]
-        [ProducesResponseType(200)]
-        [ProducesResponseType(404)]
-        [ProducesResponseType(500)]
-        public async Task<string> GetProfile([FromQuery] int memberId){
-            try{
-                Member response = await profileService.GetProfile(memberId);
-                JsonSerializerOptions options = new()
-                {
-                    ReferenceHandler = ReferenceHandler.IgnoreCycles,
-                    WriteIndented = true
-                };
-                string serializedResponse = JsonSerializer.Serialize(response, options);
-                return serializedResponse;
-            }
-            catch(Exception e){
-                return JsonSerializer.Serialize(new ProfileResponse{
-                Message = e.Message,                    
-                StatusCode = HttpStatusCode.InternalServerError,});
-            }
-        }
+        // [HttpGet("GetProfile")]
+        // [ProducesResponseType(200)]
+        // [ProducesResponseType(404)]
+        // [ProducesResponseType(500)]
+        // public async Task<string> GetProfile([FromQuery] int memberId){
+        //     try{
+        //         Member response = await profileService.GetProfile(memberId);
+        //         JsonSerializerOptions options = new()
+        //         {
+        //             ReferenceHandler = ReferenceHandler.IgnoreCycles,
+        //             WriteIndented = true
+        //         };
+        //         string serializedResponse = JsonSerializer.Serialize(response, options);
+        //         return serializedResponse;
+        //     }
+        //     catch(Exception e){
+        //         return JsonSerializer.Serialize(new ProfileResponse{
+        //         Message = e.Message,                    
+        //         StatusCode = HttpStatusCode.InternalServerError,});
+        //     }
+        // }
 
         [HttpPost("UpdateProfile")]
         [ProducesResponseType(200)]
@@ -148,6 +148,37 @@ namespace ScSoMe.API.Controllers.Members.MembersController
                 return new ProfileResponse{
                 Message = e.Message,                    
                 StatusCode = HttpStatusCode.InternalServerError,};
+            }
+        }
+
+        [HttpPost("CheckToken")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<string> CheckToken([FromQuery] int memberId, [FromQuery] string token){
+            try{
+                bool success = await profileService.CheckToken(memberId, token);
+                if(success){
+                    Member response = await profileService.GetProfile(memberId);
+                    JsonSerializerOptions options = new()
+                    {
+                        ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                        WriteIndented = true
+                    };
+                    string serializedResponse = JsonSerializer.Serialize(response, options);
+                    return serializedResponse;
+                }
+                else{
+                    return JsonSerializer.Serialize(new ProfileResponse{
+                        Message = "Token is invalid",                    
+                        StatusCode = HttpStatusCode.Unauthorized,
+                    });
+                }
+            }
+            catch(Exception e){
+                return JsonSerializer.Serialize(new ProfileResponse{
+                Message = e.Message,                    
+                StatusCode = HttpStatusCode.InternalServerError,});
             }
         }
     }

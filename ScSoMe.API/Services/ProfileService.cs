@@ -14,6 +14,20 @@ namespace ScSoMe.API.Services
         {
             db = new ScSoMeContext();
         }
+
+        public async Task<bool> CheckToken(int memberId, string token){
+            try{
+                var member = await db.MemberTokens.FirstAsync(m => m.MemberId == memberId && m.Token.Equals(token));
+                if(member != null){
+                    return true;
+                }
+                return false;
+            }
+            catch(Exception e){
+                Console.WriteLine("Check token: " + e.Message);
+                throw new Exception(e.Message);
+            }
+        }
         /**
             * <summary>Gets a profile from the database</summary>
             * <param name="memberId">The id of the member</param>
