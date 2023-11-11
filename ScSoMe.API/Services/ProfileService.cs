@@ -18,7 +18,10 @@ namespace ScSoMe.API.Services
         public async Task<bool> CheckToken(int memberId, string token){
             try{
                 var member = await db.MemberTokens.FirstAsync(m => m.MemberId == memberId && m.DeviceId == token);
-                return true;
+                if(member != null){
+                    return true;
+                }
+                return false;
             }
             catch(Exception e){
                 Console.WriteLine("Check token: " + e.Message);
