@@ -151,7 +151,7 @@ namespace ScSoMe.API.Controllers.Members.MembersController
             }
         }
 
-        [HttpPost("CheckToken")]
+        [HttpGet("CheckToken")]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
