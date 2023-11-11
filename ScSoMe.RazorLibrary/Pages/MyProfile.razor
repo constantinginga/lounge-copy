@@ -1,96 +1,13 @@
 ﻿@page "/my-profile"
-@using Microsoft.AspNetCore.Components.Forms
-@inject AppState AppState
 @inject NavigationManager NavManager
-@inject ScSoMe.Common.ApiClientFactory apiClientFactory
+@inject AppState AppState
 
-@if (CurrentUser == null)
-{
-    <MudProgressCircular Color="MudBlazor.Color.Primary" Indeterminate="true" />
-}
-else
-{
-    <MudContainer Class="my-profile-container mt-4 d-flex flex-column">
-        @*<div>
-            <MudContainer Class="m-0 p-0 my-profile-banner">
-            </MudContainer>
-        </div>*@
-        <MudContainer Class="d-flex align-center gap-3">
-            <div>
-                @if (CurrentUser.Avatar != null)
-                {
-                    <MudAvatar Image="@("https://www.startupcentral.dk" + CurrentUser.Avatar)" Alt="User avatar" Class="user-avatar" />
-                }
-                else
-                {
-                    <MudAvatar Color="MudBlazor.Color.Surface" Size="MudBlazor.Size.Large" Alt="User avatar" Class="user-avatar">@CurrentUser.Name[0]</MudAvatar>
-                }
-            </div>
-            <MudContainer Class="m-0 p-0">
-                <MudText Typo="Typo.h4">Profile</MudText>
-                <MudText Typo="Typo.body1">Here you can see details about your account.</MudText>
-            </MudContainer>
-        </MudContainer>
-
-        <MudContainer Class="m-0 p-0 d-flex flex-column gap-4 mt-4">
-            <MudContainer Class="m-0 p-0 d-flex align-center gap-16">
-                <div class="field-label-container">
-                    <MudText Class="field-label">Name</MudText>
-                </div>
-                <div class="field-input-container">
-                    <MudTextField @bind-Value="@CurrentUser.Name" Class="field-input" Variant="Variant.Outlined" Disabled="!_editingEnabled"></MudTextField>
-                </div>
-            </MudContainer>
-            <MudContainer Class="m-0 p-0 d-flex align-center gap-16">
-                <div class="field-label-container">
-                    <MudText Class="field-label">Username</MudText>
-                </div>
-                <div class="field-input-container">
-                    <MudTextField @bind-Value="@CurrentUser.Username" Class="field-input" Variant="Variant.Outlined" Disabled="!_editingEnabled"></MudTextField>
-                </div>
-            </MudContainer>
-            <MudContainer Class="m-0 p-0 d-flex align-center gap-16">
-                <MudText Class="field-label">Upload new avatar</MudText>
-                <InputFile id="fileInput" OnChange="UploadFiles" hidden multiple />
-                <MudFab HtmlTag="label"
-                    Color="MudBlazor.Color.Default"
-                    Icon="@Icons.Filled.AttachFile"
-                    Size="MudBlazor.Size.Small"
-                    for="fileInput"
-                    Disabled="!_editingEnabled" />
-            </MudContainer>
-            <MudContainer Class="p-0 m-0 d-flex gap-4 mt-2">
-                @if (_editingEnabled)
-                {
-                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.Save" Color="MudBlazor.Color.Primary" OnClick="SaveChanges">Save</MudButton>
-                    <MudButton Variant="Variant.Outlined" Color="MudBlazor.Color.Default" OnClick="@(() => ToggleEdit(false))">Cancel</MudButton>
-                }
-                else
-                {
-                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.Edit" Color="MudBlazor.Color.Primary" OnClick="@(() => ToggleEdit(true))">Edit</MudButton>
-                }
-            </MudContainer>
-
-            @*Temporary*@
-            <MudList>
-                @foreach (var file in files)
-                {
-                    <MudListItem Icon="@Icons.Filled.AttachFile" @key="@file">
-                        @file.Name
-                    </MudListItem>
-                }
-            </MudList>
-        </MudContainer>
-    </MudContainer>
-}
+<div class="wrapper">
+<iframe src=@("http://localhost:5173/?memberId=" + AppState.CurrentUser.Id) frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 @code {
-    public API.MemberInfo? CurrentUser { get; set; }
-    public API.ScSoMeApi? client { get; set; }
-    private bool _editingEnabled { get; set; }
-    private IList<IBrowserFile> files { get; set; }
-
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         if (!AppState.IsLoggedIn)
         {
@@ -98,32 +15,5 @@ else
             NavManager.NavigateTo("./login");
             return;
         }
-
-        client = apiClientFactory.GetApiClient();
-        CurrentUser = await client.GetMyMemberInfoAsync();
-        files = new List<IBrowserFile>();
     }
-
-    protected override async Task OnParametersSetAsync()
-    {
-
-    }
-
-    private void ToggleEdit(bool tog)
-    {
-        _editingEnabled = tog;
-    }
-
-    private void SaveChanges()
-    {
-        _editingEnabled = false;
-    }
-
-    private void UploadFiles(InputFileChangeEventArgs e)
-    {
-        foreach (var f in e.GetMultipleFiles())
-        {
-            files.Add(f);
-        }
-    }
-}
+ }
