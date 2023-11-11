@@ -138,6 +138,7 @@
             // should never be cleared on this client/device
             await localStorage.SetItemAsync("CrossSessionUniqueClientID", crossSessionUniqueClientID);
         }
+        AppState.token = crossSessionUniqueClientID;
 
         API.LoginResult loginResult = null;
         try

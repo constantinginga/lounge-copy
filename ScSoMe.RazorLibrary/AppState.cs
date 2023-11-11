@@ -3,6 +3,7 @@
     public class AppState
     {
         private bool _loggedIn;
+        private string _token;
         private int _currentGroup;
         private bool _isFreeUser = true;
         private string _freeUserId;
@@ -29,6 +30,17 @@
                 if (_loggedIn != value)
                 {
                     _loggedIn = value;
+                }
+            }
+        }
+
+        public string token{
+            get { return _token; }
+            set
+            {
+                if (_token != value)
+                {
+                    _token = value;
                 }
             }
         }
