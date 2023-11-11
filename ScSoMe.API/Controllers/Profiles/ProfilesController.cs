@@ -181,5 +181,43 @@ namespace ScSoMe.API.Controllers.Members.MembersController
                 StatusCode = HttpStatusCode.InternalServerError,});
             }
         }
+
+        [HttpPost("AddConnection")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<string> AddConnection([FromQuery] int memberId, [FromQuery] int connectedId){
+            try{
+                await profileService.AddConnection(memberId, connectedId);
+                return JsonSerializer.Serialize(new ProfileResponse{
+                    Message = "Succesfully added connection",                    
+                    StatusCode = HttpStatusCode.OK,
+                });
+            }
+            catch(Exception e){
+                return JsonSerializer.Serialize(new ProfileResponse{
+                Message = "Failed to add the connection with error: " + e.Message,                    
+                StatusCode = HttpStatusCode.InternalServerError,});
+            }
+        }
+
+        [HttpPost("RemoveConnection")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<string> RemoveConnection([FromQuery] int memberId, [FromQuery] int connectedId){
+            try{
+                profileService.RemoveConnection(memberId, connectedId);
+                return JsonSerializer.Serialize(new ProfileResponse{
+                    Message = "Succesfully removed connection",                    
+                    StatusCode = HttpStatusCode.OK,
+                });
+            }
+            catch(Exception e){
+                return JsonSerializer.Serialize(new ProfileResponse{
+                Message = "Failed to remove connection with error: " + e.Message,                    
+                StatusCode = HttpStatusCode.InternalServerError,});
+            }
+        }
     }
 }

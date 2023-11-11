@@ -92,7 +92,7 @@
     private async void Logout()
     {
         var signoutResult = await apiClientFactory.SignOut();
-        await localStorage.RemoveItemAsync("Token");
+        await localStorage.RemoveItemAsync("CrossSessionUniqueClientID");
         AppState.IsLoggedIn = false;
         AppState.CurrentUser = null;
         NavigationManager.NavigateTo("./");

@@ -30,6 +30,7 @@ namespace ScSoMe.EF
         public virtual DbSet<Group> Groups { get; set; } = null!;
         public virtual DbSet<GroupsRead> GroupsReads { get; set; } = null!;
         public virtual DbSet<Member> Members { get; set; } = null!;
+        public virtual DbSet<MemberConnection> MemberConnections { get; set; } = null!;
         public virtual DbSet<MemberDeviceToken> MemberDeviceTokens { get; set; } = null!;
         public virtual DbSet<MemberEmailSubscription> MemberEmailSubscriptions { get; set; } = null!;
         public virtual DbSet<MemberNetPromotorScore> MemberNetPromotorScores { get; set; } = null!;
@@ -66,7 +67,7 @@ namespace ScSoMe.EF
             modelBuilder.Entity<ActivitySection>(entity =>
             {
                 entity.HasKey(e => e.MemberId)
-                    .HasName("PK__Activity__B29B853444823F57");
+                    .HasName("PK__Activity__B29B853491B22092");
 
                 entity.ToTable("ActivitySection");
 
@@ -84,7 +85,7 @@ namespace ScSoMe.EF
                     .WithOne(p => p.ActivitySection)
                     .HasForeignKey<ActivitySection>(d => d.MemberId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__ActivityS__membe__36D11DD4");
+                    .HasConstraintName("FK__ActivityS__membe__68687968");
             });
 
             modelBuilder.Entity<BlockedMember>(entity =>
@@ -159,7 +160,7 @@ namespace ScSoMe.EF
             modelBuilder.Entity<ContactsSection>(entity =>
             {
                 entity.HasKey(e => e.MemberId)
-                    .HasName("PK__Contacts__B29B853462D3964B");
+                    .HasName("PK__Contacts__B29B8534D134CAC4");
 
                 entity.ToTable("ContactsSection");
 
@@ -182,7 +183,7 @@ namespace ScSoMe.EF
                     .WithOne(p => p.ContactsSection)
                     .HasForeignKey<ContactsSection>(d => d.MemberId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__ContactsS__membe__2B5F6B28");
+                    .HasConstraintName("FK__ContactsS__membe__5CF6C6BC");
             });
 
             modelBuilder.Entity<CountryCode>(entity =>
@@ -201,7 +202,7 @@ namespace ScSoMe.EF
             modelBuilder.Entity<DescriptionSection>(entity =>
             {
                 entity.HasKey(e => e.MemberId)
-                    .HasName("PK__Descript__B29B8534A8B175F2");
+                    .HasName("PK__Descript__B29B8534F09F978F");
 
                 entity.ToTable("DescriptionSection");
 
@@ -219,7 +220,7 @@ namespace ScSoMe.EF
                     .WithOne(p => p.DescriptionSection)
                     .HasForeignKey<DescriptionSection>(d => d.MemberId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__Descripti__membe__22CA2527");
+                    .HasConstraintName("FK__Descripti__membe__546180BB");
             });
 
             modelBuilder.Entity<Emoji>(entity =>
@@ -236,8 +237,7 @@ namespace ScSoMe.EF
             modelBuilder.Entity<ExternalLink>(entity =>
             {
                 entity.Property(e => e.ExternalLinkId)
-                    .HasMaxLength(250)
-                    .IsUnicode(false)
+                    .ValueGeneratedNever()
                     .HasColumnName("externalLinkId");
 
                 entity.Property(e => e.MemberId).HasColumnName("member_id");
@@ -255,13 +255,13 @@ namespace ScSoMe.EF
                 entity.HasOne(d => d.Member)
                     .WithMany(p => p.ExternalLinks)
                     .HasForeignKey(d => d.MemberId)
-                    .HasConstraintName("FK__ExternalL__membe__2882FE7D");
+                    .HasConstraintName("FK__ExternalL__membe__5A1A5A11");
             });
 
             modelBuilder.Entity<ExternalLinksSection>(entity =>
             {
                 entity.HasKey(e => e.MemberId)
-                    .HasName("PK__External__B29B8534749044D9");
+                    .HasName("PK__External__B29B853430265DEE");
 
                 entity.ToTable("ExternalLinksSection");
 
@@ -275,7 +275,7 @@ namespace ScSoMe.EF
                     .WithOne(p => p.ExternalLinksSection)
                     .HasForeignKey<ExternalLinksSection>(d => d.MemberId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__ExternalL__membe__25A691D2");
+                    .HasConstraintName("FK__ExternalL__membe__573DED66");
             });
 
             modelBuilder.Entity<Group>(entity =>
@@ -357,6 +357,30 @@ namespace ScSoMe.EF
                 entity.Property(e => e.Url)
                     .IsUnicode(false)
                     .HasColumnName("url");
+            });
+
+            modelBuilder.Entity<MemberConnection>(entity =>
+            {
+                entity.HasKey(e => e.ConnectionId)
+                    .HasName("PK__MemberCo__E4AA4DD0B0DEDC00");
+
+                entity.Property(e => e.ConnectionId)
+                    .ValueGeneratedNever()
+                    .HasColumnName("connection_id");
+
+                entity.Property(e => e.ConnectedId).HasColumnName("connected_id");
+
+                entity.Property(e => e.MemberId).HasColumnName("member_id");
+
+                entity.HasOne(d => d.Connected)
+                    .WithMany(p => p.MemberConnectionConnecteds)
+                    .HasForeignKey(d => d.ConnectedId)
+                    .HasConstraintName("FK__MemberCon__conne__6C390A4C");
+
+                entity.HasOne(d => d.Member)
+                    .WithMany(p => p.MemberConnectionMembers)
+                    .HasForeignKey(d => d.MemberId)
+                    .HasConstraintName("FK__MemberCon__membe__6B44E613");
             });
 
             modelBuilder.Entity<MemberDeviceToken>(entity =>
@@ -513,7 +537,7 @@ namespace ScSoMe.EF
             modelBuilder.Entity<ServicesSection>(entity =>
             {
                 entity.HasKey(e => e.MemberId)
-                    .HasName("PK__Services__B29B853419D70720");
+                    .HasName("PK__Services__B29B853437096273");
 
                 entity.ToTable("ServicesSection");
 
@@ -531,7 +555,7 @@ namespace ScSoMe.EF
                     .WithOne(p => p.ServicesSection)
                     .HasForeignKey<ServicesSection>(d => d.MemberId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__ServicesS__membe__2E3BD7D3");
+                    .HasConstraintName("FK__ServicesS__membe__5FD33367");
             });
 
             modelBuilder.Entity<TrackedMessage>(entity =>
@@ -559,8 +583,7 @@ namespace ScSoMe.EF
                 entity.ToTable("WorkExperience");
 
                 entity.Property(e => e.WorkExperienceId)
-                    .HasMaxLength(250)
-                    .IsUnicode(false)
+                    .ValueGeneratedNever()
                     .HasColumnName("workExperienceId");
 
                 entity.Property(e => e.CompanyName)
@@ -590,13 +613,13 @@ namespace ScSoMe.EF
                 entity.HasOne(d => d.Member)
                     .WithMany(p => p.WorkExperiences)
                     .HasForeignKey(d => d.MemberId)
-                    .HasConstraintName("FK__WorkExper__membe__33F4B129");
+                    .HasConstraintName("FK__WorkExper__membe__658C0CBD");
             });
 
             modelBuilder.Entity<WorkExperienceSection>(entity =>
             {
                 entity.HasKey(e => e.MemberId)
-                    .HasName("PK__WorkExpe__B29B8534510B65DE");
+                    .HasName("PK__WorkExpe__B29B85343A655E72");
 
                 entity.ToTable("WorkExperienceSection");
 
@@ -610,7 +633,7 @@ namespace ScSoMe.EF
                     .WithOne(p => p.WorkExperienceSection)
                     .HasForeignKey<WorkExperienceSection>(d => d.MemberId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__WorkExper__membe__3118447E");
+                    .HasConstraintName("FK__WorkExper__membe__62AFA012");
             });
 
             OnModelCreatingPartial(modelBuilder);

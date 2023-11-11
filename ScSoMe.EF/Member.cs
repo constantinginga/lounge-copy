@@ -7,6 +7,8 @@ namespace ScSoMe.EF
     {
         public Member()
         {
+            MemberConnectionConnecteds = new HashSet<MemberConnection>();
+            MemberConnectionMembers = new HashSet<MemberConnection>();
             Participants = new HashSet<Participant>();
         }
 
@@ -28,6 +30,8 @@ namespace ScSoMe.EF
         public virtual ExternalLinksSection ExternalLinksSection { get; set; } = null!;
         public virtual ServicesSection ServicesSection { get; set; } = null!;
         public virtual WorkExperienceSection WorkExperienceSection { get; set; } = null!;
+        public virtual ICollection<MemberConnection> MemberConnectionConnecteds { get; set; }
+        public virtual ICollection<MemberConnection> MemberConnectionMembers { get; set; }
         public virtual ICollection<Participant> Participants { get; set; }
     }
 }

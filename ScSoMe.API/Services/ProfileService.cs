@@ -18,10 +18,7 @@ namespace ScSoMe.API.Services
         public async Task<bool> CheckToken(int memberId, string token){
             try{
                 var member = await db.MemberTokens.FirstAsync(m => m.MemberId == memberId && m.DeviceId == token);
-                if(member != null){
-                    return true;
-                }
-                return false;
+                return true;
             }
             catch(Exception e){
                 Console.WriteLine("Check token: " + e.Message);
@@ -164,6 +161,9 @@ namespace ScSoMe.API.Services
                 case nameof(Member.Image):
                     response = await UpdateProfileImage(memberId, (newVal as string));
                     break;
+                case nameof(Member.Banner):
+                    response = await UpdateProfileBanner(memberId, (newVal as string));
+                    break;
                 case nameof(DescriptionSection):
                     response = await UpdateProfileDescription((newVal as DescriptionSection));
                     break;
@@ -261,6 +261,21 @@ namespace ScSoMe.API.Services
             }
             catch(Exception e){
                 Console.WriteLine("Update profile image: " + e.Message);
+                throw new Exception(e.Message);
+            }
+        }
+
+        public async Task<bool> UpdateProfileBanner(int memberId, string? bannerUrl){
+            try{
+                var member = await db.Members.FirstAsync(m => m.MemberId == memberId);
+                member.Banner = bannerUrl;
+                db.ChangeTracker.Clear();
+                db.Members.Update(member);
+                await db.SaveChangesAsync();
+                return true;
+            }
+            catch(Exception e){
+                Console.WriteLine("Update profile banner: " + e.Message);
                 throw new Exception(e.Message);
             }
         }
@@ -419,6 +434,7 @@ namespace ScSoMe.API.Services
                         PrivacySetting = true,
                 };
                 await db.WorkExperienceSections.AddAsync(newWorkExperienceSection);
+                await db.SaveChangesAsync();
                 Member member = await GetProfile(memberId);
                 if(workExperiences != null){
                     foreach(var workExperience in workExperiences){
@@ -468,13 +484,13 @@ namespace ScSoMe.API.Services
 
         public async Task<bool> AddProfileActivitySection(int memberId, string? content){
             try{
-                var newActivitySection = new ActivitySection{
-                        MemberId = memberId,
-                        Content = content,
-                        PrivacySetting = true,
-                };
-                await db.ActivitySections.AddAsync(newActivitySection);
-                await db.SaveChangesAsync();
+                // var newActivitySection = new ActivitySection{
+                //         MemberId = memberId,
+                //         Content = content,
+                //         PrivacySetting = true,
+                // };
+                // await db.ActivitySections.AddAsync(newActivitySection);
+                // await db.SaveChangesAsync();
                 return true;
             }
             catch(Exception e){
@@ -492,6 +508,55 @@ namespace ScSoMe.API.Services
             catch(Exception e){
                 Console.WriteLine("Update profile activity: " + e.Message);
                 throw new Exception(e.Message);             
+            }
+        }
+
+        public async Task<MemberConnection> GetConnection(int memberId, int connectedId){
+            try{
+                var connection = await db.MemberConnections.FirstAsync(m => m.MemberId == memberId && m.ConnectedId == connectedId || m.MemberId == connectedId && m.ConnectedId == memberId);
+                return connection;
+            }
+            catch(Exception e){
+                Console.WriteLine(e.Message + " " + e.InnerException);
+                throw new Exception(e.Message);
+            }
+        }
+
+        public async Task AddConnection(int memberId, int connectedId){
+            try{
+                var newConnection = new MemberConnection{
+                        MemberId = memberId,
+                        ConnectedId = connectedId,
+                };
+                await db.MemberConnections.AddAsync(newConnection);
+                await db.SaveChangesAsync();
+            }
+            catch(Exception e){
+                Console.WriteLine(e.Message + " " + e.InnerException);
+                throw new Exception(e.Message);
+            }
+        }
+        public async void RemoveConnection(int memberId, int connectedId){
+            try{
+                var connectionToRemove = await GetConnection(memberId, connectedId);
+                db.ChangeTracker.Clear();
+                db.MemberConnections.Remove(connectionToRemove);
+                db.SaveChanges();
+            }
+            catch(Exception e){
+                Console.WriteLine(e.Message + " " + e.InnerException);
+                throw new Exception(e.Message);
+            }
+        }
+
+        public async Task<List<MemberConnection>> GetMemberConnections(int memberId){
+            try{
+                var connections = await db.MemberConnections.Where(m => m.MemberId == memberId || m.ConnectedId == memberId).ToListAsync();
+                return connections;
+            }
+            catch(Exception e){
+                Console.WriteLine(e.Message + " " + e.InnerException);
+                throw new Exception(e.Message);
             }
         }
     }

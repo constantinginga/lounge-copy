@@ -198,8 +198,8 @@ namespace ScSoMe.API.Controllers.Members.MembersController
 
 
 
-        private readonly string baseUmbracoUrl = //"http://localhost:1111";
-            "https://www.startupcentral.dk";
+        private readonly string baseUmbracoUrl = "http://localhost:1111";
+            // "https://www.startupcentral.dk";
 
         [HttpPost("GetMyMemberInfo")]
         [ProducesResponseType(200)]
