@@ -17,7 +17,6 @@ namespace ScSoMe.API.Services
 
         public async Task<bool> CheckToken(int memberId, string token){
             try{
-                Console.WriteLine(memberId + " " + token);
                 var member = await db.MemberTokens.FirstAsync(m => m.MemberId == memberId && m.DeviceId == token);
                 return true;
             }
@@ -36,6 +35,8 @@ namespace ScSoMe.API.Services
         public async Task<Member> GetProfile(int memberId){
             try{
                 var member = await db.Members.FirstAsync(m => m.MemberId == memberId);
+                member.Login = "";
+                member.Password = "";
                 if(member != null){
                     //Description section
                     var description = await db.DescriptionSections.FirstOrDefaultAsync(d => d.MemberId == memberId);
