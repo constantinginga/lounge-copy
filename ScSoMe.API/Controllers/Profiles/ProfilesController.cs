@@ -30,16 +30,25 @@ namespace ScSoMe.API.Controllers.Members.MembersController
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<string> GetProfile([FromQuery] int memberId){
+        public async Task<string> GetProfile([FromQuery] int memberId, [FromQuery] string token){
             try{
-                Member response = await profileService.GetProfile(memberId, false);
-                JsonSerializerOptions options = new()
-                {
-                    ReferenceHandler = ReferenceHandler.IgnoreCycles,
-                    WriteIndented = true
-                };
-                string serializedResponse = JsonSerializer.Serialize(response, options);
-                return serializedResponse;
+                bool success = await profileService.CheckToken(memberId, token);
+                if(success){
+                    Member response = await profileService.GetProfile(memberId, false);
+                    JsonSerializerOptions options = new()
+                    {
+                        ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                        WriteIndented = true
+                    };
+                    string serializedResponse = JsonSerializer.Serialize(response, options);
+                    return serializedResponse;
+                }
+                else{
+                    return JsonSerializer.Serialize(new ProfileResponse{
+                        Message = "Can't get profile. Token is invalid",                    
+                        StatusCode = HttpStatusCode.Unauthorized,
+                    });
+                }
             }
             catch(Exception e){
                 return JsonSerializer.Serialize(new ProfileResponse{
@@ -74,29 +83,38 @@ namespace ScSoMe.API.Controllers.Members.MembersController
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<ProfileResponse> UpdateProfile([FromBody]JsonElement profile){
+        public async Task<ProfileResponse> UpdateProfile([FromQuery] int memberId, [FromQuery] string token, [FromBody]JsonElement profile){
             try{
-                Member? newProfile = profile.Deserialize<Member>();
-                if (newProfile != null)
-                {
-                    bool response = await profileService.UpdateProfile(newProfile);
-                    if(response){
-                        return new ProfileResponse{
-                            Message = "Profile updated successfully",                    
-                            StatusCode = HttpStatusCode.OK,
-                        };
+                bool success = await profileService.CheckToken(memberId, token);
+                if(success){
+                    Member? newProfile = profile.Deserialize<Member>();
+                    if (newProfile != null)
+                    {
+                        bool response = await profileService.UpdateProfile(newProfile);
+                        if(response){
+                            return new ProfileResponse{
+                                Message = "Profile updated successfully",                    
+                                StatusCode = HttpStatusCode.OK,
+                            };
+                        }
+                        else{
+                            return new ProfileResponse{
+                                Message = "Failed to update profile",                    
+                                StatusCode = HttpStatusCode.InternalServerError,
+                            };
+                        }
                     }
-                    else{
-                        return new ProfileResponse{
-                            Message = "Failed to update profile",                    
-                            StatusCode = HttpStatusCode.InternalServerError,
-                        };
-                    }
+                    return new ProfileResponse{
+                        Message = "Failed to deserialize received member object",                    
+                        StatusCode = HttpStatusCode.InternalServerError,
+                    };
                 }
-                return new ProfileResponse{
-                    Message = "Failed to deserialize received member object",                    
-                    StatusCode = HttpStatusCode.InternalServerError,
-                };
+                else{
+                    return new ProfileResponse{
+                        Message = "Can't update profile. Token is invalid",                    
+                        StatusCode = HttpStatusCode.Unauthorized,
+                    };
+                }
             }
             catch(Exception e){
                 return new ProfileResponse{
@@ -208,17 +226,71 @@ namespace ScSoMe.API.Controllers.Members.MembersController
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<string> AddConnection([FromQuery] int memberId, [FromQuery] int connectedId){
+        public async Task<string> AddConnection([FromQuery] int memberId, [FromQuery] string token, [FromBody] JsonElement connection){
             try{
-                await profileService.AddConnection(memberId, connectedId);
-                return JsonSerializer.Serialize(new ProfileResponse{
-                    Message = "Succesfully added connection",                    
-                    StatusCode = HttpStatusCode.OK,
-                });
+                bool success = await profileService.CheckToken(memberId, token);
+                if(success){
+                    MemberConnection? newConnection = connection.Deserialize<MemberConnection>();
+                    if(newConnection != null){
+                        await profileService.AddConnection(newConnection);
+                        return JsonSerializer.Serialize(new ProfileResponse{
+                            Message = "Succesfully added connection",                    
+                            StatusCode = HttpStatusCode.OK,
+                        });
+                    }
+                    else{
+                        return JsonSerializer.Serialize(new ProfileResponse{
+                            Message = "Failed to deserialize the received connection",                    
+                            StatusCode = HttpStatusCode.InternalServerError,});
+                    }
+                }
+                else{
+                    return JsonSerializer.Serialize(new ProfileResponse{
+                        Message = "Can't add connection. Token is invalid",                    
+                        StatusCode = HttpStatusCode.Unauthorized,
+                    });
+                }
             }
             catch(Exception e){
                 return JsonSerializer.Serialize(new ProfileResponse{
-                Message = "Failed to add the connection with error: " + e.Message,                    
+                Message = "Failed to add connection with error: " + e.Message,                    
+                StatusCode = HttpStatusCode.InternalServerError,});
+            }
+        }
+
+        [HttpPost("ApproveConnection")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<string> ApproveConnection([FromQuery] int memberId, [FromQuery] string token, [FromBody] JsonElement newConnection){
+            try{
+                bool success = await profileService.CheckToken(memberId, token);
+                if(success){
+                    MemberConnection? connection = newConnection.Deserialize<MemberConnection>();
+                    if(connection != null){
+                        await profileService.ApproveConnection(connection);
+                        return JsonSerializer.Serialize(new ProfileResponse{
+                            Message = "Succesfully added connection",                    
+                            StatusCode = HttpStatusCode.OK,
+                        });
+                    }
+                    else{
+                        return JsonSerializer.Serialize(new ProfileResponse{
+                            Message = "Failed to deserialize the received connection",                    
+                            StatusCode = HttpStatusCode.InternalServerError,});
+                    }
+                }
+                else{
+                    return JsonSerializer.Serialize(new ProfileResponse{
+                        Message = "Can't approve connection. Token is invalid",                    
+                        StatusCode = HttpStatusCode.Unauthorized,
+                    });
+                
+                }
+            }
+            catch(Exception e){
+                return JsonSerializer.Serialize(new ProfileResponse{
+                Message = "Failed to approve the connection with error: " + e.Message,                    
                 StatusCode = HttpStatusCode.InternalServerError,});
             }
         }
@@ -227,17 +299,97 @@ namespace ScSoMe.API.Controllers.Members.MembersController
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<string> RemoveConnection([FromQuery] int memberId, [FromQuery] int connectedId){
+        public async Task<string> RemoveConnection([FromQuery] int memberId, [FromQuery] string token, [FromBody] JsonElement connectionToRemove){
             try{
-                profileService.RemoveConnection(memberId, connectedId);
-                return JsonSerializer.Serialize(new ProfileResponse{
-                    Message = "Succesfully removed connection",                    
-                    StatusCode = HttpStatusCode.OK,
-                });
+                bool success = await profileService.CheckToken(memberId, token);
+                if(success){
+                    MemberConnection? connection = connectionToRemove.Deserialize<MemberConnection>();
+                    if(connection != null){
+                        profileService.RemoveConnection(connection);
+                        return JsonSerializer.Serialize(new ProfileResponse{
+                            Message = "Succesfully removed connection",                    
+                            StatusCode = HttpStatusCode.OK,
+                        });
+                    }
+                    else{
+                        return JsonSerializer.Serialize(new ProfileResponse{
+                            Message = "Failed to deserialize the received connection",                    
+                            StatusCode = HttpStatusCode.InternalServerError,});
+                    }
+                }
+                else{
+                    return JsonSerializer.Serialize(new ProfileResponse{
+                        Message = "Can't remove connection. Token is invalid",                    
+                        StatusCode = HttpStatusCode.Unauthorized,
+                    });
+                
+                }
             }
             catch(Exception e){
                 return JsonSerializer.Serialize(new ProfileResponse{
                 Message = "Failed to remove connection with error: " + e.Message,                    
+                StatusCode = HttpStatusCode.InternalServerError,});
+            }
+        }
+
+        [HttpGet("GetConnections")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<string> GetConnections([FromQuery] int memberId, [FromQuery] string token){
+            try{
+                bool success = await profileService.CheckToken(memberId, token);
+                if(success){
+                    List<MemberConnection> connections = await profileService.GetMemberConnections(memberId);
+                    JsonSerializerOptions options = new()
+                    {
+                        ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                        WriteIndented = true
+                    };
+                    string serializedResponse = JsonSerializer.Serialize(connections, options);
+                    return serializedResponse;
+                }
+                else{
+                    return JsonSerializer.Serialize(new ProfileResponse{
+                        Message = "Can't get connections. Token is invalid",                    
+                        StatusCode = HttpStatusCode.Unauthorized,
+                    });
+                }
+            }
+            catch(Exception e){
+                return JsonSerializer.Serialize(new ProfileResponse{
+                Message = "Failed to get connections with error: " + e.Message,                    
+                StatusCode = HttpStatusCode.InternalServerError,});
+            }
+        }
+
+        [HttpGet("GetConnections")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<string> GetConnectionRequests([FromQuery] int memberId, [FromQuery] string token){
+            try{
+                bool success = await profileService.CheckToken(memberId, token);
+                if(success){
+                    List<MemberConnection> requests = await profileService.GetMemberConnectionRequests(memberId);
+                    JsonSerializerOptions options = new()
+                    {
+                        ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                        WriteIndented = true
+                    };
+                    string serializedResponse = JsonSerializer.Serialize(requests, options);
+                    return serializedResponse;
+                }
+                else{
+                    return JsonSerializer.Serialize(new ProfileResponse{
+                        Message = "Can't get connection requests. Token is invalid",                    
+                        StatusCode = HttpStatusCode.Unauthorized,
+                    });
+                }
+            }
+            catch(Exception e){
+                return JsonSerializer.Serialize(new ProfileResponse{
+                Message = "Failed to get connection requests with error: " + e.Message,                    
                 StatusCode = HttpStatusCode.InternalServerError,});
             }
         }

@@ -554,11 +554,12 @@ namespace ScSoMe.API.Services
             }
         }
 
-        public async Task AddConnection(int memberId, int connectedId){
+        public async Task AddConnection(MemberConnection connection){
             try{
                 var newConnection = new MemberConnection{
-                        MemberId = memberId,
-                        ConnectedId = connectedId,
+                        MemberId = connection.MemberId,
+                        ConnectedId = connection.ConnectedId,
+                        Status = false,
                 };
                 await db.MemberConnections.AddAsync(newConnection);
                 await db.SaveChangesAsync();
@@ -568,9 +569,8 @@ namespace ScSoMe.API.Services
                 throw new Exception(e.Message);
             }
         }
-        public async void RemoveConnection(int memberId, int connectedId){
+        public async void RemoveConnection(MemberConnection connectionToRemove){
             try{
-                var connectionToRemove = await GetConnection(memberId, connectedId);
                 db.ChangeTracker.Clear();
                 db.MemberConnections.Remove(connectionToRemove);
                 db.SaveChanges();
@@ -581,9 +581,32 @@ namespace ScSoMe.API.Services
             }
         }
 
+        public async Task ApproveConnection(MemberConnection newConnection){
+            try{
+                db.ChangeTracker.Clear();
+                db.MemberConnections.Update(newConnection);
+                db.SaveChanges();
+            }
+            catch(Exception e){
+                Console.WriteLine(e.Message + " " + e.InnerException);
+                throw new Exception(e.Message);
+            }
+        }
+
         public async Task<List<MemberConnection>> GetMemberConnections(int memberId){
             try{
-                var connections = await db.MemberConnections.Where(m => m.MemberId == memberId || m.ConnectedId == memberId).ToListAsync();
+                var connections = await db.MemberConnections.Where(m => m.MemberId == memberId || m.ConnectedId == memberId && m.Status == true).ToListAsync();
+                return connections;
+            }
+            catch(Exception e){
+                Console.WriteLine(e.Message + " " + e.InnerException);
+                throw new Exception(e.Message);
+            }
+        }
+
+        public async Task<List<MemberConnection>> GetMemberConnectionRequests(int memberId){
+            try{
+                var connections = await db.MemberConnections.Where(m => m.ConnectedId == memberId && m.Status == false).ToListAsync();
                 return connections;
             }
             catch(Exception e){
