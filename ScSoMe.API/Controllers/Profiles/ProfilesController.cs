@@ -195,7 +195,34 @@ namespace ScSoMe.API.Controllers.Members.MembersController
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<string> CheckToken([FromQuery] int memberId, [FromQuery] string token){
+        public async Task<ProfileResponse> CheckToken([FromQuery] int memberId, [FromQuery] string token){
+            try{
+                bool success = await profileService.CheckToken(memberId, token);
+                if(success){
+                    return new ProfileResponse{
+                        Message = "Token is valid",                    
+                        StatusCode = HttpStatusCode.OK,
+                    };
+                }
+                else{
+                    return new ProfileResponse{
+                        Message = "Token is invalid",                    
+                        StatusCode = HttpStatusCode.Unauthorized,
+                    };
+                }
+            }
+            catch(Exception e){
+                return new ProfileResponse{
+                Message = e.Message,                    
+                StatusCode = HttpStatusCode.InternalServerError,};
+            }
+        }
+
+        [HttpGet("CheckTokenProfile")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<string> CheckTokenProfile([FromQuery] int memberId, [FromQuery] string token){
             try{
                 bool success = await profileService.CheckToken(memberId, token);
                 if(success){
