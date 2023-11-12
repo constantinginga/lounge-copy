@@ -8,6 +8,7 @@ namespace ScSoMe.EF
         public int ConnectionId { get; set; }
         public int? MemberId { get; set; }
         public int? ConnectedId { get; set; }
+        public bool? Status { get; set; }
 
         public virtual Member? Connected { get; set; }
         public virtual Member? Member { get; set; }
