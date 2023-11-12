@@ -44,16 +44,11 @@ namespace ScSoMe.API.Services
                         await AddProfileDescription(memberId, "");
                     }
                     else{
-                        if(description.PrivacySetting == true && !external){
+                        if(!external || (external && description.PrivacySetting == true)){
                             member.DescriptionSection = description;
                         }
                         else{
-                            member.DescriptionSection = new DescriptionSection{
-                                MemberId = memberId,
-                                Content = "This user has set their description to private",
-                                PrivacySetting = true,
-                            };
-                        
+                            member.DescriptionSection = null;
                         }
                     }
                     //Contacts section
@@ -62,16 +57,11 @@ namespace ScSoMe.API.Services
                         await AddProfileContacts(memberId, "", null);
                     }
                     else{
-                        if(contacts.PrivacySetting == true && !external){
+                        if(!external || (external && contacts.PrivacySetting == true)){
                             member.ContactsSection = contacts;
                         }
                         else{
-                            member.ContactsSection = new ContactsSection{
-                                MemberId = memberId,
-                                Email = "This user has set their email to private",
-                                PhoneNumber = null,
-                                PrivacySetting = true,
-                            };
+                            member.ContactsSection = null;
                         }
                     }
                     //External links section
@@ -80,18 +70,14 @@ namespace ScSoMe.API.Services
                         await AddProfileExternalLinksSection(memberId, null);
                     }
                     else{
-                        if(externalLinksSection.PrivacySetting == true && !external){
+                        if(!external || (external && externalLinksSection.PrivacySetting == true)){
                             member.ExternalLinksSection = externalLinksSection;
                             //External links
                             var externalLinks = await db.ExternalLinks.Where(e => e.MemberId == memberId).ToListAsync();
                             member.ExternalLinksSection.ExternalLinks = new List<ExternalLink>(externalLinks);
                         }
                         else{
-                            member.ExternalLinksSection = new ExternalLinksSection{
-                                MemberId = memberId,
-                                PrivacySetting = true,
-                            };
-                            member.ExternalLinksSection.ExternalLinks = new List<ExternalLink>();
+                            member.ExternalLinksSection = null;
                         }
                     }
                     //Services section
@@ -100,15 +86,11 @@ namespace ScSoMe.API.Services
                         await AddProfileService(memberId, "");
                     }
                     else{
-                        if(services.PrivacySetting == true && !external){
+                        if(!external || (external && services.PrivacySetting == true)){
                             member.ServicesSection = services;
                         }
                         else{
-                            member.ServicesSection = new ServicesSection{
-                                MemberId = memberId,
-                                Content = "This user has set their services to private",
-                                PrivacySetting = true,
-                            };
+                            member.ServicesSection = null;
                         }
                     }
                     //Activity section
@@ -117,15 +99,11 @@ namespace ScSoMe.API.Services
                         await AddProfileActivitySection(memberId, "");
                     }
                     else{
-                        if(activity.PrivacySetting == true && !external){
+                        if(!external || (external && activity.PrivacySetting == true)){
                             member.ActivitySection = activity;
                         }
                         else{
-                            member.ActivitySection = new ActivitySection{
-                                MemberId = memberId,
-                                Content = "This user has set their activity to private",
-                                PrivacySetting = true,
-                            };
+                            member.ActivitySection = null;
                         }
                     }
                     //Work experience section
@@ -134,18 +112,14 @@ namespace ScSoMe.API.Services
                         await AddProfileWorkExperienceSection(memberId, null);
                     }
                     else{
-                        if(workExperienceSection.PrivacySetting == true && !external){
+                        if(!external || (external && workExperienceSection.PrivacySetting == true)){
                             member.WorkExperienceSection = workExperienceSection;
                             //Work experiences
                             var workExperiences = await db.WorkExperiences.Where(w => w.MemberId == memberId).ToListAsync();
                             member.WorkExperienceSection.WorkExperiences = new List<WorkExperience>(workExperiences);
                         }
                         else{
-                            member.WorkExperienceSection = new WorkExperienceSection{
-                                MemberId = memberId,
-                                PrivacySetting = true,
-                            };
-                            member.WorkExperienceSection.WorkExperiences = new List<WorkExperience>();
+                            member.WorkExperienceSection = null;
                         }
                     }
                     return member;
