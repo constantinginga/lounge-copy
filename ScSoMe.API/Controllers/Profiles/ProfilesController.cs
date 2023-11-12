@@ -363,7 +363,7 @@ namespace ScSoMe.API.Controllers.Members.MembersController
             }
         }
 
-        [HttpGet("GetConnections")]
+        [HttpGet("GetConnectionRequests")]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
