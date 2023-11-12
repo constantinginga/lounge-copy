@@ -421,17 +421,17 @@ namespace ScSoMe.API.Controllers.Members.MembersController
             }
         }
 
-        [HttpGet("GetMemberRequest")]
+        [HttpPost("CheckMemberConnection")]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<string> GetMemberRequest([FromQuery] int memberId, [FromQuery] string token, [FromBody] JsonElement connectionToCheck){
+        public async Task<string> CheckMemberConnection([FromQuery] int memberId, [FromQuery] string token, [FromBody] JsonElement connectionToCheck){
             try{
                 bool success = await profileService.CheckToken(memberId, token);
                 if(success){
                     MemberConnection? re = connectionToCheck.Deserialize<MemberConnection>();
                     if(re != null){
-                        MemberConnection? requestStatus = await profileService.GetMemberRequest(re);
+                        MemberConnection? requestStatus = await profileService.CheckMemberConnection(re);
                         JsonSerializerOptions options = new()
                         {
                             ReferenceHandler = ReferenceHandler.IgnoreCycles,

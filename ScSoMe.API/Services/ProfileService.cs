@@ -604,7 +604,7 @@ namespace ScSoMe.API.Services
             }
         }
 
-        public async Task<MemberConnection> GetMemberRequest(MemberConnection request){
+        public async Task<MemberConnection> CheckMemberConnection(MemberConnection request){
             try{
                 var connection = await db.MemberConnections.FirstAsync(m => (m.MemberId == request.MemberId && m.ConnectedId == request.ConnectedId || m.MemberId == request.ConnectedId) && m.ConnectedId == request.MemberId && m.Status == false);
                 return connection;
