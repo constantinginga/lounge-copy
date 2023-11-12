@@ -32,7 +32,7 @@ namespace ScSoMe.API.Services
             * Checks if the member has profile sections in DB, if not, adds them
             * <returns>A member object</returns>
         */
-        public async Task<Member> GetProfile(int memberId){
+        public async Task<Member> GetProfile(int memberId, bool external){
             try{
                 var member = await db.Members.FirstAsync(m => m.MemberId == memberId);
                 member.Login = "";
@@ -44,7 +44,17 @@ namespace ScSoMe.API.Services
                         await AddProfileDescription(memberId, "");
                     }
                     else{
-                        member.DescriptionSection = description;
+                        if(description.PrivacySetting == true && !external){
+                            member.DescriptionSection = description;
+                        }
+                        else{
+                            member.DescriptionSection = new DescriptionSection{
+                                MemberId = memberId,
+                                Content = "This user has set their description to private",
+                                PrivacySetting = true,
+                            };
+                        
+                        }
                     }
                     //Contacts section
                     var contacts = await db.ContactsSections.FirstOrDefaultAsync(c => c.MemberId == memberId);
@@ -52,7 +62,17 @@ namespace ScSoMe.API.Services
                         await AddProfileContacts(memberId, "", null);
                     }
                     else{
-                        member.ContactsSection = contacts;
+                        if(contacts.PrivacySetting == true && !external){
+                            member.ContactsSection = contacts;
+                        }
+                        else{
+                            member.ContactsSection = new ContactsSection{
+                                MemberId = memberId,
+                                Email = "This user has set their email to private",
+                                PhoneNumber = null,
+                                PrivacySetting = true,
+                            };
+                        }
                     }
                     //External links section
                     var externalLinksSection = await db.ExternalLinksSections.FirstOrDefaultAsync(e => e.MemberId == memberId);
@@ -60,18 +80,36 @@ namespace ScSoMe.API.Services
                         await AddProfileExternalLinksSection(memberId, null);
                     }
                     else{
-                        member.ExternalLinksSection = externalLinksSection;
+                        if(externalLinksSection.PrivacySetting == true && !external){
+                            member.ExternalLinksSection = externalLinksSection;
+                            //External links
+                            var externalLinks = await db.ExternalLinks.Where(e => e.MemberId == memberId).ToListAsync();
+                            member.ExternalLinksSection.ExternalLinks = new List<ExternalLink>(externalLinks);
+                        }
+                        else{
+                            member.ExternalLinksSection = new ExternalLinksSection{
+                                MemberId = memberId,
+                                PrivacySetting = true,
+                            };
+                            member.ExternalLinksSection.ExternalLinks = new List<ExternalLink>();
+                        }
                     }
-                    //External links
-                    var externalLinks = await db.ExternalLinks.Where(e => e.MemberId == memberId).ToListAsync();
-                    member.ExternalLinksSection.ExternalLinks = new List<ExternalLink>(externalLinks);
                     //Services section
                     var services = await db.ServicesSections.FirstOrDefaultAsync(s => s.MemberId == memberId);
                     if(services == null){
                         await AddProfileService(memberId, "");
                     }
                     else{
-                        member.ServicesSection = services;
+                        if(services.PrivacySetting == true && !external){
+                            member.ServicesSection = services;
+                        }
+                        else{
+                            member.ServicesSection = new ServicesSection{
+                                MemberId = memberId,
+                                Content = "This user has set their services to private",
+                                PrivacySetting = true,
+                            };
+                        }
                     }
                     //Activity section
                     var activity = await db.ActivitySections.FirstOrDefaultAsync(a => a.MemberId == memberId);
@@ -79,7 +117,16 @@ namespace ScSoMe.API.Services
                         await AddProfileActivitySection(memberId, "");
                     }
                     else{
-                        member.ActivitySection = activity;
+                        if(activity.PrivacySetting == true && !external){
+                            member.ActivitySection = activity;
+                        }
+                        else{
+                            member.ActivitySection = new ActivitySection{
+                                MemberId = memberId,
+                                Content = "This user has set their activity to private",
+                                PrivacySetting = true,
+                            };
+                        }
                     }
                     //Work experience section
                     var workExperienceSection = await db.WorkExperienceSections.FirstOrDefaultAsync(w => w.MemberId == memberId);
@@ -87,11 +134,20 @@ namespace ScSoMe.API.Services
                         await AddProfileWorkExperienceSection(memberId, null);
                     }
                     else{
-                        member.WorkExperienceSection = workExperienceSection;
+                        if(workExperienceSection.PrivacySetting == true && !external){
+                            member.WorkExperienceSection = workExperienceSection;
+                            //Work experiences
+                            var workExperiences = await db.WorkExperiences.Where(w => w.MemberId == memberId).ToListAsync();
+                            member.WorkExperienceSection.WorkExperiences = new List<WorkExperience>(workExperiences);
+                        }
+                        else{
+                            member.WorkExperienceSection = new WorkExperienceSection{
+                                MemberId = memberId,
+                                PrivacySetting = true,
+                            };
+                            member.WorkExperienceSection.WorkExperiences = new List<WorkExperience>();
+                        }
                     }
-                    //Work experiences
-                    var workExperiences = await db.WorkExperiences.Where(w => w.MemberId == memberId).ToListAsync();
-                    member.WorkExperienceSection.WorkExperiences = new List<WorkExperience>(workExperiences);
                     return member;
                 }
                 return null;
@@ -103,7 +159,7 @@ namespace ScSoMe.API.Services
 
         public async Task<bool> UpdateProfile(Member newProfile){
             try{
-                var oldProfile = await GetProfile(newProfile.MemberId);
+                var oldProfile = await GetProfile(newProfile.MemberId, false);
                 var propertyInfos = typeof(Member).GetProperties();
                 bool response = true;
                 foreach (var prop in propertyInfos)
@@ -211,7 +267,7 @@ namespace ScSoMe.API.Services
         }
 
         public async Task<bool> SyncUserFromUmbraco(Member member){
-            var oldProfile = await GetProfile(member.MemberId);
+            var oldProfile = await GetProfile(member.MemberId, false);
             bool response = true;
             if(oldProfile.Name != member.Name){
                 response = await UpdateProfileName(member.MemberId, member.Name);
@@ -381,7 +437,7 @@ namespace ScSoMe.API.Services
                 };
                 await db.ExternalLinksSections.AddAsync(newExternalLinksSection);
                 await db.SaveChangesAsync();
-                Member member = await GetProfile(memberId);
+                Member member = await GetProfile(memberId, false);
                 if(externalLinks != null){
                     foreach(var externalLink in externalLinks){
                         externalLink.MemberId = memberId;
@@ -398,7 +454,7 @@ namespace ScSoMe.API.Services
 
         public async Task<bool> UpdateProfileExternalLinksSection(int memberId, ExternalLinksSection externalLinksSection){
            try{
-                Member member = await GetProfile(memberId);
+                Member member = await GetProfile(memberId, false);
                 db.ChangeTracker.Clear();
                 db.Entry(externalLinksSection).CurrentValues.SetValues(externalLinksSection);
                 if(externalLinksSection.ExternalLinks != null){
@@ -437,7 +493,7 @@ namespace ScSoMe.API.Services
                 };
                 await db.WorkExperienceSections.AddAsync(newWorkExperienceSection);
                 await db.SaveChangesAsync();
-                Member member = await GetProfile(memberId);
+                Member member = await GetProfile(memberId, false);
                 if(workExperiences != null){
                     foreach(var workExperience in workExperiences){
                         await AddProfileWorkExperience(workExperience);
@@ -453,7 +509,7 @@ namespace ScSoMe.API.Services
 
         public async Task<bool> UpdateProfileWorkExperienceSection(int memberId, WorkExperienceSection workExperienceSection){
             try{
-                Member member = await GetProfile(memberId);
+                Member member = await GetProfile(memberId, false);
                 db.ChangeTracker.Clear();
                 db.Entry(workExperienceSection).CurrentValues.SetValues(workExperienceSection);
                 if(workExperienceSection.WorkExperiences != null){

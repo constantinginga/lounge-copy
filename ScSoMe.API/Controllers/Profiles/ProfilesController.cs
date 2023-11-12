@@ -32,7 +32,29 @@ namespace ScSoMe.API.Controllers.Members.MembersController
         [ProducesResponseType(500)]
         public async Task<string> GetProfile([FromQuery] int memberId){
             try{
-                Member response = await profileService.GetProfile(memberId);
+                Member response = await profileService.GetProfile(memberId, false);
+                JsonSerializerOptions options = new()
+                {
+                    ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                    WriteIndented = true
+                };
+                string serializedResponse = JsonSerializer.Serialize(response, options);
+                return serializedResponse;
+            }
+            catch(Exception e){
+                return JsonSerializer.Serialize(new ProfileResponse{
+                Message = e.Message,                    
+                StatusCode = HttpStatusCode.InternalServerError,});
+            }
+        }
+
+        [HttpGet("GetExternalProfile")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<string> GetExternalProfile([FromQuery] int memberId){
+            try{
+                Member response = await profileService.GetProfile(memberId, true);
                 JsonSerializerOptions options = new()
                 {
                     ReferenceHandler = ReferenceHandler.IgnoreCycles,
@@ -159,7 +181,7 @@ namespace ScSoMe.API.Controllers.Members.MembersController
             try{
                 bool success = await profileService.CheckToken(memberId, token);
                 if(success){
-                    Member response = await profileService.GetProfile(memberId);
+                    Member response = await profileService.GetProfile(memberId, false);
                     JsonSerializerOptions options = new()
                     {
                         ReferenceHandler = ReferenceHandler.IgnoreCycles,
