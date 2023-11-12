@@ -545,7 +545,7 @@ namespace ScSoMe.API.Services
 
         public async Task<MemberConnection> GetConnection(int memberId, int connectedId){
             try{
-                var connection = await db.MemberConnections.FirstAsync(m => (m.MemberId == memberId && m.ConnectedId == connectedId || m.MemberId == connectedId && m.ConnectedId == memberId) && m.Status == true);
+                var connection = await db.MemberConnections.FirstAsync(m => (m.MemberId == memberId && m.ConnectedId == connectedId && m.Status == true) || (m.MemberId == connectedId && m.ConnectedId == memberId && m.Status == true));
                 return connection;
             }
             catch(Exception e){
@@ -606,7 +606,7 @@ namespace ScSoMe.API.Services
 
         public async Task<MemberConnection> CheckMemberConnection(MemberConnection request){
             try{
-                var connection = await db.MemberConnections.FirstAsync(m => (m.MemberId == request.MemberId && m.ConnectedId == request.ConnectedId || m.MemberId == request.ConnectedId) && m.ConnectedId == request.MemberId && m.Status == false);
+                var connection = await db.MemberConnections.FirstAsync(m => (m.MemberId == request.MemberId && m.ConnectedId == request.ConnectedId && m.Status == false) || (m.MemberId == request.ConnectedId && m.ConnectedId == request.MemberId && m.Status == false));
                 return connection;
             }
             catch(Exception e){
