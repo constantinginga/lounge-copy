@@ -420,5 +420,44 @@ namespace ScSoMe.API.Controllers.Members.MembersController
                 StatusCode = HttpStatusCode.InternalServerError,});
             }
         }
+
+        [HttpGet("GetMemberRequest")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<string> GetMemberRequest([FromQuery] int memberId, [FromQuery] string token, [FromBody] JsonElement connectionToCheck){
+            try{
+                bool success = await profileService.CheckToken(memberId, token);
+                if(success){
+                    MemberConnection? re = connectionToCheck.Deserialize<MemberConnection>();
+                    if(re != null){
+                        MemberConnection? requestStatus = await profileService.GetMemberRequest(re);
+                        JsonSerializerOptions options = new()
+                        {
+                            ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                            WriteIndented = true
+                        };
+                        string serializedResponse = JsonSerializer.Serialize(requestStatus, options);
+                        return serializedResponse;
+                    }
+                    else{
+                        return JsonSerializer.Serialize(new ProfileResponse{
+                            Message = "Failed to deserialize the received connection",                    
+                            StatusCode = HttpStatusCode.InternalServerError,});
+                    }
+                }
+                else{
+                    return JsonSerializer.Serialize(new ProfileResponse{
+                        Message = "Can't get connection status. Token is invalid",                    
+                        StatusCode = HttpStatusCode.Unauthorized,
+                    });
+                }
+            }
+            catch(Exception e){
+                return JsonSerializer.Serialize(new ProfileResponse{
+                Message = "Failed to get connections with error: " + e.Message,                    
+                StatusCode = HttpStatusCode.InternalServerError,});
+            }
+        }
     }
 }
