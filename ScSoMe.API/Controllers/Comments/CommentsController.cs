@@ -350,8 +350,9 @@ namespace ScSoMe.API.Controllers.Comments.CommentsController
         [HttpPost("CreatePost")]
         [ProducesResponseType(201)]
         [ProducesResponseType(500)]
-        public async Task<long> CreatePost(int belongsToGroupId, bool hasMedia,WriteMessage post)
+        public async Task<long> CreatePost(int belongsToGroupId, bool hasMedia, WriteMessage post, bool privacySetting)
         {
+            Console.WriteLine("Pepe post: " + belongsToGroupId, hasMedia, privacySetting);
             var apiSession = new ApiSession(this);
             apiSession.Check();
             var authorId = apiSession.MyMemberId.Value;
@@ -370,7 +371,8 @@ namespace ScSoMe.API.Controllers.Comments.CommentsController
                     CreatedDt = now,
                     UpdatedDt = now,
                     LikersJson = null,
-                    HasMedia= hasMedia
+                    HasMedia= hasMedia,
+                    PrivacySetting = privacySetting,
                 };
                 db.Comments.Add(dbPost);
                 db.SaveChanges();

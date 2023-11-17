@@ -26,6 +26,7 @@ namespace ScSoMe.RazorLibrary.Pages.Components
         public API.ScSoMeApi client { get; set; }
         public API.MemberInfo CurrentUser { get; set; }
         public ICollection<API.ScGroup> groups { get; set; }
+        public bool postPrivacySetting { get; set; } = false;
         private string? groupValue { get; set; }
         private bool _processing { get; set; } = false;
         private string errorMessage { get; set; } = null;
@@ -78,7 +79,7 @@ namespace ScSoMe.RazorLibrary.Pages.Components
                 if (InRef != null)
                 {
                     Console.WriteLine("NEWPOST 112: " + selectedGroup.GroupId);
-                    var newPost = await base.CreatePost(selectedGroup.GroupId);
+                    var newPost = await base.CreatePost(selectedGroup.GroupId, postPrivacySetting);
                     await OnCreate.InvokeAsync(newPost);
                     errorMessage = null;
                     _processing = false;

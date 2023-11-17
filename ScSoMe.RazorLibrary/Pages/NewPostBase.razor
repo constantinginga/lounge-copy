@@ -11,7 +11,7 @@
     private API.ScSoMeApi client { get; set; }
     public AttachFile attachFile { get; set; }
 
-    public async Task<API.Post> CreatePost(int groupId)
+    public async Task<API.Post> CreatePost(int groupId, bool? privacySetting)
     {
         var client = apiClientFactory.GetApiClient();
         //_processing = true;
@@ -22,7 +22,7 @@
             Console.WriteLine("FROM NewPostBase.Razor: " + val + "    " + groupId);
             if (string.IsNullOrEmpty(val) || string.IsNullOrWhiteSpace(val)) return null;
 
-            long newPostId = await client.CreatePostAsync(groupId, AppState.IsMediaAttached, new API.WriteMessage() { Text = val });
+            long newPostId = await client.CreatePostAsync(groupId, AppState.IsMediaAttached, new API.WriteMessage() { Text = val }, privacySetting);
 
             API.Post? newPost = await client.GetPostWithCommentsAsync(newPostId);
             newPost.Text = newPost.Text.Replace("?<span contenteditable=\"false\">", "<span contenteditable=\"false\">");

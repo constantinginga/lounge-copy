@@ -39,7 +39,7 @@
         if (_inRef != null)
         {
             base.InRef = _inRef;
-            var created = await base.CreatePost(GroupId);
+            var created = await base.CreatePost(GroupId, null);
             if (created != null)
             {
                 EventService.SendEvent(created);
