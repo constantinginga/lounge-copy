@@ -19,6 +19,7 @@ namespace ScSoMe.EF
         public string? LikersJson { get; set; }
         public string? EmbeddedUrl { get; set; }
         public bool? HasMedia { get; set; }
+        public bool? PrivacySetting { get; set; }
 
         public virtual Group Group { get; set; } = null!;
     }

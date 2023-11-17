@@ -953,14 +953,21 @@ namespace ScSoMe.API.Controllers.Comments.CommentsController
                 }
 
                 var toDate = fromDate.Value.AddDays(-daysBack);
-
+                ProfileService profileService = new ProfileService();
                 var groupPosts = db.Comments.Where(c =>
                     c.GroupId == groupId && c.UpdatedDt <= fromDate && c.UpdatedDt >= toDate
                     && c.ParentCommentId == null) // Only posts no comments
                     .OrderByDescending(x => x.UpdatedDt)
                     .ToList();
-
-               return GetPostDetails(includeAllComments, browserId, groupPosts);
+                var filteredPosts = new List<EF.Comment>();
+                foreach (var post in groupPosts)
+                {
+                    if(post.PrivacySetting == false || profileService.CheckMemberConnectionById(browserId, post.AuthorMemberId))
+                    {
+                        filteredPosts.Add(post);
+                    }
+                }
+               return GetPostDetails(includeAllComments, browserId, filteredPosts);
 
             }
             catch (Exception ex)

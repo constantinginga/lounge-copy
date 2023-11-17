@@ -595,7 +595,7 @@ namespace ScSoMe.API.Services
 
         public async Task<List<MemberConnection>> GetMemberConnections(int memberId){
             try{
-                var connections = await db.MemberConnections.Where(m => m.MemberId == memberId || m.ConnectedId == memberId && m.Status == true).ToListAsync();
+                var connections = await db.MemberConnections.Where(m => (m.MemberId == memberId && m.Status == true) || (m.ConnectedId == memberId && m.Status == true)).ToListAsync();
                 return connections;
             }
             catch(Exception e){
@@ -612,6 +612,23 @@ namespace ScSoMe.API.Services
             catch(Exception e){
                 Console.WriteLine(e.Message + " " + e.InnerException);
                 throw new Exception(e.Message);
+            }
+        }
+
+        public bool CheckMemberConnectionById(int currentMemberId, int idToCheck){
+            try{
+                var connection = db.MemberConnections.First(m => (m.MemberId == currentMemberId && m.ConnectedId == idToCheck && m.Status == true) || (m.MemberId == idToCheck && m.ConnectedId == currentMemberId && m.Status == true));
+                if(connection != null){
+                    return true;
+                }
+                else{
+                    return false;
+                }
+            }
+            catch(Exception e){
+                Console.WriteLine(e.Message + " " + e.InnerException);
+                // throw new Exception(e.Message);
+                return false;
             }
         }
 
