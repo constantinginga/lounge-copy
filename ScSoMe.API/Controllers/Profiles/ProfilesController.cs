@@ -459,5 +459,27 @@ namespace ScSoMe.API.Controllers.Members.MembersController
                 StatusCode = HttpStatusCode.InternalServerError,});
             }
         }
+
+        [HttpGet("SearchProfiles")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<string> SearchProfiles([FromQuery] int memberId, [FromQuery] string token, [FromQuery]string terms)
+        {
+            bool success = await profileService.CheckToken(memberId, token);
+
+            if (success) {
+                var result = await profileService.SearchProfiles(terms);
+
+                string serializedResponse = JsonSerializer.Serialize(result);
+
+                return serializedResponse;
+            } else{
+                    return JsonSerializer.Serialize(new ProfileResponse{
+                        Message = "Can't get profile. Token is invalid",                    
+                        StatusCode = HttpStatusCode.Unauthorized,
+                    });
+                }
+        }
     }
 }

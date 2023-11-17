@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ScSoMe.API.Controllers.Members;
 using ScSoMe.API.Controllers.Profiles;
+using ScSoMe.ApiDtos;
 using ScSoMe.EF;
 
 namespace ScSoMe.API.Services
@@ -370,6 +371,17 @@ namespace ScSoMe.API.Services
                 Console.WriteLine("Update service: " + e.Message);
                 throw new Exception(e.Message);
             }
+        }
+
+        public async Task<List<MinimalMemberInfo>> SearchProfiles(string term)
+        {
+            var results = await db.Members.Where(x => x.Name.Contains(term)).Select(x => new MinimalMemberInfo
+            {
+                Id = x.MemberId,
+                Name = x.Name
+            }).ToListAsync();
+
+            return results;
         }
 
         public async Task<bool> AddProfileContacts(int memberId, string? email, string? phoneNumber){
