@@ -98,3 +98,7 @@
 ::deep .reply-btn {
     padding: 0;
 }
+
+::deep .connection{
+    border-bottom: 2px solid #7e6fff;
+}

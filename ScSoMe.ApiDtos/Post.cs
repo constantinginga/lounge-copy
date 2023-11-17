@@ -18,6 +18,7 @@
         public int? BrowserLikeType { get; set; }
         public List<Comment> Responses { get; set; }
         public bool? HasMedia { get; set; }
+        public bool? PrivacySetting { get; set; }
     }
 
     public class Post : Comment

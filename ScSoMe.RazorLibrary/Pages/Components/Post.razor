@@ -17,7 +17,7 @@ else
         PostAuthor = client.GetMemberInfoByIdAsync(PostToComment.AuthorMemberId).GetAwaiter().GetResult();
     }
     <MudCard Outlined="true" Elevation="0" Class="rounded-lg pt-2 pb-0 my-4">
-        <Comment Message="PostToComment" Level="-1" OnComment="CommentHandler" OnDelete="DeleteComment" PostId="post.Id" GroupId="post.GroupId" />
+        <Comment PrivatePost="@privatePost" Message="PostToComment" Level="-1" OnComment="CommentHandler" OnDelete="DeleteComment" PostId="post.Id" GroupId="post.GroupId" />
         @*First level*@
         @if (PostToComment.Responses != null && PostToComment.Responses.Count != 0)
         {

@@ -22,7 +22,7 @@
             Console.WriteLine("FROM NewPostBase.Razor: " + val + "    " + groupId);
             if (string.IsNullOrEmpty(val) || string.IsNullOrWhiteSpace(val)) return null;
 
-            long newPostId = await client.CreatePostAsync(groupId, AppState.IsMediaAttached, new API.WriteMessage() { Text = val }, privacySetting);
+            long newPostId = await client.CreatePostAsync(groupId, AppState.IsMediaAttached, privacySetting, new API.WriteMessage() { Text = val });
 
             API.Post? newPost = await client.GetPostWithCommentsAsync(newPostId);
             newPost.Text = newPost.Text.Replace("?<span contenteditable=\"false\">", "<span contenteditable=\"false\">");

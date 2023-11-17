@@ -29,6 +29,8 @@ namespace ScSoMe.RazorLibrary.Pages.Components.Comment
         public int Level { get; set; }
         [Parameter]
         public bool isHidden { get; set; }
+        [Parameter]
+        public string PrivatePost { get; set; }
         [Inject]
         public IJSRuntime? JSRuntime { get; set; }
         public int currentMemberId { get; set; }

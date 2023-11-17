@@ -10,6 +10,9 @@ namespace ScSoMe.RazorLibrary.Pages.Components
         [Parameter]
         public int GroupId { get; set; }
 
+        [Parameter]
+        public string privatePost { get; set; }
+
         [EditorRequired]
         [Parameter]
         public long PostId { get; set; }
@@ -71,8 +74,10 @@ namespace ScSoMe.RazorLibrary.Pages.Components
                     BrowserLikeType = post.BrowserLikeType,
                     LikeType2Count = post.LikeType2Count,
                     Responses = post.Responses,
-                    HasMedia = post.HasMedia
+                    HasMedia = post.HasMedia,
+                    PrivacySetting = post.PrivacySetting,
                 };
+                privatePost = (post.PrivacySetting != null && post.PrivacySetting == true) ? "connection" : "";
 
                 ReplyCount = post.Responses.Count();
                 foreach (var one in post.Responses)

@@ -352,7 +352,6 @@ namespace ScSoMe.API.Controllers.Comments.CommentsController
         [ProducesResponseType(500)]
         public async Task<long> CreatePost(int belongsToGroupId, bool hasMedia, WriteMessage post, bool privacySetting)
         {
-            Console.WriteLine("Pepe post: " + belongsToGroupId, hasMedia, privacySetting);
             var apiSession = new ApiSession(this);
             apiSession.Check();
             var authorId = apiSession.MyMemberId.Value;
@@ -877,6 +876,7 @@ namespace ScSoMe.API.Controllers.Comments.CommentsController
 
                 var dtoPost = new Post();
                 dtoPost.GroupId = dbPost.GroupId;
+                dtoPost.PrivacySetting = dbPost.PrivacySetting;
                 HandleMsgRead(dbPost, dtoPost, browserId);
 
                 var dbAllPostComments = postAndAllComments.Where(c =>
@@ -989,6 +989,7 @@ namespace ScSoMe.API.Controllers.Comments.CommentsController
             {
                 var dtoPost = new Post();
                 dtoPost.GroupId = dbPost.GroupId;
+                dtoPost.PrivacySetting = dbPost.PrivacySetting;
                 HandleMsgRead(dbPost, dtoPost, browserId);
 
                 if (includeAllComments)

@@ -30,7 +30,7 @@
         string commentStyle = $"color:{Colors.Grey.Default} !important; padding-top: 1rem !important; padding-bottom: .5rem !important; border-radius: 2rem !important; background-color: #eee";
         //commentStyle += (!MessageAuthor.IsAdmin) ? "background-color: #eee" : "background-color: #daf0f0";
         <div class="comment @commentIndent" id="@((Level == -1) ? $"post-{Message.Id}" : null)">
-        <MudCard Outlined="false" Elevation="0" Class="rounded-lg pt-2 pb-3" Style="@((Level == -1) ? $"color:{Colors.Grey.Default} !important" : commentStyle)">            
+        <MudCard Outlined="false" Elevation="0" Class="@(PrivatePost + " rounded-lg pt-2 pb-3")" Style="@((Level == -1) ? $"color:{Colors.Grey.Default} !important" : commentStyle)">            
             <CommentHeader Level=@Level Author=@MessageAuthor DateCreated=@Message.CreatedDt DateUpdated=@Message.UpdatedDt
                        EditingEnabled=@EditingEnabled OnDelete=@DeleteMessage OnEditingEnabledChanged=@((arg) => SetEditMode(arg))
                        PostId=@(Level == -1 ? Message.Id : null) />
