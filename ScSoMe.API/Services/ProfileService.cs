@@ -608,6 +608,15 @@ namespace ScSoMe.API.Services
         public async Task<List<MemberConnection>> GetMemberConnections(int memberId){
             try{
                 var connections = await db.MemberConnections.Where(m => (m.MemberId == memberId && m.Status == true) || (m.ConnectedId == memberId && m.Status == true)).ToListAsync();
+                int? tmpId = 0;
+                foreach (var con in connections)
+                {
+                    if(memberId == con.MemberId){
+                        tmpId = con.MemberId;
+                        con.MemberId = con.ConnectedId;
+                        con.ConnectedId = tmpId;
+                    }
+                }
                 return connections;
             }
             catch(Exception e){
