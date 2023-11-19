@@ -264,7 +264,7 @@ namespace ScSoMe.API.Services
             }
             catch(Exception e){
                 Console.WriteLine("Update memberDt: " + e.Message);
-                throw new Exception(e.Message);
+                return false;
             }
         }
 
@@ -279,7 +279,7 @@ namespace ScSoMe.API.Services
             }
             catch(Exception e){
                 Console.WriteLine("Update profile name: " + e.Message);
-                throw new Exception(e.Message);
+                return false;
             }
         }
 
@@ -294,7 +294,7 @@ namespace ScSoMe.API.Services
             }
             catch(Exception e){
                 Console.WriteLine("Update profile image: " + e.Message);
-                throw new Exception(e.Message);
+                return false;
             }
         }
 
@@ -309,7 +309,7 @@ namespace ScSoMe.API.Services
             }
             catch(Exception e){
                 Console.WriteLine("Update profile banner: " + e.Message);
-                throw new Exception(e.Message);
+                return false;
             }
         }
 
@@ -326,7 +326,7 @@ namespace ScSoMe.API.Services
             }
             catch(Exception e){
                 Console.WriteLine(e.Message);
-                throw new Exception(e.Message);
+                return false;
             }
         }
 
@@ -339,7 +339,7 @@ namespace ScSoMe.API.Services
             }
             catch(Exception e){
                 Console.WriteLine("Update profile description: " + e.Message);
-                throw new Exception(e.Message);
+                return false;
             }
         }
 
@@ -356,7 +356,7 @@ namespace ScSoMe.API.Services
             }
             catch(Exception e){
                 Console.WriteLine(e.Message);
-                throw new Exception(e.Message);
+                return false;
             }
         }
 
@@ -369,7 +369,7 @@ namespace ScSoMe.API.Services
             }
             catch(Exception e){
                 Console.WriteLine("Update service: " + e.Message);
-                throw new Exception(e.Message);
+                return false;
             }
         }
 
@@ -398,7 +398,7 @@ namespace ScSoMe.API.Services
             }
             catch(Exception e){
                 Console.WriteLine(e.Message);
-                throw new Exception(e.Message);
+                return false;
             }
         }
 
@@ -411,7 +411,7 @@ namespace ScSoMe.API.Services
             }
             catch(Exception e){
                 Console.WriteLine("Update contacts: " + e.Message);
-                throw new Exception(e.Message);
+                return false;
             }
         }
 
@@ -434,7 +434,7 @@ namespace ScSoMe.API.Services
             }
             catch(Exception e){
                 Console.WriteLine(e.Message);
-                throw new Exception(e.Message);
+                return false;
             }  
         }
 
@@ -455,7 +455,7 @@ namespace ScSoMe.API.Services
             }
             catch(Exception e){
                 Console.WriteLine("Update external links: " + e.Message + " : " + e.StackTrace);
-                throw new Exception(e.Message);              
+                return false;              
             }
         }
 
@@ -467,7 +467,7 @@ namespace ScSoMe.API.Services
             }
             catch(Exception e){
                 Console.WriteLine(e.Message);
-                throw new Exception(e.Message);
+                return false;
             }
         }
 
@@ -489,7 +489,7 @@ namespace ScSoMe.API.Services
             }
             catch(Exception e){
                 Console.WriteLine(e.Message);
-                throw new Exception(e.Message);
+                return false;
             }            
         }
 
@@ -510,7 +510,7 @@ namespace ScSoMe.API.Services
             }
             catch(Exception e){
                 Console.WriteLine("Update work experience: " + e.Message + " : " + e.InnerException);
-                throw new Exception(e.Message);           
+                return false;           
             }
         }
 
@@ -522,7 +522,7 @@ namespace ScSoMe.API.Services
             }
             catch(Exception e){
                 Console.WriteLine(e.Message);
-                throw new Exception(e.Message);
+                return false;
             }
         }
 
@@ -539,7 +539,7 @@ namespace ScSoMe.API.Services
             }
             catch(Exception e){
                 Console.WriteLine(e.Message);
-                throw new Exception(e.Message);
+                return false;
             }
         }
 
@@ -551,7 +551,7 @@ namespace ScSoMe.API.Services
             }
             catch(Exception e){
                 Console.WriteLine("Update profile activity: " + e.Message);
-                throw new Exception(e.Message);             
+                return false;             
             }
         }
 
@@ -562,7 +562,7 @@ namespace ScSoMe.API.Services
             }
             catch(Exception e){
                 Console.WriteLine(e.Message + " " + e.InnerException);
-                throw new Exception(e.Message);
+                return null;
             }
         }
 
@@ -648,7 +648,6 @@ namespace ScSoMe.API.Services
             }
             catch(Exception e){
                 Console.WriteLine(e.Message + " " + e.InnerException);
-                // throw new Exception(e.Message);
                 return false;
             }
         }
