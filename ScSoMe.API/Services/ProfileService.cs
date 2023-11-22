@@ -5,6 +5,7 @@ using ScSoMe.API.Controllers.Members;
 using ScSoMe.API.Controllers.Profiles;
 using ScSoMe.ApiDtos;
 using ScSoMe.EF;
+using System.Text.Json;
 
 namespace ScSoMe.API.Services
 {
@@ -33,12 +34,14 @@ namespace ScSoMe.API.Services
             * Checks if the member has profile sections in DB, if not, adds them
             * <returns>A member object</returns>
         */
-        public async Task<Member> GetProfile(int memberId, bool external){
+        public async Task<Profile> GetProfile(int memberId, bool external){
             try{
                 var member = await db.Members.FirstAsync(m => m.MemberId == memberId);
                 member.Login = "";
                 member.Password = "";
                 if(member != null){
+                    Profile profile = new Profile();
+                    profile.activitySection = new CustomActivitySection();
                     //Description section
                     var description = await db.DescriptionSections.FirstOrDefaultAsync(d => d.MemberId == memberId);
                     if(description == null){
@@ -97,11 +100,14 @@ namespace ScSoMe.API.Services
                     //Activity section
                     var activity = await db.ActivitySections.FirstOrDefaultAsync(a => a.MemberId == memberId);
                     if(activity == null){
-                        await AddProfileActivitySection(memberId, "");
+                        await AddActivitySection(memberId);
                     }
                     else{
                         if(!external || (external && activity.PrivacySetting == true)){
-                            member.ActivitySection = activity;
+                            profile.activitySection.PrivacySetting = activity.PrivacySetting;
+                            profile.activitySection.JoinDate = member.CreatedDt;
+                            profile.activitySection.NumberOfMentions = CalculateNumberOfMentions(member);
+                            profile.activitySection.ActivityGroups = await CalculateActivityGroups(member);
                         }
                         else{
                             member.ActivitySection = null;
@@ -123,7 +129,8 @@ namespace ScSoMe.API.Services
                             member.WorkExperienceSection = null;
                         }
                     }
-                    return member;
+                    profile.member = member;
+                    return profile;
                 }
                 return null;
             }
@@ -173,7 +180,7 @@ namespace ScSoMe.API.Services
                     response = await AddProfileService(memberId, (newVal as ServicesSection)?.Content);
                     break;
                 case nameof(ActivitySection):
-                    response = await AddProfileActivitySection(memberId, (newVal as ActivitySection)?.Content);
+                    response = await AddActivitySection(memberId);
                     break;
                 case nameof(WorkExperienceSection):
                     response = await AddProfileWorkExperienceSection(memberId, (newVal as WorkExperienceSection)?.WorkExperiences.ToList());
@@ -209,9 +216,6 @@ namespace ScSoMe.API.Services
                 case nameof(ServicesSection):
                     response = await UpdateService((newVal as ServicesSection));
                     break;
-                case nameof(ActivitySection):
-                    response = await UpdateProfileActivitySection((newVal as ActivitySection));
-                    break;
                 case nameof(WorkExperienceSection):
                     response = await UpdateProfileWorkExperienceSection(memberId, (newVal as WorkExperienceSection));
                     break;
@@ -244,10 +248,10 @@ namespace ScSoMe.API.Services
         public async Task<bool> SyncUserFromUmbraco(Member member){
             var oldProfile = await GetProfile(member.MemberId, false);
             bool response = true;
-            if(oldProfile.Name != member.Name){
+            if(oldProfile.member.Name != member.Name){
                 response = await UpdateProfileName(member.MemberId, member.Name);
             }
-            if(oldProfile.ContactsSection.PhoneNumber != member.ContactsSection.PhoneNumber){
+            if(oldProfile.member.ContactsSection.PhoneNumber != member.ContactsSection.PhoneNumber){
                 response = await UpdateContacts(member.ContactsSection);
             }
             return response;
@@ -265,6 +269,53 @@ namespace ScSoMe.API.Services
             catch(Exception e){
                 Console.WriteLine("Update memberDt: " + e.Message);
                 return false;
+            }
+        }
+
+        public long CalculateNumberOfMentions(Member member){
+            try{
+                var mentions = db.Comments.Where(m => m.Text != null && m.Text.Contains("@" + member.Name)).ToList();
+                return mentions.Count;
+            }
+            catch(Exception e){
+                Console.WriteLine("Calculate number of mentions: " + e.Message);
+                return 0;
+            }
+        }
+
+        public async Task<List<ActivityLevel>> CalculateActivityGroups(Member member){
+            try{
+                var groups = await db.Groups.ToListAsync();
+                var comments = await db.Comments.Where(c => c.AuthorMemberId == member.MemberId).ToListAsync();
+                List<ActivityLevel> groupsWithActivity = new List<ActivityLevel>();
+                foreach (var group in groups)
+                {
+                    ActivityLevel activityLevel = new ActivityLevel();
+                    activityLevel.MemberId = member.MemberId;
+                    activityLevel.Name = group.Groupname;
+                    foreach (var comment in comments)
+                    {
+                        if (comment.ParentCommentId == null)
+                        {
+                            activityLevel.NumberOfPosts++;
+                        }
+                        else
+                        {
+                            activityLevel.NumberOfComments++;
+                        }
+                        if (comment.LikersJson != null)
+                        {
+                            List<Like> likes = JsonSerializer.Deserialize<List<Like>>(comment.LikersJson);
+                            activityLevel.NumberOfLikes += likes?.Count;
+                        }
+                    }
+                    groupsWithActivity.Add(activityLevel);
+                }
+                return groupsWithActivity;
+            }
+            catch(Exception e){
+                Console.WriteLine("Calculate activity groups: " + e.Message);
+                return null;
             }
         }
 
@@ -423,7 +474,6 @@ namespace ScSoMe.API.Services
                 };
                 await db.ExternalLinksSections.AddAsync(newExternalLinksSection);
                 await db.SaveChangesAsync();
-                Member member = await GetProfile(memberId, false);
                 if(externalLinks != null){
                     foreach(var externalLink in externalLinks){
                         externalLink.MemberId = memberId;
@@ -440,11 +490,11 @@ namespace ScSoMe.API.Services
 
         public async Task<bool> UpdateProfileExternalLinksSection(int memberId, ExternalLinksSection externalLinksSection){
            try{
-                Member member = await GetProfile(memberId, false);
+                Profile member = await GetProfile(memberId, false);
                 db.ChangeTracker.Clear();
                 db.Entry(externalLinksSection).CurrentValues.SetValues(externalLinksSection);
                 if(externalLinksSection.ExternalLinks != null){
-                    db.ExternalLinks.RemoveRange(member.ExternalLinksSection.ExternalLinks);
+                    db.ExternalLinks.RemoveRange(member.member.ExternalLinksSection.ExternalLinks);
                     db.SaveChanges();
 
                     db.ExternalLinks.AddRange(externalLinksSection.ExternalLinks);
@@ -479,7 +529,6 @@ namespace ScSoMe.API.Services
                 };
                 await db.WorkExperienceSections.AddAsync(newWorkExperienceSection);
                 await db.SaveChangesAsync();
-                Member member = await GetProfile(memberId, false);
                 if(workExperiences != null){
                     foreach(var workExperience in workExperiences){
                         await AddProfileWorkExperience(workExperience);
@@ -495,11 +544,11 @@ namespace ScSoMe.API.Services
 
         public async Task<bool> UpdateProfileWorkExperienceSection(int memberId, WorkExperienceSection workExperienceSection){
             try{
-                Member member = await GetProfile(memberId, false);
+                Profile member = await GetProfile(memberId, false);
                 db.ChangeTracker.Clear();
                 db.Entry(workExperienceSection).CurrentValues.SetValues(workExperienceSection);
                 if(workExperienceSection.WorkExperiences != null){
-                    db.WorkExperiences.RemoveRange(member.WorkExperienceSection.WorkExperiences);
+                    db.WorkExperiences.RemoveRange(member.member.WorkExperienceSection.WorkExperiences);
                     db.SaveChanges();
 
                     db.WorkExperiences.AddRange(workExperienceSection.WorkExperiences);
@@ -526,33 +575,20 @@ namespace ScSoMe.API.Services
             }
         }
 
-        public async Task<bool> AddProfileActivitySection(int memberId, string? content){
+        public async Task<bool> AddActivitySection(int memberId){
             try{
-                // var newActivitySection = new ActivitySection{
-                //         MemberId = memberId,
-                //         Content = content,
-                //         PrivacySetting = true,
-                // };
-                // await db.ActivitySections.AddAsync(newActivitySection);
-                // await db.SaveChangesAsync();
+                var newActivitySection = new ActivitySection{
+                        MemberId = memberId,
+                        PrivacySetting = true,
+                };
+                await db.ActivitySections.AddAsync(newActivitySection);
+                await db.SaveChangesAsync();
                 return true;
             }
             catch(Exception e){
                 Console.WriteLine(e.Message);
                 return false;
-            }
-        }
-
-        public async Task<bool> UpdateProfileActivitySection(ActivitySection activitySection){
-            try{
-                // db.ActivitySections.Update(activitySection);
-                // await db.SaveChangesAsync();
-                return true;
-            }
-            catch(Exception e){
-                Console.WriteLine("Update profile activity: " + e.Message);
-                return false;             
-            }
+            }            
         }
 
         public async Task<MemberConnection> GetConnection(int memberId, int connectedId){

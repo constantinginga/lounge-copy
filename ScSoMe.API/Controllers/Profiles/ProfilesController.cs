@@ -34,7 +34,7 @@ namespace ScSoMe.API.Controllers.Members.MembersController
             try{
                 bool success = await profileService.CheckToken(memberId, token);
                 if(success){
-                    Member response = await profileService.GetProfile(memberId, false);
+                    Services.Profile response = await profileService.GetProfile(memberId, false);
                     JsonSerializerOptions options = new()
                     {
                         ReferenceHandler = ReferenceHandler.IgnoreCycles,
@@ -63,7 +63,7 @@ namespace ScSoMe.API.Controllers.Members.MembersController
         [ProducesResponseType(500)]
         public async Task<string> GetExternalProfile([FromQuery] int memberId){
             try{
-                Member response = await profileService.GetProfile(memberId, true);
+                Services.Profile response = await profileService.GetProfile(memberId, true);
                 JsonSerializerOptions options = new()
                 {
                     ReferenceHandler = ReferenceHandler.IgnoreCycles,
@@ -226,7 +226,7 @@ namespace ScSoMe.API.Controllers.Members.MembersController
             try{
                 bool success = await profileService.CheckToken(memberId, token);
                 if(success){
-                    Member response = await profileService.GetProfile(memberId, false);
+                    Services.Profile response = await profileService.GetProfile(memberId, false);
                     JsonSerializerOptions options = new()
                     {
                         ReferenceHandler = ReferenceHandler.IgnoreCycles,
