@@ -1,6 +1,9 @@
+using System.Text.Json;
 using Azure;
 using NUnit.Framework;
+using NUnit.Framework.Internal;
 using ScSoMe.API.Services;
+using ScSoMe.ApiDtos;
 using ScSoMe.EF;
 
 namespace ScSoMe.APIProfile.Test{
@@ -12,18 +15,18 @@ namespace ScSoMe.APIProfile.Test{
         /**
             Requires connected ScSoMe database to run successfully
         */
-        [SetUp]
+        [OneTimeSetUp]
         public void Setup()
         {
             _profileService = new ProfileService();
         }
 
-        [TearDown]
+        [OneTimeTearDown]
         public void TearDown()
         {
             _profileService = null;
         }
-
+ 
         [Test]
         public async Task CheckTokenSuccess()
         {
@@ -70,7 +73,7 @@ namespace ScSoMe.APIProfile.Test{
         public async Task GetProfileFail()
         {
             API.Services.Profile response = await _profileService.GetProfile(-69, false);
-            if(response.member == null){ 
+            if(response == null){ 
                 Assert.Pass();
             }
             else{
@@ -169,6 +172,50 @@ namespace ScSoMe.APIProfile.Test{
             else{
                 Assert.Fail();
             }
+        }
+
+        [Test]
+        public void GetNumberOfMentionsZero()
+        {
+            Member testMember = CreateTestMemberInDB();
+            long addedAmount = 0;
+            long response = _profileService.CalculateNumberOfMentions(testMember);
+            RemoveTestMemberFromDB(testMember);
+            Assert.AreEqual(addedAmount, response);
+        }
+
+        [Test]
+        public void GetNumberOfMentionsMany()
+        {
+            Member testMember = CreateTestMemberInDB();
+            long addedAmount = CreateTestPosts(testMember);
+            long response = _profileService.CalculateNumberOfMentions(testMember);
+            RemoveTestPostsAndComments(testMember.MemberId);
+            RemoveTestMemberFromDB(testMember);
+            Assert.AreEqual(addedAmount, response);
+        }
+
+        [Test]
+        public async Task GetNumberOfPostsCommentsLikesNull()
+        {
+            Member testMember = CreateTestMemberInDB();
+            List<API.Services.ActivityLevel> response = await _profileService.CalculateActivityGroups(testMember);
+            RemoveTestMemberFromDB(testMember);
+            Assert.AreEqual(0, response[0].NumberOfPosts);
+            Assert.AreEqual(0, response[0].NumberOfComments);
+            Assert.AreEqual(0, response[0].NumberOfLikes);
+        }
+
+        [Test]
+        public async Task GetNumberOfPostsAndLikesMany()
+        {
+            Member testMember = CreateTestMemberInDB();
+            long expectedAmount = CreateTestPosts(testMember);
+            List<API.Services.ActivityLevel> response = await _profileService.CalculateActivityGroups(testMember);
+            RemoveTestPostsAndComments(testMember.MemberId);
+            RemoveTestMemberFromDB(testMember);
+            Assert.AreEqual(expectedAmount, response[0].NumberOfPosts);
+            Assert.AreEqual(expectedAmount, response[0].NumberOfLikes);
         }
 
         [Test]
@@ -374,6 +421,10 @@ namespace ScSoMe.APIProfile.Test{
                 MemberId = -69,
                 PrivacySetting = false,
             };
+            testMember.ActivitySection = new ActivitySection{
+                MemberId = -69,
+                PrivacySetting = false,
+            };
             using (var context = new ScSoMeContext())
             {
                 context.ChangeTracker.Clear();
@@ -382,6 +433,7 @@ namespace ScSoMe.APIProfile.Test{
                 context.ServicesSections.Add(testMember.ServicesSection);
                 context.DescriptionSections.Add(testMember.DescriptionSection);
                 context.ExternalLinksSections.Add(testMember.ExternalLinksSection);
+                context.ActivitySections.Add(testMember.ActivitySection);
                 context.WorkExperienceSections.Add(testMember.WorkExperienceSection);
                 context.SaveChanges();
             }
@@ -399,7 +451,46 @@ namespace ScSoMe.APIProfile.Test{
                 context.ExternalLinks.RemoveRange(testMember.ExternalLinksSection.ExternalLinks);
                 context.WorkExperienceSections.Remove(testMember.WorkExperienceSection);
                 context.WorkExperiences.RemoveRange(testMember.WorkExperienceSection.WorkExperiences);
+                context.ActivitySections.Remove(testMember.ActivitySection);
                 context.Members.Remove(testMember);
+                context.SaveChanges();
+            }
+        }
+
+        long CreateTestPosts(Member member){
+            using (var context = new ScSoMeContext())
+            {
+                int amount = Randomizer.CreateRandomizer().Next(0, 20);
+                //Find the highest comment id
+                long currentAmount = context.Comments.OrderByDescending(c => c.CommentId).First().CommentId;
+                for (int i = 1; i <= amount; i++)
+                {
+                    context.ChangeTracker.Clear();
+                    List<Like> likes = new List<Like>();
+                    likes.Add(new Like{
+                        MemberId = member.MemberId,
+                        LikeType = 1,
+                    });
+                    context.Comments.Add(new EF.Comment{
+                        CommentId = currentAmount + i,
+                        AuthorMemberId = member.MemberId,
+                        GroupId = 1,
+                        Text = "@" + member.Name,
+                        LikersJson = JsonSerializer.Serialize(likes),
+                        CreatedDt = DateTimeOffset.Now,
+                        UpdatedDt = DateTimeOffset.Now,
+                    });
+                    context.SaveChanges();
+                }
+                return amount;
+            }
+        }
+
+        void RemoveTestPostsAndComments(int memberId){
+            using (var context = new ScSoMeContext())
+            {
+                context.ChangeTracker.Clear();
+                context.Comments.RemoveRange(context.Comments.Where(c => c.AuthorMemberId == memberId));
                 context.SaveChanges();
             }
         }

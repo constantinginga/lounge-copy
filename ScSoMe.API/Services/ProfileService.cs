@@ -296,20 +296,25 @@ namespace ScSoMe.API.Services
                     ActivityLevel activityLevel = new ActivityLevel();
                     activityLevel.MemberId = member.MemberId;
                     activityLevel.Name = group.Groupname;
+                    activityLevel.NumberOfComments = 0;
+                    activityLevel.NumberOfLikes = 0;
+                    activityLevel.NumberOfPosts = 0;
                     foreach (var comment in comments)
                     {
-                        if (comment.ParentCommentId == null)
-                        {
-                            activityLevel.NumberOfPosts++;
-                        }
-                        else
-                        {
-                            activityLevel.NumberOfComments++;
-                        }
-                        if (comment.LikersJson != null)
-                        {
-                            List<Like> likes = JsonSerializer.Deserialize<List<Like>>(comment.LikersJson);
-                            activityLevel.NumberOfLikes += likes?.Count;
+                        if(comment.GroupId == group.GroupId){
+                            if (comment.ParentCommentId == null)
+                            {
+                                activityLevel.NumberOfPosts++;
+                            }
+                            else
+                            {
+                                activityLevel.NumberOfComments++;
+                            }
+                            if (comment.LikersJson != null)
+                            {
+                                List<Like> likes = JsonSerializer.Deserialize<List<Like>>(comment.LikersJson);
+                                activityLevel.NumberOfLikes += likes?.Count;
+                            }
                         }
                     }
                     groupsWithActivity.Add(activityLevel);
