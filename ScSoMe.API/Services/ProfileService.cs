@@ -216,6 +216,9 @@ namespace ScSoMe.API.Services
                 case nameof(ServicesSection):
                     response = await UpdateService((newVal as ServicesSection));
                     break;
+                case nameof(ActivitySection):
+                    response = await UpdateActivitySection((newVal as ActivitySection));
+                    break;
                 case nameof(WorkExperienceSection):
                     response = await UpdateProfileWorkExperienceSection(memberId, (newVal as WorkExperienceSection));
                     break;
@@ -587,6 +590,19 @@ namespace ScSoMe.API.Services
             }
             catch(Exception e){
                 Console.WriteLine(e.Message);
+                return false;
+            }            
+        }
+
+        public async Task<bool> UpdateActivitySection(ActivitySection activitySection){
+            try{
+                db.ChangeTracker.Clear();
+                db.ActivitySections.Update(activitySection);
+                await db.SaveChangesAsync();
+                return true;
+            }
+            catch(Exception e){
+                Console.WriteLine("Update activity section: " + e.Message);
                 return false;
             }            
         }
