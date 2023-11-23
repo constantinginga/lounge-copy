@@ -56,9 +56,9 @@ namespace ScSoMe.APIProfile.Test{
         public async Task GetProfileSuccess()
         {
             Member testMember = CreateTestMemberInDB();
-            Member response = await _profileService.GetProfile(testMember.MemberId, false);
+            API.Services.Profile response = await _profileService.GetProfile(testMember.MemberId, false);
             RemoveTestMemberFromDB(testMember);
-            if(response != null && response.Name.Equals(testMember.Name)){ 
+            if(response != null && response.member.Name.Equals(testMember.Name)){ 
                 Assert.Pass();
             }
             else{
@@ -69,8 +69,8 @@ namespace ScSoMe.APIProfile.Test{
         [Test]
         public async Task GetProfileFail()
         {
-            Member response = await _profileService.GetProfile(-69, false);
-            if(response == null){ 
+            API.Services.Profile response = await _profileService.GetProfile(-69, false);
+            if(response.member == null){ 
                 Assert.Pass();
             }
             else{
@@ -84,9 +84,9 @@ namespace ScSoMe.APIProfile.Test{
             Member testMember = CreateTestMemberInDB();
             testMember.ContactsSection.Email = "test2";
             bool response = await _profileService.UpdateContacts(testMember.ContactsSection);
-            Member updatedMember = await _profileService.GetProfile(testMember.MemberId, false);
+            API.Services.Profile updatedMember = await _profileService.GetProfile(testMember.MemberId, false);
             RemoveTestMemberFromDB(testMember);
-            if(response && updatedMember.ContactsSection.Email.Equals(testMember.ContactsSection.Email)){ 
+            if(response && updatedMember.member.ContactsSection.Email.Equals(testMember.ContactsSection.Email)){ 
                 Assert.Pass();
             }
             else{
@@ -115,9 +115,9 @@ namespace ScSoMe.APIProfile.Test{
             Member testMember = CreateTestMemberInDB();
             testMember.DescriptionSection.Content = "test2";
             bool response = await _profileService.UpdateProfileDescription(testMember.DescriptionSection);
-            Member updatedMember = await _profileService.GetProfile(testMember.MemberId, false);
+            API.Services.Profile updatedMember = await _profileService.GetProfile(testMember.MemberId, false);
             RemoveTestMemberFromDB(testMember);
-            if(response && updatedMember.DescriptionSection.Content.Equals(testMember.DescriptionSection.Content)){ 
+            if(response && updatedMember.member.DescriptionSection.Content.Equals(testMember.DescriptionSection.Content)){ 
                 Assert.Pass();
             }
             else{
@@ -146,9 +146,9 @@ namespace ScSoMe.APIProfile.Test{
             Member testMember = CreateTestMemberInDB();
             testMember.ServicesSection.Content = "test2";
             bool response = await _profileService.UpdateService(testMember.ServicesSection);
-            Member updatedMember = await _profileService.GetProfile(testMember.MemberId, false);
+            API.Services.Profile updatedMember = await _profileService.GetProfile(testMember.MemberId, false);
             RemoveTestMemberFromDB(testMember);
-            if(response && updatedMember.ServicesSection.Content.Equals(testMember.ServicesSection.Content)){ 
+            if(response && updatedMember.member.ServicesSection.Content.Equals(testMember.ServicesSection.Content)){ 
                 Assert.Pass();
             }
             else{
@@ -182,9 +182,9 @@ namespace ScSoMe.APIProfile.Test{
                 Url = "test",
             });
             bool response = await _profileService.UpdateProfileExternalLinksSection(testMember.MemberId, testMember.ExternalLinksSection);
-            Member updatedMember = await _profileService.GetProfile(testMember.MemberId, false);
+            API.Services.Profile updatedMember = await _profileService.GetProfile(testMember.MemberId, false);
             RemoveTestMemberFromDB(testMember);
-            if(response && updatedMember.ExternalLinksSection.ExternalLinks.Count == testMember.ExternalLinksSection.ExternalLinks.Count){ 
+            if(response && updatedMember.member.ExternalLinksSection.ExternalLinks.Count == testMember.ExternalLinksSection.ExternalLinks.Count){ 
                 Assert.Pass();
             }
             else{
@@ -209,9 +209,9 @@ namespace ScSoMe.APIProfile.Test{
                 Url = "test2",
             });
             bool response = await _profileService.UpdateProfileExternalLinksSection(testMember.MemberId, testMember.ExternalLinksSection);
-            Member updatedMember = await _profileService.GetProfile(testMember.MemberId, false);
+            API.Services.Profile updatedMember = await _profileService.GetProfile(testMember.MemberId, false);
             RemoveTestMemberFromDB(testMember);
-            if(response && updatedMember.ExternalLinksSection.ExternalLinks.Count == testMember.ExternalLinksSection.ExternalLinks.Count){ 
+            if(response && updatedMember.member.ExternalLinksSection.ExternalLinks.Count == testMember.ExternalLinksSection.ExternalLinks.Count){ 
                 Assert.Pass();
             }
             else{
@@ -236,11 +236,11 @@ namespace ScSoMe.APIProfile.Test{
                 Url = "test2",
             });
             await _profileService.UpdateProfileExternalLinksSection(testMember.MemberId, testMember.ExternalLinksSection);
-            Member updatedMember = await _profileService.GetProfile(testMember.MemberId, false);
-            updatedMember.ExternalLinksSection.ExternalLinks.Clear();
+            API.Services.Profile updatedMember = await _profileService.GetProfile(testMember.MemberId, false);
+            updatedMember.member.ExternalLinksSection.ExternalLinks.Clear();
             bool response = await _profileService.UpdateProfileExternalLinksSection(testMember.MemberId, testMember.ExternalLinksSection);
             RemoveTestMemberFromDB(testMember);
-            if(response && updatedMember.ExternalLinksSection.ExternalLinks.Count == testMember.ExternalLinksSection.ExternalLinks.Count){ 
+            if(response && updatedMember.member.ExternalLinksSection.ExternalLinks.Count == testMember.ExternalLinksSection.ExternalLinks.Count){ 
                 Assert.Pass();
             }
             else{
@@ -262,9 +262,9 @@ namespace ScSoMe.APIProfile.Test{
                 EndDate = new System.DateTime(2020, 1, 1),
             });
             bool response = await _profileService.UpdateProfileWorkExperienceSection(testMember.MemberId, testMember.WorkExperienceSection);
-            Member updatedMember = await _profileService.GetProfile(testMember.MemberId, false);
+            API.Services.Profile updatedMember = await _profileService.GetProfile(testMember.MemberId, false);
             RemoveTestMemberFromDB(testMember);
-            if(response && updatedMember.WorkExperienceSection.WorkExperiences.Count == testMember.WorkExperienceSection.WorkExperiences.Count){ 
+            if(response && updatedMember.member.WorkExperienceSection.WorkExperiences.Count == testMember.WorkExperienceSection.WorkExperiences.Count){ 
                 Assert.Pass();
             }
             else{
@@ -295,9 +295,9 @@ namespace ScSoMe.APIProfile.Test{
                 EndDate = new System.DateTime(2020, 1, 1),
             });
             bool response = await _profileService.UpdateProfileWorkExperienceSection(testMember.MemberId, testMember.WorkExperienceSection);
-            Member updatedMember = await _profileService.GetProfile(testMember.MemberId, false);
+            API.Services.Profile updatedMember = await _profileService.GetProfile(testMember.MemberId, false);
             RemoveTestMemberFromDB(testMember);
-            if(response && updatedMember.WorkExperienceSection.WorkExperiences.Count == testMember.WorkExperienceSection.WorkExperiences.Count){ 
+            if(response && updatedMember.member.WorkExperienceSection.WorkExperiences.Count == testMember.WorkExperienceSection.WorkExperiences.Count){ 
                 Assert.Pass();
             }
             else{
@@ -328,11 +328,11 @@ namespace ScSoMe.APIProfile.Test{
                 EndDate = new System.DateTime(2020, 1, 1),
             });
             await _profileService.UpdateProfileWorkExperienceSection(testMember.MemberId, testMember.WorkExperienceSection);
-            Member updatedMember = await _profileService.GetProfile(testMember.MemberId, false);
-            updatedMember.WorkExperienceSection.WorkExperiences.Clear();
+            API.Services.Profile updatedMember = await _profileService.GetProfile(testMember.MemberId, false);
+            updatedMember.member.WorkExperienceSection.WorkExperiences.Clear();
             bool response = await _profileService.UpdateProfileWorkExperienceSection(testMember.MemberId, testMember.WorkExperienceSection);
             RemoveTestMemberFromDB(testMember);
-            if(response && updatedMember.WorkExperienceSection.WorkExperiences.Count == testMember.WorkExperienceSection.WorkExperiences.Count){ 
+            if(response && updatedMember.member.WorkExperienceSection.WorkExperiences.Count == testMember.WorkExperienceSection.WorkExperiences.Count){ 
                 Assert.Pass();
             }
             else{
