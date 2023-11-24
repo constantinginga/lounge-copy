@@ -693,7 +693,7 @@ namespace ScSoMe.API.Services
 
         public async Task<MemberConnection> CheckMemberConnection(MemberConnection request){
             try{
-                var connection = await db.MemberConnections.FirstAsync(m => (m.MemberId == request.MemberId && m.ConnectedId == request.ConnectedId && m.Status == false) || (m.MemberId == request.ConnectedId && m.ConnectedId == request.MemberId && m.Status == false));
+                var connection = await db.MemberConnections.FirstAsync(m => (m.MemberId == request.MemberId && m.ConnectedId == request.ConnectedId) || (m.MemberId == request.ConnectedId && m.ConnectedId == request.MemberId));
                 return connection;
             }
             catch(Exception e){
