@@ -469,7 +469,7 @@ namespace ScSoMe.API.Controllers.Members.MembersController
             bool success = await profileService.CheckToken(memberId, token);
 
             if (success) {
-                var result = await profileService.SearchProfiles(terms);
+                var result = await profileService.SearchProfiles(terms, memberId);
 
                 string serializedResponse = JsonSerializer.Serialize(result);
 

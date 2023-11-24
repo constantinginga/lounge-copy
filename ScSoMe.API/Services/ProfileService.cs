@@ -434,9 +434,9 @@ namespace ScSoMe.API.Services
             }
         }
 
-        public async Task<List<MinimalMemberInfo>> SearchProfiles(string term)
+        public async Task<List<MinimalMemberInfo>> SearchProfiles(string term, int member_id)
         {
-            var results = await db.Members.Where(x => x.Name.Contains(term)).Select(x => new MinimalMemberInfo
+            var results = await db.Members.Where(x => x.Name.Contains(term) && x.MemberId != member_id).Select(x => new MinimalMemberInfo
             {
                 Id = x.MemberId,
                 Name = x.Name
