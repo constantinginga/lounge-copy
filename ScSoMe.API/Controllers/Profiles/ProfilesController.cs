@@ -61,12 +61,12 @@ namespace ScSoMe.API.Controllers.Members.MembersController
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<string> GetExternalProfile([FromQuery] int memberIdToView, [FromQuery] int authId, [FromQuery] string token){
+        public async Task<string> GetExternalProfile([FromQuery] int memberIdToView, [FromQuery] int? authId, [FromQuery] string? token){
             try{
-                if(token != null){
-                    bool success = await profileService.CheckToken(authId, token);
+                if(token != null && authId != null){
+                    bool success = await profileService.CheckToken((int)authId, token);
                     if(success){
-                        bool isConnection = profileService.CheckMemberConnectionById(authId, memberIdToView);
+                        bool isConnection = profileService.CheckMemberConnectionById((int)authId, memberIdToView);
                         Services.Profile response = await profileService.GetProfile(memberIdToView, true, isConnection);
                         JsonSerializerOptions options = new()
                         {
