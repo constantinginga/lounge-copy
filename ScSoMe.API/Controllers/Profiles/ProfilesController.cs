@@ -63,10 +63,28 @@ namespace ScSoMe.API.Controllers.Members.MembersController
         [ProducesResponseType(500)]
         public async Task<string> GetExternalProfile([FromQuery] int memberIdToView, [FromQuery] int authId, [FromQuery] string token){
             try{
-                bool success = await profileService.CheckToken(authId, token);
-                if(success){
-                    bool isConnection = profileService.CheckMemberConnectionById(authId, memberIdToView);
-                    Services.Profile response = await profileService.GetProfile(memberIdToView, true, isConnection);
+                if(token != null){
+                    bool success = await profileService.CheckToken(authId, token);
+                    if(success){
+                        bool isConnection = profileService.CheckMemberConnectionById(authId, memberIdToView);
+                        Services.Profile response = await profileService.GetProfile(memberIdToView, true, isConnection);
+                        JsonSerializerOptions options = new()
+                        {
+                            ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                            WriteIndented = true
+                        };
+                        string serializedResponse = JsonSerializer.Serialize(response, options);
+                        return serializedResponse;
+                    }
+                    else{
+                        return JsonSerializer.Serialize(new ProfileResponse{
+                            Message = "Can't get profile. Token is invalid",                    
+                            StatusCode = HttpStatusCode.Unauthorized,
+                        });
+                    }
+                }
+                else{
+                    Services.Profile response = await profileService.GetProfile(memberIdToView, true, false);
                     JsonSerializerOptions options = new()
                     {
                         ReferenceHandler = ReferenceHandler.IgnoreCycles,
@@ -74,12 +92,6 @@ namespace ScSoMe.API.Controllers.Members.MembersController
                     };
                     string serializedResponse = JsonSerializer.Serialize(response, options);
                     return serializedResponse;
-                }
-                else{
-                    return JsonSerializer.Serialize(new ProfileResponse{
-                        Message = "Can't get profile. Token is invalid",                    
-                        StatusCode = HttpStatusCode.Unauthorized,
-                    });
                 }
             }
             catch(Exception e){
