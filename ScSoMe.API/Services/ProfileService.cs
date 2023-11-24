@@ -6,6 +6,7 @@ using ScSoMe.API.Controllers.Profiles;
 using ScSoMe.ApiDtos;
 using ScSoMe.EF;
 using System.Text.Json;
+using Microsoft.Data.SqlClient;
 
 namespace ScSoMe.API.Services
 {
@@ -499,15 +500,17 @@ namespace ScSoMe.API.Services
 
         public async Task<bool> UpdateProfileExternalLinksSection(int memberId, ExternalLinksSection externalLinksSection){
            try{
-                Profile member = await GetProfile(memberId, false);
                 db.ChangeTracker.Clear();
-                db.Entry(externalLinksSection).CurrentValues.SetValues(externalLinksSection);
-                if(externalLinksSection.ExternalLinks != null){
-                    db.ExternalLinks.RemoveRange(member.member.ExternalLinksSection.ExternalLinks);
-                    db.SaveChanges();
-
-                    db.ExternalLinks.AddRange(externalLinksSection.ExternalLinks);
-                    db.SaveChanges();
+                db.ExternalLinksSections.Update(externalLinksSection);
+                await db.SaveChangesAsync();
+                db.ChangeTracker.Clear();
+                db.Database.ExecuteSqlRaw("DELETE FROM [scSoMe].[dbo].[ExternalLinks] WHERE member_id = {0}", memberId);
+                foreach (var el in externalLinksSection.ExternalLinks)
+                {
+                    db.Database.ExecuteSqlRaw("INSERT INTO [scSoMe].[dbo].[ExternalLinks] VALUES(@member_id, @title, @url)",
+                    new SqlParameter("member_id", el.MemberId),
+                    new SqlParameter("title", el.Title), 
+                    new SqlParameter("url", el.Url));
                 }
                 db.SaveChanges();
                 return true;
@@ -525,7 +528,7 @@ namespace ScSoMe.API.Services
                 return true;
             }
             catch(Exception e){
-                Console.WriteLine(e.Message);
+                Console.WriteLine(e.Message + " " + e.InnerException);
                 return false;
             }
         }
@@ -553,15 +556,20 @@ namespace ScSoMe.API.Services
 
         public async Task<bool> UpdateProfileWorkExperienceSection(int memberId, WorkExperienceSection workExperienceSection){
             try{
-                Profile member = await GetProfile(memberId, false);
                 db.ChangeTracker.Clear();
-                db.Entry(workExperienceSection).CurrentValues.SetValues(workExperienceSection);
-                if(workExperienceSection.WorkExperiences != null){
-                    db.WorkExperiences.RemoveRange(member.member.WorkExperienceSection.WorkExperiences);
-                    db.SaveChanges();
-
-                    db.WorkExperiences.AddRange(workExperienceSection.WorkExperiences);
-                    db.SaveChanges();
+                db.WorkExperienceSections.Update(workExperienceSection);
+                await db.SaveChangesAsync();
+                db.ChangeTracker.Clear();
+                db.Database.ExecuteSqlRaw("DELETE FROM [scSoMe].[dbo].[WorkExperience] WHERE member_id = {0}", memberId);
+                foreach (var el in workExperienceSection.WorkExperiences)
+                {
+                    db.Database.ExecuteSqlRaw("INSERT INTO [scSoMe].[dbo].[WorkExperience] VALUES(@member_id, @startDate, @endDate, @companyName, @position, @positionDescription)",
+                    new SqlParameter("member_id", el.MemberId),
+                    new SqlParameter("startDate", el.StartDate),
+                    new SqlParameter("endDate", el.EndDate),
+                    new SqlParameter("companyName", el.CompanyName),
+                    new SqlParameter("position", el.Position),
+                    new SqlParameter("positionDescription", el.PositionDescription));
                 }
                 db.SaveChanges();
                 return true;
