@@ -34,7 +34,7 @@ namespace ScSoMe.API.Controllers.Members.MembersController
             try{
                 bool success = await profileService.CheckToken(memberId, token);
                 if(success){
-                    Services.Profile response = await profileService.GetProfile(memberId, false);
+                    Services.Profile response = await profileService.GetProfile(memberId, false, false);
                     JsonSerializerOptions options = new()
                     {
                         ReferenceHandler = ReferenceHandler.IgnoreCycles,
@@ -61,16 +61,26 @@ namespace ScSoMe.API.Controllers.Members.MembersController
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<string> GetExternalProfile([FromQuery] int memberId){
+        public async Task<string> GetExternalProfile([FromQuery] int memberIdToView, [FromQuery] int authId, [FromQuery] string token){
             try{
-                Services.Profile response = await profileService.GetProfile(memberId, true);
-                JsonSerializerOptions options = new()
-                {
-                    ReferenceHandler = ReferenceHandler.IgnoreCycles,
-                    WriteIndented = true
-                };
-                string serializedResponse = JsonSerializer.Serialize(response, options);
-                return serializedResponse;
+                bool success = await profileService.CheckToken(authId, token);
+                if(success){
+                    bool isConnection = profileService.CheckMemberConnectionById(authId, memberIdToView);
+                    Services.Profile response = await profileService.GetProfile(memberIdToView, true, isConnection);
+                    JsonSerializerOptions options = new()
+                    {
+                        ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                        WriteIndented = true
+                    };
+                    string serializedResponse = JsonSerializer.Serialize(response, options);
+                    return serializedResponse;
+                }
+                else{
+                    return JsonSerializer.Serialize(new ProfileResponse{
+                        Message = "Can't get profile. Token is invalid",                    
+                        StatusCode = HttpStatusCode.Unauthorized,
+                    });
+                }
             }
             catch(Exception e){
                 return JsonSerializer.Serialize(new ProfileResponse{
@@ -226,7 +236,7 @@ namespace ScSoMe.API.Controllers.Members.MembersController
             try{
                 bool success = await profileService.CheckToken(memberId, token);
                 if(success){
-                    Services.Profile response = await profileService.GetProfile(memberId, false);
+                    Services.Profile response = await profileService.GetProfile(memberId, false, false);
                     JsonSerializerOptions options = new()
                     {
                         ReferenceHandler = ReferenceHandler.IgnoreCycles,

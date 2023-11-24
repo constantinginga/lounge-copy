@@ -35,7 +35,7 @@ namespace ScSoMe.API.Services
             * Checks if the member has profile sections in DB, if not, adds them
             * <returns>A member object</returns>
         */
-        public async Task<Profile> GetProfile(int memberId, bool external){
+        public async Task<Profile> GetProfile(int memberId, bool external, bool isConnection){
             try{
                 var member = await db.Members.FirstAsync(m => m.MemberId == memberId);
                 member.Login = "";
@@ -49,7 +49,7 @@ namespace ScSoMe.API.Services
                         await AddProfileDescription(memberId, "");
                     }
                     else{
-                        if(!external || (external && description.PrivacySetting == true)){
+                        if(!external || ((external && description.PrivacySetting == true )|| isConnection)){
                             member.DescriptionSection = description;
                         }
                         else{
@@ -62,7 +62,7 @@ namespace ScSoMe.API.Services
                         await AddProfileContacts(memberId, "", null);
                     }
                     else{
-                        if(!external || (external && contacts.PrivacySetting == true)){
+                        if(!external || ((external && contacts.PrivacySetting == true) || isConnection)){
                             member.ContactsSection = contacts;
                         }
                         else{
@@ -75,7 +75,7 @@ namespace ScSoMe.API.Services
                         await AddProfileExternalLinksSection(memberId, null);
                     }
                     else{
-                        if(!external || (external && externalLinksSection.PrivacySetting == true)){
+                        if(!external || ((external && externalLinksSection.PrivacySetting == true) || isConnection)){
                             member.ExternalLinksSection = externalLinksSection;
                             //External links
                             var externalLinks = await db.ExternalLinks.Where(e => e.MemberId == memberId).ToListAsync();
@@ -91,7 +91,7 @@ namespace ScSoMe.API.Services
                         await AddProfileService(memberId, "");
                     }
                     else{
-                        if(!external || (external && services.PrivacySetting == true)){
+                        if(!external || ((external && services.PrivacySetting == true) || isConnection)){
                             member.ServicesSection = services;
                         }
                         else{
@@ -104,7 +104,7 @@ namespace ScSoMe.API.Services
                         await AddActivitySection(memberId);
                     }
                     else{
-                        if(!external || (external && activity.PrivacySetting == true)){
+                        if(!external || ((external && activity.PrivacySetting == true) || isConnection)){
                             profile.activitySection.PrivacySetting = activity.PrivacySetting;
                             profile.activitySection.JoinDate = member.CreatedDt;
                             profile.activitySection.NumberOfMentions = CalculateNumberOfMentions(member);
@@ -120,7 +120,7 @@ namespace ScSoMe.API.Services
                         await AddProfileWorkExperienceSection(memberId, null);
                     }
                     else{
-                        if(!external || (external && workExperienceSection.PrivacySetting == true)){
+                        if(!external || ((external && workExperienceSection.PrivacySetting == true) || isConnection)){
                             member.WorkExperienceSection = workExperienceSection;
                             //Work experiences
                             var workExperiences = await db.WorkExperiences.Where(w => w.MemberId == memberId).ToListAsync();
@@ -142,7 +142,7 @@ namespace ScSoMe.API.Services
 
         public async Task<bool> UpdateProfile(Member newProfile){
             try{
-                var oldProfile = await GetProfile(newProfile.MemberId, false);
+                var oldProfile = await GetProfile(newProfile.MemberId, false, false);
                 Member oldProfileMember = oldProfile.member;
                 var propertyInfos = typeof(Member).GetProperties();
                 bool response = true;
@@ -251,7 +251,7 @@ namespace ScSoMe.API.Services
         }
 
         public async Task<bool> SyncUserFromUmbraco(Member member){
-            var oldProfile = await GetProfile(member.MemberId, false);
+            var oldProfile = await GetProfile(member.MemberId, false, false);
             bool response = true;
             if(oldProfile.member.Name != member.Name){
                 response = await UpdateProfileName(member.MemberId, member.Name);
