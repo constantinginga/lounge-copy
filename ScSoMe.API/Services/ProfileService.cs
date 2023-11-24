@@ -687,7 +687,7 @@ namespace ScSoMe.API.Services
             }
             catch(Exception e){
                 Console.WriteLine(e.Message + " " + e.InnerException);
-                throw new Exception(e.Message);
+                return new List<MemberConnection>();
             }
         }
 
@@ -698,7 +698,7 @@ namespace ScSoMe.API.Services
             }
             catch(Exception e){
                 Console.WriteLine(e.Message + " " + e.InnerException);
-                throw new Exception(e.Message);
+                return null;
             }
         }
 
@@ -725,7 +725,7 @@ namespace ScSoMe.API.Services
             }
             catch(Exception e){
                 Console.WriteLine(e.Message + " " + e.InnerException);
-                throw new Exception(e.Message);
+                return null;
             }
         }
     }
