@@ -142,11 +142,12 @@ namespace ScSoMe.API.Services
         public async Task<bool> UpdateProfile(Member newProfile){
             try{
                 var oldProfile = await GetProfile(newProfile.MemberId, false);
+                Member oldProfileMember = oldProfile.member;
                 var propertyInfos = typeof(Member).GetProperties();
                 bool response = true;
                 foreach (var prop in propertyInfos)
                 {
-                    if(prop.GetValue(newProfile) != prop.GetValue(oldProfile)){
+                    if(prop.GetValue(newProfile) != prop.GetValue(oldProfileMember)){
                         response = await UpdateProfileProp(newProfile.MemberId, prop.Name, prop.GetValue(newProfile));
                     }
                 }
@@ -157,7 +158,7 @@ namespace ScSoMe.API.Services
                 return response;
             }
             catch(Exception e){
-                Console.WriteLine("Update profile: " + e.Message);
+                Console.WriteLine("Update profile: " + e.Message + " " + e.InnerException);
                 throw new Exception(e.Message);
             }
         }
