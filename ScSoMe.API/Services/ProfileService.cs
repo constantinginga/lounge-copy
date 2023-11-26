@@ -112,6 +112,7 @@ namespace ScSoMe.API.Services
                         }
                         else{
                             member.ActivitySection = null;
+                            profile.activitySection = null;
                         }
                     }
                     //Work experience section
@@ -436,13 +437,26 @@ namespace ScSoMe.API.Services
 
         public async Task<List<MinimalMemberInfo>> SearchProfiles(string term, int member_id)
         {
+            //Get search results
             var results = await db.Members.Where(x => x.Name.Contains(term) && x.MemberId != member_id).Select(x => new MinimalMemberInfo
             {
                 Id = x.MemberId,
                 Name = x.Name
             }).ToListAsync();
+            //Final array of results
+            List<MinimalMemberInfo> connections = new List<MinimalMemberInfo>();
+            //Get all connections and requests of active member
+            var memberConnections = await db.MemberConnections.Where(m => m.MemberId == member_id || m.ConnectedId == member_id).ToListAsync();
+            //Loop through search results and check if they are in any way associated with active member
+            foreach (var m in results)
+            {
+                List<MemberConnection>? matchingAssociations = memberConnections.FindAll(mm => mm.MemberId == m.Id || mm.ConnectedId == m.Id);
+                if(matchingAssociations.Count == 0){
+                    connections.Add(m);
+                }
+            }
 
-            return results;
+            return connections;
         }
 
         public async Task<bool> AddProfileContacts(int memberId, string? email, string? phoneNumber){
