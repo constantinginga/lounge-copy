@@ -125,6 +125,9 @@ namespace ScSoMe.API.Services
                         profile.activitySection = new CustomActivitySection{
                             MemberId = memberId,
                             PrivacySetting = true,
+                            JoinDate = member.CreatedDt,
+                            NumberOfMentions = CalculateNumberOfMentions(member),
+                            ActivityGroups = await CalculateActivityGroups(member),
                         };
                     }
                     else{
