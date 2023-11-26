@@ -31,7 +31,14 @@
     <MudNavLink Href="./coaches" Icon="@Icons.Outlined.Group">Coaches</MudNavLink>
     <MudNavLink Href="./partners" Icon="@Icons.Outlined.Handshake">Partners</MudNavLink>
     <MudNavLink Href="./edit-profile" Icon="@Icons.Outlined.Person">Profile</MudNavLink>
-    <MudNavLink Href="./connections" Icon="@Icons.Outlined.People">Connections</MudNavLink>
+    @if(AppState.IsFreeUser)
+    {
+        <MudNavLink Href="./users" Icon="@Icons.Outlined.People">Users</MudNavLink>
+    }
+    else
+    {
+        <MudNavLink Href="./connections" Icon="@Icons.Outlined.People">Connections</MudNavLink>
+    }
 
     @if (AppState.IsFreeUser)
     {
