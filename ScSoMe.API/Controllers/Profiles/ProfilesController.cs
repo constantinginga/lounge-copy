@@ -495,8 +495,7 @@ namespace ScSoMe.API.Controllers.Members.MembersController
         public async Task<string> SearchProfiles([FromQuery] int memberId, [FromQuery] string token, [FromQuery]string terms)
         {
             bool tokenPassed = await profileService.CheckToken(memberId, token);
-            bool isFreeUser = await profileService.CheckIsFreeUser(memberId);
-            if(tokenPassed && !isFreeUser){
+            if(tokenPassed){
                 var result = await profileService.SearchProfiles(terms, memberId);
 
                 string serializedResponse = JsonSerializer.Serialize(result);
