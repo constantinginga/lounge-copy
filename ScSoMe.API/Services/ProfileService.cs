@@ -63,6 +63,7 @@ namespace ScSoMe.API.Services
                     var description = await db.DescriptionSections.FirstOrDefaultAsync(d => d.MemberId == memberId);
                     if(description == null){
                         await AddProfileDescription(memberId, "");
+                        member.DescriptionSection = await db.DescriptionSections.FirstOrDefaultAsync(d => d.MemberId == memberId);
                     }
                     else{
                         if(!external || ((external && description.PrivacySetting == true )|| isConnection)){
@@ -76,6 +77,7 @@ namespace ScSoMe.API.Services
                     var contacts = await db.ContactsSections.FirstOrDefaultAsync(c => c.MemberId == memberId);
                     if(contacts == null){
                         await AddProfileContacts(memberId, "", null);
+                        member.ContactsSection = await db.ContactsSections.FirstOrDefaultAsync(c => c.MemberId == memberId);
                     }
                     else{
                         if(!external || ((external && contacts.PrivacySetting == true) || isConnection)){
@@ -89,6 +91,7 @@ namespace ScSoMe.API.Services
                     var externalLinksSection = await db.ExternalLinksSections.FirstOrDefaultAsync(e => e.MemberId == memberId);
                     if(externalLinksSection == null){
                         await AddProfileExternalLinksSection(memberId, null);
+                        member.ExternalLinksSection = await db.ExternalLinksSections.FirstOrDefaultAsync(e => e.MemberId == memberId);
                     }
                     else{
                         if(!external || ((external && externalLinksSection.PrivacySetting == true) || isConnection)){
@@ -105,6 +108,7 @@ namespace ScSoMe.API.Services
                     var services = await db.ServicesSections.FirstOrDefaultAsync(s => s.MemberId == memberId);
                     if(services == null){
                         await AddProfileService(memberId, "");
+                        member.ServicesSection = await db.ServicesSections.FirstOrDefaultAsync(s => s.MemberId == memberId);
                     }
                     else{
                         if(!external || ((external && services.PrivacySetting == true) || isConnection)){
@@ -118,7 +122,10 @@ namespace ScSoMe.API.Services
                     var activity = await db.ActivitySections.FirstOrDefaultAsync(a => a.MemberId == memberId);
                     if(activity == null){
                         await AddActivitySection(memberId);
-                        profile.activitySection = null;
+                        profile.activitySection = new CustomActivitySection{
+                            MemberId = memberId,
+                            PrivacySetting = true,
+                        };
                     }
                     else{
                         if(!external || ((external && activity.PrivacySetting == true) || isConnection)){
@@ -136,6 +143,7 @@ namespace ScSoMe.API.Services
                     var workExperienceSection = await db.WorkExperienceSections.FirstOrDefaultAsync(w => w.MemberId == memberId);
                     if(workExperienceSection == null){
                         await AddProfileWorkExperienceSection(memberId, null);
+                        member.WorkExperienceSection = await db.WorkExperienceSections.FirstOrDefaultAsync(w => w.MemberId == memberId);
                     }
                     else{
                         if(!external || ((external && workExperienceSection.PrivacySetting == true) || isConnection)){
