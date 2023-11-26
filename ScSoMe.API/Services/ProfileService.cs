@@ -118,6 +118,7 @@ namespace ScSoMe.API.Services
                     var activity = await db.ActivitySections.FirstOrDefaultAsync(a => a.MemberId == memberId);
                     if(activity == null){
                         await AddActivitySection(memberId);
+                        profile.activitySection = null;
                     }
                     else{
                         if(!external || ((external && activity.PrivacySetting == true) || isConnection)){
