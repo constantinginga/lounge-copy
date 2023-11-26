@@ -277,8 +277,9 @@ namespace ScSoMe.API.Controllers.Members.MembersController
         [ProducesResponseType(500)]
         public async Task<string> AddConnection([FromQuery] int memberId, [FromQuery] string token, [FromBody] JsonElement connection){
             try{
-                bool success = await profileService.CheckToken(memberId, token);
-                if(success){
+                bool tokenPassed = await profileService.CheckToken(memberId, token);
+                bool isFreeUser = await profileService.CheckIsFreeUser(memberId);
+                if(tokenPassed && !isFreeUser){
                     MemberConnection? newConnection = connection.Deserialize<MemberConnection>();
                     if(newConnection != null){
                         await profileService.AddConnection(newConnection);
@@ -313,8 +314,9 @@ namespace ScSoMe.API.Controllers.Members.MembersController
         [ProducesResponseType(500)]
         public async Task<string> ApproveConnection([FromQuery] int memberId, [FromQuery] string token, [FromBody] JsonElement newConnection){
             try{
-                bool success = await profileService.CheckToken(memberId, token);
-                if(success){
+                bool tokenPassed = await profileService.CheckToken(memberId, token);
+                bool isFreeUser = await profileService.CheckIsFreeUser(memberId);
+                if(tokenPassed && !isFreeUser){
                     MemberConnection? connection = newConnection.Deserialize<MemberConnection>();
                     if(connection != null){
                         await profileService.ApproveConnection(connection);
@@ -350,8 +352,9 @@ namespace ScSoMe.API.Controllers.Members.MembersController
         [ProducesResponseType(500)]
         public async Task<string> RemoveConnection([FromQuery] int memberId, [FromQuery] string token, [FromBody] JsonElement connectionToRemove){
             try{
-                bool success = await profileService.CheckToken(memberId, token);
-                if(success){
+                bool tokenPassed = await profileService.CheckToken(memberId, token);
+                bool isFreeUser = await profileService.CheckIsFreeUser(memberId);
+                if(tokenPassed && !isFreeUser){
                     MemberConnection? connection = connectionToRemove.Deserialize<MemberConnection>();
                     if(connection != null){
                         profileService.RemoveConnection(connection);
@@ -387,8 +390,9 @@ namespace ScSoMe.API.Controllers.Members.MembersController
         [ProducesResponseType(500)]
         public async Task<string> GetConnections([FromQuery] int memberId, [FromQuery] string token){
             try{
-                bool success = await profileService.CheckToken(memberId, token);
-                if(success){
+                bool tokenPassed = await profileService.CheckToken(memberId, token);
+                bool isFreeUser = await profileService.CheckIsFreeUser(memberId);
+                if(tokenPassed && !isFreeUser){
                     List<MemberConnection> connections = await profileService.GetMemberConnections(memberId);
                     JsonSerializerOptions options = new()
                     {
@@ -418,8 +422,9 @@ namespace ScSoMe.API.Controllers.Members.MembersController
         [ProducesResponseType(500)]
         public async Task<string> GetConnectionRequests([FromQuery] int memberId, [FromQuery] string token){
             try{
-                bool success = await profileService.CheckToken(memberId, token);
-                if(success){
+                bool tokenPassed = await profileService.CheckToken(memberId, token);
+                bool isFreeUser = await profileService.CheckIsFreeUser(memberId);
+                if(tokenPassed && !isFreeUser){
                     List<MemberConnection> requests = await profileService.GetMemberConnectionRequests(memberId);
                     JsonSerializerOptions options = new()
                     {
@@ -449,8 +454,9 @@ namespace ScSoMe.API.Controllers.Members.MembersController
         [ProducesResponseType(500)]
         public async Task<string> CheckMemberConnection([FromQuery] int memberId, [FromQuery] string token, [FromBody] JsonElement connectionToCheck){
             try{
-                bool success = await profileService.CheckToken(memberId, token);
-                if(success){
+                bool tokenPassed = await profileService.CheckToken(memberId, token);
+                bool isFreeUser = await profileService.CheckIsFreeUser(memberId);
+                if(tokenPassed && !isFreeUser){
                     MemberConnection? re = connectionToCheck.Deserialize<MemberConnection>();
                     if(re != null){
                         MemberConnection? requestStatus = await profileService.CheckMemberConnection(re);
@@ -488,20 +494,20 @@ namespace ScSoMe.API.Controllers.Members.MembersController
         [ProducesResponseType(500)]
         public async Task<string> SearchProfiles([FromQuery] int memberId, [FromQuery] string token, [FromQuery]string terms)
         {
-            bool success = await profileService.CheckToken(memberId, token);
-
-            if (success) {
+            bool tokenPassed = await profileService.CheckToken(memberId, token);
+            bool isFreeUser = await profileService.CheckIsFreeUser(memberId);
+            if(tokenPassed && !isFreeUser){
                 var result = await profileService.SearchProfiles(terms, memberId);
 
                 string serializedResponse = JsonSerializer.Serialize(result);
 
                 return serializedResponse;
             } else{
-                    return JsonSerializer.Serialize(new ProfileResponse{
-                        Message = "Can't get profile. Token is invalid",                    
-                        StatusCode = HttpStatusCode.Unauthorized,
-                    });
-                }
+                return JsonSerializer.Serialize(new ProfileResponse{
+                    Message = "Can't get profile. Token is invalid",                    
+                    StatusCode = HttpStatusCode.Unauthorized,
+                });
+            }
         }
     }
 }

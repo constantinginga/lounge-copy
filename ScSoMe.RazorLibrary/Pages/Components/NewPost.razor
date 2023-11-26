@@ -33,10 +33,12 @@
                             </MudButton>
 
                             <AttachFileButton />
-                            <div style="disply: flex; align-self: flex-end;">
-                                <MudCheckBox @bind-Checked="@postPrivacySetting"/>
-                                <label>Only for connections</label>
-                            </div>
+                            @if(!AppState.IsFreeUser){
+                                <div style="disply: flex; align-self: flex-end;">
+                                    <MudCheckBox @bind-Checked="@postPrivacySetting"/>
+                                    <label>Only for connections</label>
+                                </div>
+                            }
 
                         </MudContainer>
 

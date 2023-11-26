@@ -29,6 +29,22 @@ namespace ScSoMe.API.Services
                 return false;
             }
         }
+        public async Task<bool> CheckIsFreeUser(int member_id){
+            try{
+                var member = await db.Members.FirstAsync(m => m.MemberId == member_id);
+                MemberJson memberJSON = JsonSerializer.Deserialize<MemberJson>(member.Json);
+                if(memberJSON.IsApproved){
+                    return false;
+                }
+                else{
+                    return true;
+                }
+            }
+            catch(Exception e){
+                Console.WriteLine("Check is free user: " + e.Message + " " + e.InnerException);
+                return false;
+            }
+        }
         /**
             * <summary>Gets a profile from the database</summary>
             * <param name="memberId">The id of the member</param>
