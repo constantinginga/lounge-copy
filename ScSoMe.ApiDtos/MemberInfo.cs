@@ -26,5 +26,6 @@ namespace ScSoMe.ApiDtos
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
+        public bool isFreeUser { get; set; }
     }
 }

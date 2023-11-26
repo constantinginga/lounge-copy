@@ -469,7 +469,8 @@ namespace ScSoMe.API.Services
             var results = await db.Members.Where(x => x.Name.Contains(term) && x.MemberId != member_id).Select(x => new MinimalMemberInfo
             {
                 Id = x.MemberId,
-                Name = x.Name
+                Name = x.Name,
+                isFreeUser = JsonSerializer.Deserialize<MemberJson>(x.Json, new JsonSerializerOptions()).IsApproved,
             }).ToListAsync();
             //Final array of results
             List<MinimalMemberInfo> connections = new List<MinimalMemberInfo>();
