@@ -515,8 +515,8 @@ namespace ScSoMe.API.Services
         public async Task<bool> UpdateProfileExternalLinksSection(int memberId, ExternalLinksSection externalLinksSection){
            try{
                 db.ChangeTracker.Clear();
-                db.ExternalLinksSections.Update(externalLinksSection);
-                await db.SaveChangesAsync();
+                db.Database.ExecuteSqlRaw("UPDATE [scSoMe].[dbo].[ExternalLinksSection] SET privacy_setting = {0} WHERE member_id = {1}", externalLinksSection.PrivacySetting, memberId);
+                db.SaveChanges();
                 db.ChangeTracker.Clear();
                 db.Database.ExecuteSqlRaw("DELETE FROM [scSoMe].[dbo].[ExternalLinks] WHERE member_id = {0}", memberId);
                 foreach (var el in externalLinksSection.ExternalLinks)
@@ -571,8 +571,8 @@ namespace ScSoMe.API.Services
         public async Task<bool> UpdateProfileWorkExperienceSection(int memberId, WorkExperienceSection workExperienceSection){
             try{
                 db.ChangeTracker.Clear();
-                db.WorkExperienceSections.Update(workExperienceSection);
-                await db.SaveChangesAsync();
+                db.Database.ExecuteSqlRaw("UPDATE [scSoMe].[dbo].[WorkExperienceSection] SET privacy_setting = {0} WHERE member_id = {1}", workExperienceSection.PrivacySetting, memberId);
+                db.SaveChanges();
                 db.ChangeTracker.Clear();
                 db.Database.ExecuteSqlRaw("DELETE FROM [scSoMe].[dbo].[WorkExperience] WHERE member_id = {0}", memberId);
                 foreach (var el in workExperienceSection.WorkExperiences)
