@@ -65,7 +65,7 @@
                                 }
                                 if (Posts != null)
                                 {
-                                    foreach (var post in Posts)
+                                    foreach (var post in allPosts)
                                     {
                                         if (!_blockedMembers.Any(m => m.BlockedMemberId == post.AuthorMemberId))
                                         {
@@ -210,9 +210,9 @@
         if (newPost != null && Posts != null)
         {
             // Add newest post to the top
-            var PostsList = Posts.ToList();
+            var PostsList = allPosts.ToList();
             PostsList.Insert(0, newPost);
-            Posts = PostsList;
+            allPosts = PostsList;
             InvokeAsync(StateHasChanged);
         }
     }
