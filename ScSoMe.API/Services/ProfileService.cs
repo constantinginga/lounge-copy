@@ -33,6 +33,7 @@ namespace ScSoMe.API.Services
             try{
                 var member = await db.Members.FirstAsync(m => m.MemberId == member_id);
                 MemberJson memberJSON = JsonSerializer.Deserialize<MemberJson>(member.Json);
+                Console.WriteLine("Is approved: " + memberJSON.IsApproved);
                 if(memberJSON.IsApproved){
                     return false;
                 }
@@ -484,7 +485,6 @@ namespace ScSoMe.API.Services
                     connections.Add(m);
                 }
             }
-
             return connections;
         }
 
@@ -693,7 +693,7 @@ namespace ScSoMe.API.Services
         public async void RemoveConnection(MemberConnection connectionToRemove){
             try{
                 db.ChangeTracker.Clear();
-                db.MemberConnections.Remove(connectionToRemove);
+                db.Database.ExecuteSqlRaw("DELETE FROM [scSoMe].[dbo].[MemberConnections] WHERE member_id = {0}", connectionToRemove.MemberId);
                 db.SaveChanges();
             }
             catch(Exception e){
@@ -704,8 +704,8 @@ namespace ScSoMe.API.Services
 
         public async Task ApproveConnection(MemberConnection newConnection){
             try{
-                db.ChangeTracker.Clear();
-                db.MemberConnections.Update(newConnection);
+                Console.WriteLine("new connection " + newConnection.MemberId);
+                db.Database.ExecuteSqlRaw("UPDATE [scSoMe].[dbo].[MemberConnections] SET status = {0} WHERE member_id = {1}", newConnection.Status, newConnection.MemberId);
                 db.SaveChanges();
             }
             catch(Exception e){
