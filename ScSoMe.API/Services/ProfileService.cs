@@ -230,12 +230,6 @@ namespace ScSoMe.API.Services
                 case nameof(Member.Name):
                     response = await UpdateProfileName(memberId, (newVal as string));
                     break;
-                case nameof(Member.Image):
-                    response = await UpdateProfileImage(memberId, (newVal as string));
-                    break;
-                case nameof(Member.Banner):
-                    response = await UpdateProfileBanner(memberId, (newVal as string));
-                    break;
                 case nameof(DescriptionSection):
                     response = await UpdateProfileDescription((newVal as DescriptionSection));
                     break;
@@ -370,36 +364,6 @@ namespace ScSoMe.API.Services
             }
             catch(Exception e){
                 Console.WriteLine("Update profile name: " + e.Message);
-                return false;
-            }
-        }
-
-        public async Task<bool> UpdateProfileImage(int memberId, string? imageUrl){
-            try{
-                var member = await db.Members.FirstAsync(m => m.MemberId == memberId);
-                member.Image = imageUrl;
-                db.ChangeTracker.Clear();
-                db.Members.Update(member);
-                await db.SaveChangesAsync();
-                return true;
-            }
-            catch(Exception e){
-                Console.WriteLine("Update profile image: " + e.Message);
-                return false;
-            }
-        }
-
-        public async Task<bool> UpdateProfileBanner(int memberId, string? bannerUrl){
-            try{
-                var member = await db.Members.FirstAsync(m => m.MemberId == memberId);
-                member.Banner = bannerUrl;
-                db.ChangeTracker.Clear();
-                db.Members.Update(member);
-                await db.SaveChangesAsync();
-                return true;
-            }
-            catch(Exception e){
-                Console.WriteLine("Update profile banner: " + e.Message);
                 return false;
             }
         }
