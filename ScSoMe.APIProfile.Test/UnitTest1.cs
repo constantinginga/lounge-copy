@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Azure;
+using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 using NUnit.Framework.Internal;
 using ScSoMe.API.Services;
@@ -59,7 +60,7 @@ namespace ScSoMe.APIProfile.Test{
         public async Task GetProfileSuccess()
         {
             Member testMember = CreateTestMemberInDB();
-            API.Services.Profile response = await _profileService.GetProfile(testMember.MemberId, false);
+            API.Services.Profile response = await _profileService.GetProfile(testMember.MemberId, false, false);
             RemoveTestMemberFromDB(testMember);
             if(response != null && response.member.Name.Equals(testMember.Name)){ 
                 Assert.Pass();
@@ -72,7 +73,7 @@ namespace ScSoMe.APIProfile.Test{
         [Test]
         public async Task GetProfileFail()
         {
-            API.Services.Profile response = await _profileService.GetProfile(-69, false);
+            API.Services.Profile response = await _profileService.GetProfile(-69, false, false);
             if(response == null){ 
                 Assert.Pass();
             }
@@ -87,7 +88,7 @@ namespace ScSoMe.APIProfile.Test{
             Member testMember = CreateTestMemberInDB();
             testMember.ContactsSection.Email = "test2";
             bool response = await _profileService.UpdateContacts(testMember.ContactsSection);
-            API.Services.Profile updatedMember = await _profileService.GetProfile(testMember.MemberId, false);
+            API.Services.Profile updatedMember = await _profileService.GetProfile(testMember.MemberId, false, false);
             RemoveTestMemberFromDB(testMember);
             if(response && updatedMember.member.ContactsSection.Email.Equals(testMember.ContactsSection.Email)){ 
                 Assert.Pass();
@@ -118,7 +119,7 @@ namespace ScSoMe.APIProfile.Test{
             Member testMember = CreateTestMemberInDB();
             testMember.DescriptionSection.Content = "test2";
             bool response = await _profileService.UpdateProfileDescription(testMember.DescriptionSection);
-            API.Services.Profile updatedMember = await _profileService.GetProfile(testMember.MemberId, false);
+            API.Services.Profile updatedMember = await _profileService.GetProfile(testMember.MemberId, false, false);
             RemoveTestMemberFromDB(testMember);
             if(response && updatedMember.member.DescriptionSection.Content.Equals(testMember.DescriptionSection.Content)){ 
                 Assert.Pass();
@@ -149,7 +150,7 @@ namespace ScSoMe.APIProfile.Test{
             Member testMember = CreateTestMemberInDB();
             testMember.ServicesSection.Content = "test2";
             bool response = await _profileService.UpdateService(testMember.ServicesSection);
-            API.Services.Profile updatedMember = await _profileService.GetProfile(testMember.MemberId, false);
+            API.Services.Profile updatedMember = await _profileService.GetProfile(testMember.MemberId, false, false);
             RemoveTestMemberFromDB(testMember);
             if(response && updatedMember.member.ServicesSection.Content.Equals(testMember.ServicesSection.Content)){ 
                 Assert.Pass();
@@ -223,13 +224,12 @@ namespace ScSoMe.APIProfile.Test{
         {
             Member testMember = CreateTestMemberInDB();
             testMember.ExternalLinksSection.ExternalLinks.Add(new ExternalLink{
-                ExternalLinkId = "testtesttest",
                 MemberId = -69,
                 Title = "test",
                 Url = "test",
             });
             bool response = await _profileService.UpdateProfileExternalLinksSection(testMember.MemberId, testMember.ExternalLinksSection);
-            API.Services.Profile updatedMember = await _profileService.GetProfile(testMember.MemberId, false);
+            API.Services.Profile updatedMember = await _profileService.GetProfile(testMember.MemberId, false, false);
             RemoveTestMemberFromDB(testMember);
             if(response && updatedMember.member.ExternalLinksSection.ExternalLinks.Count == testMember.ExternalLinksSection.ExternalLinks.Count){ 
                 Assert.Pass();
@@ -244,19 +244,17 @@ namespace ScSoMe.APIProfile.Test{
         {
             Member testMember = CreateTestMemberInDB();
             testMember.ExternalLinksSection.ExternalLinks.Add(new ExternalLink{
-                ExternalLinkId = "testtesttest",
                 MemberId = -69,
                 Title = "test",
                 Url = "test",
             });
             testMember.ExternalLinksSection.ExternalLinks.Add(new ExternalLink{
-                ExternalLinkId = "testtesttest2",
                 MemberId = -69,
                 Title = "test2",
                 Url = "test2",
             });
             bool response = await _profileService.UpdateProfileExternalLinksSection(testMember.MemberId, testMember.ExternalLinksSection);
-            API.Services.Profile updatedMember = await _profileService.GetProfile(testMember.MemberId, false);
+            API.Services.Profile updatedMember = await _profileService.GetProfile(testMember.MemberId, false, false);
             RemoveTestMemberFromDB(testMember);
             if(response && updatedMember.member.ExternalLinksSection.ExternalLinks.Count == testMember.ExternalLinksSection.ExternalLinks.Count){ 
                 Assert.Pass();
@@ -271,28 +269,21 @@ namespace ScSoMe.APIProfile.Test{
         {
             Member testMember = CreateTestMemberInDB();
             testMember.ExternalLinksSection.ExternalLinks.Add(new ExternalLink{
-                ExternalLinkId = "testtesttest",
                 MemberId = -69,
                 Title = "test",
                 Url = "test",
             });
             testMember.ExternalLinksSection.ExternalLinks.Add(new ExternalLink{
-                ExternalLinkId = "testtesttest2",
                 MemberId = -69,
                 Title = "test2",
                 Url = "test2",
             });
             await _profileService.UpdateProfileExternalLinksSection(testMember.MemberId, testMember.ExternalLinksSection);
-            API.Services.Profile updatedMember = await _profileService.GetProfile(testMember.MemberId, false);
+            API.Services.Profile updatedMember = await _profileService.GetProfile(testMember.MemberId, false, false);
             updatedMember.member.ExternalLinksSection.ExternalLinks.Clear();
             bool response = await _profileService.UpdateProfileExternalLinksSection(testMember.MemberId, testMember.ExternalLinksSection);
             RemoveTestMemberFromDB(testMember);
-            if(response && updatedMember.member.ExternalLinksSection.ExternalLinks.Count == testMember.ExternalLinksSection.ExternalLinks.Count){ 
-                Assert.Pass();
-            }
-            else{
-                Assert.Fail();
-            }
+            Assert.AreEqual(0, updatedMember.member.ExternalLinksSection.ExternalLinks.Count);
         }
 
         [Test]
@@ -300,7 +291,6 @@ namespace ScSoMe.APIProfile.Test{
         {
             Member testMember = CreateTestMemberInDB();
             testMember.WorkExperienceSection.WorkExperiences.Add(new WorkExperience{
-                WorkExperienceId = "testtesttest",
                 MemberId = -69,
                 CompanyName = "test",
                 Position = "test",
@@ -309,7 +299,7 @@ namespace ScSoMe.APIProfile.Test{
                 EndDate = new System.DateTime(2020, 1, 1),
             });
             bool response = await _profileService.UpdateProfileWorkExperienceSection(testMember.MemberId, testMember.WorkExperienceSection);
-            API.Services.Profile updatedMember = await _profileService.GetProfile(testMember.MemberId, false);
+            API.Services.Profile updatedMember = await _profileService.GetProfile(testMember.MemberId, false, false);
             RemoveTestMemberFromDB(testMember);
             if(response && updatedMember.member.WorkExperienceSection.WorkExperiences.Count == testMember.WorkExperienceSection.WorkExperiences.Count){ 
                 Assert.Pass();
@@ -324,7 +314,6 @@ namespace ScSoMe.APIProfile.Test{
         {
             Member testMember = CreateTestMemberInDB();
              testMember.WorkExperienceSection.WorkExperiences.Add(new WorkExperience{
-                WorkExperienceId = "testtesttest",
                 MemberId = -69,
                 CompanyName = "test",
                 Position = "test",
@@ -333,7 +322,6 @@ namespace ScSoMe.APIProfile.Test{
                 EndDate = new System.DateTime(2020, 1, 1),
             });
              testMember.WorkExperienceSection.WorkExperiences.Add(new WorkExperience{
-                WorkExperienceId = "testtesttest2",
                 MemberId = -69,
                 CompanyName = "test2",
                 Position = "test2",
@@ -342,7 +330,7 @@ namespace ScSoMe.APIProfile.Test{
                 EndDate = new System.DateTime(2020, 1, 1),
             });
             bool response = await _profileService.UpdateProfileWorkExperienceSection(testMember.MemberId, testMember.WorkExperienceSection);
-            API.Services.Profile updatedMember = await _profileService.GetProfile(testMember.MemberId, false);
+            API.Services.Profile updatedMember = await _profileService.GetProfile(testMember.MemberId, false, false);
             RemoveTestMemberFromDB(testMember);
             if(response && updatedMember.member.WorkExperienceSection.WorkExperiences.Count == testMember.WorkExperienceSection.WorkExperiences.Count){ 
                 Assert.Pass();
@@ -357,7 +345,6 @@ namespace ScSoMe.APIProfile.Test{
         {
             Member testMember = CreateTestMemberInDB();
             testMember.WorkExperienceSection.WorkExperiences.Add(new WorkExperience{
-                WorkExperienceId = "testtesttest",
                 MemberId = -69,
                 CompanyName = "test",
                 Position = "test",
@@ -366,7 +353,6 @@ namespace ScSoMe.APIProfile.Test{
                 EndDate = new System.DateTime(2020, 1, 1),
             });
              testMember.WorkExperienceSection.WorkExperiences.Add(new WorkExperience{
-                WorkExperienceId = "testtesttest2",
                 MemberId = -69,
                 CompanyName = "test2",
                 Position = "test2",
@@ -375,16 +361,11 @@ namespace ScSoMe.APIProfile.Test{
                 EndDate = new System.DateTime(2020, 1, 1),
             });
             await _profileService.UpdateProfileWorkExperienceSection(testMember.MemberId, testMember.WorkExperienceSection);
-            API.Services.Profile updatedMember = await _profileService.GetProfile(testMember.MemberId, false);
+            API.Services.Profile updatedMember = await _profileService.GetProfile(testMember.MemberId, false, false);
             updatedMember.member.WorkExperienceSection.WorkExperiences.Clear();
             bool response = await _profileService.UpdateProfileWorkExperienceSection(testMember.MemberId, testMember.WorkExperienceSection);
             RemoveTestMemberFromDB(testMember);
-            if(response && updatedMember.member.WorkExperienceSection.WorkExperiences.Count == testMember.WorkExperienceSection.WorkExperiences.Count){ 
-                Assert.Pass();
-            }
-            else{
-                Assert.Fail();
-            }
+            Assert.AreEqual(0, updatedMember.member.WorkExperienceSection.WorkExperiences.Count);
         }
 
         /** HELPING METHODS **/
@@ -447,10 +428,12 @@ namespace ScSoMe.APIProfile.Test{
                 context.ContactsSections.Remove(testMember.ContactsSection);
                 context.ServicesSections.Remove(testMember.ServicesSection);
                 context.DescriptionSections.Remove(testMember.DescriptionSection);
+                // context.ExternalLinks.RemoveRange(testMember.ExternalLinksSection.ExternalLinks);
+                context.Database.ExecuteSqlRaw("DELETE FROM [scSoMe].[dbo].[ExternalLinks] WHERE member_id = {0}", testMember.MemberId);
                 context.ExternalLinksSections.Remove(testMember.ExternalLinksSection);
-                context.ExternalLinks.RemoveRange(testMember.ExternalLinksSection.ExternalLinks);
+                // context.WorkExperiences.RemoveRange(testMember.WorkExperienceSection.WorkExperiences);
+                context.Database.ExecuteSqlRaw("DELETE FROM [scSoMe].[dbo].[WorkExperience] WHERE member_id = {0}", testMember.MemberId);
                 context.WorkExperienceSections.Remove(testMember.WorkExperienceSection);
-                context.WorkExperiences.RemoveRange(testMember.WorkExperienceSection.WorkExperiences);
                 context.ActivitySections.Remove(testMember.ActivitySection);
                 context.Members.Remove(testMember);
                 context.SaveChanges();
